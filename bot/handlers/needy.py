@@ -8,26 +8,36 @@ from bot.database import (
     get_donation,
     get_reservation,
     get_reservations_by_needy,
+    get_user,
     set_donation_status,
     set_reservation_received,
 )
 from bot.keyboards import category_keyboard, confirm_received_keyboard, reserve_keyboard
 from bot.states import NeedyConfirmation, NeedyReservation
 from bot.texts import category_name, status_label, t
-from bot.utils import button_variants, get_lang
+from bot.utils import button_variants, get_lang, with_cancel_hint
 
 router = Router()
 
 
 @router.message(F.text.in_(button_variants("btn_browse_donations")))
 async def browse_categories(message: Message, state: FSMContext) -> None:
+    user = await get_user(message.from_user.id)
+    if not user or user["role"] != "needy":
+        return
+
     await state.clear()
-    lang = await get_lang(message.from_user.id)
+    lang = user["language"] or "uz"
     await message.answer(t(lang, "choose_category"), reply_markup=category_keyboard(lang))
 
 
 @router.callback_query(F.data.startswith("cat:"))
 async def category_browse(callback: CallbackQuery) -> None:
+    user = await get_user(callback.from_user.id)
+    if not user or user["role"] != "needy":
+        await callback.answer()
+        return
+
     category = callback.data.split(":", 1)[1]
     lang = await get_lang(callback.from_user.id)
     donations = await get_available_donations(category)
@@ -53,6 +63,11 @@ async def category_browse(callback: CallbackQuery) -> None:
 
 @router.callback_query(F.data.startswith("reserve:"))
 async def reserve_requested(callback: CallbackQuery, state: FSMContext) -> None:
+    user = await get_user(callback.from_user.id)
+    if not user or user["role"] != "needy":
+        await callback.answer()
+        return
+
     donation_id = int(callback.data.split(":", 1)[1])
     lang = await get_lang(callback.from_user.id)
     donation = await get_donation(donation_id)
@@ -63,7 +78,7 @@ async def reserve_requested(callback: CallbackQuery, state: FSMContext) -> None:
 
     await state.set_state(NeedyReservation.entering_name)
     await state.update_data(donation_id=donation_id)
-    await callback.message.answer(t(lang, "ask_full_name"))
+    await callback.message.answer(with_cancel_hint(lang, "ask_full_name"))
     await callback.answer()
 
 
@@ -72,7 +87,7 @@ async def name_entered(message: Message, state: FSMContext) -> None:
     lang = await get_lang(message.from_user.id)
     await state.update_data(full_name=message.text)
     await state.set_state(NeedyReservation.entering_address)
-    await message.answer(t(lang, "ask_address"))
+    await message.answer(with_cancel_hint(lang, "ask_address"))
 
 
 @router.message(NeedyReservation.entering_address, F.text)
@@ -80,7 +95,7 @@ async def address_entered(message: Message, state: FSMContext) -> None:
     lang = await get_lang(message.from_user.id)
     await state.update_data(address=message.text)
     await state.set_state(NeedyReservation.entering_phone)
-    await message.answer(t(lang, "ask_phone"))
+    await message.answer(with_cancel_hint(lang, "ask_phone"))
 
 
 @router.message(NeedyReservation.entering_phone, F.text)
@@ -123,8 +138,12 @@ async def phone_entered(message: Message, state: FSMContext) -> None:
 
 @router.message(F.text.in_(button_variants("btn_my_requests")))
 async def my_requests(message: Message, state: FSMContext) -> None:
+    user = await get_user(message.from_user.id)
+    if not user or user["role"] != "needy":
+        return
+
     await state.clear()
-    lang = await get_lang(message.from_user.id)
+    lang = user["language"] or "uz"
     reservations = await get_reservations_by_needy(message.from_user.id)
 
     if not reservations:
@@ -171,7 +190,7 @@ async def confirm_requested(callback: CallbackQuery, state: FSMContext) -> None:
 
     await state.set_state(NeedyConfirmation.entering_dua)
     await state.update_data(reservation_id=reservation_id)
-    await callback.message.answer(t(lang, "ask_dua"))
+    await callback.message.answer(with_cancel_hint(lang, "ask_dua"))
     await callback.answer()
 
 
@@ -183,6 +202,7 @@ async def dua_entered(message: Message, state: FSMContext) -> None:
     reservation = await get_reservation(reservation_id)
 
     await set_reservation_received(reservation_id, message.text)
+    await set_donation_status(reservation["donation_id"], "received")
     await state.clear()
     await message.answer(t(lang, "received_confirmed_needy"))
 

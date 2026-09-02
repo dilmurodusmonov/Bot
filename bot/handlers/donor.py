@@ -8,20 +8,25 @@ from bot.database import (
     get_donation,
     get_donations_by_donor,
     get_reservation,
+    get_user,
     set_donation_status,
     set_reservation_shipped,
 )
 from bot.keyboards import category_keyboard, ship_keyboard, confirm_received_keyboard
 from bot.states import DonorAddDonation, DonorShipment
 from bot.texts import category_name, status_label, t
-from bot.utils import button_variants, get_lang
+from bot.utils import button_variants, get_lang, with_cancel_hint
 
 router = Router()
 
 
 @router.message(F.text.in_(button_variants("btn_add_donation")))
 async def start_add_donation(message: Message, state: FSMContext) -> None:
-    lang = await get_lang(message.from_user.id)
+    user = await get_user(message.from_user.id)
+    if not user or user["role"] != "donor":
+        return
+
+    lang = user["language"] or "uz"
     await state.set_state(DonorAddDonation.choosing_category)
     await message.answer(t(lang, "choose_category"), reply_markup=category_keyboard(lang))
 
@@ -33,7 +38,7 @@ async def category_chosen(callback: CallbackQuery, state: FSMContext) -> None:
     await state.update_data(category=category)
     await state.set_state(DonorAddDonation.uploading_photo)
     await callback.message.edit_text(category_name(category, lang))
-    await callback.message.answer(t(lang, "ask_photo"))
+    await callback.message.answer(with_cancel_hint(lang, "ask_photo"))
     await callback.answer()
 
 
@@ -42,7 +47,7 @@ async def photo_uploaded(message: Message, state: FSMContext) -> None:
     lang = await get_lang(message.from_user.id)
     await state.update_data(photo_file_id=message.photo[-1].file_id)
     await state.set_state(DonorAddDonation.entering_description)
-    await message.answer(t(lang, "ask_description"))
+    await message.answer(with_cancel_hint(lang, "ask_description"))
 
 
 @router.message(DonorAddDonation.uploading_photo)
@@ -68,8 +73,12 @@ async def description_entered(message: Message, state: FSMContext) -> None:
 
 @router.message(F.text.in_(button_variants("btn_my_donations")))
 async def my_donations(message: Message, state: FSMContext) -> None:
+    user = await get_user(message.from_user.id)
+    if not user or user["role"] != "donor":
+        return
+
     await state.clear()
-    lang = await get_lang(message.from_user.id)
+    lang = user["language"] or "uz"
     donations = await get_donations_by_donor(message.from_user.id)
 
     if not donations:
@@ -123,7 +132,7 @@ async def ship_requested(callback: CallbackQuery, state: FSMContext) -> None:
 
     await state.set_state(DonorShipment.uploading_receipt)
     await state.update_data(reservation_id=reservation_id)
-    await callback.message.answer(t(lang, "ask_receipt_photo"))
+    await callback.message.answer(with_cancel_hint(lang, "ask_receipt_photo"))
     await callback.answer()
 
 
