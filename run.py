@@ -9,11 +9,13 @@ from aiogram.fsm.storage.memory import MemoryStorage
 from bot.config import BOT_TOKEN
 from bot.database import init_db
 from bot.handlers import donor, needy, start
+from bot.keepalive import start_webserver
 
 
 async def main() -> None:
     logging.basicConfig(level=logging.INFO)
     await init_db()
+    await start_webserver()
 
     bot = Bot(token=BOT_TOKEN, default=DefaultBotProperties(parse_mode=ParseMode.HTML))
     dp = Dispatcher(storage=MemoryStorage())

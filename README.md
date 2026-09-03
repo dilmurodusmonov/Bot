@@ -49,9 +49,40 @@ bot/
 ├── states.py       # FSM holatlari
 ├── keyboards.py    # Inline/reply tugmalar
 ├── utils.py        # Yordamchi funksiyalar
+├── keepalive.py    # Bepul hosting uchun mini health-check server
 └── handlers/
     ├── start.py    # Til, rol tanlash, asosiy menyu
     ├── donor.py    # Saxiy oqimi: ehson qo'shish, yuborish
     └── needy.py    # Muhtoj oqimi: ehson tanlash, qabul qilish
 run.py              # Botni ishga tushirish nuqtasi
 ```
+
+## Bepul 24/7 hostga qo'yish (Render.com)
+
+Botni doimiy ishlaydigan qilib qo'yish uchun kompyuter shart emas —
+Render.com'ning bepul tarifidan foydalanish mumkin.
+
+1. [render.com](https://render.com) saytida ro'yxatdan o'ting (GitHub
+   akkountingiz bilan kiring — shunda repolaringiz avtomatik ko'rinadi).
+2. Dashboard'da **"New +"** → **"Web Service"** ni tanlang.
+3. Ushbu GitHub repoziyoriyani ulang (`dilmurodusmonov/Bot`), branch —
+   `main` (yoki PR merge qilingandan keyin shu branch).
+4. Quyidagi maydonlarni to'ldiring:
+   - **Build Command**: `pip install -r requirements.txt`
+   - **Start Command**: `python run.py`
+   - **Instance Type**: `Free`
+5. **Environment Variables** bo'limida qo'shing: `BOT_TOKEN` = sizning
+   tokeningiz (BotFather'dan olingan). `PORT`ni Render o'zi avtomatik beradi
+   — qo'shish shart emas.
+6. **"Create Web Service"** ni bosing — bir necha daqiqada bot deploy bo'ladi.
+
+Render'ning bepul tarifi 15 daqiqa trafik bo'lmasa xizmatni "uxlatib"
+qo'yadi. Buning oldini olish uchun:
+
+7. [uptimerobot.com](https://uptimerobot.com) da bepul akkount oching.
+8. **"Add New Monitor"** → **HTTP(s)** → Render bergan URL manzilingizni
+   kiriting (masalan `https://ehson-bot.onrender.com`) → tekshirish
+   oralig'ini **5 daqiqa** qilib belgilang.
+
+Shu bilan bot 24/7 ishlab turadi, kompyuteringiz yoqilgan-o'chganiga
+bog'liq bo'lmaydi.
