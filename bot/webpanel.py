@@ -60,7 +60,7 @@ def _bar(label: str, count: int, max_count: int) -> str:
 
 
 def _recent_row(donation: dict) -> str:
-    created = donation["created_at"][:16].replace("T", " ")
+    created = donation["created_at"].strftime("%Y-%m-%d %H:%M")
     desc = donation["description"] or ""
     if len(desc) > 60:
         desc = desc[:57] + "..."

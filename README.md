@@ -2,7 +2,7 @@
 
 "Saxiy" (xayr-ehson qiluvchi) va "Muhtoj" (ehsonga muhtoj) foydalanuvchilarni
 bog'lovchi Telegram bot. Python + [aiogram 3](https://docs.aiogram.dev/) va
-SQLite (aiosqlite) asosida qurilgan, 3 tilni qo'llab-quvvatlaydi: o'zbek,
+PostgreSQL (asyncpg) asosida qurilgan, 3 tilni qo'llab-quvvatlaydi: o'zbek,
 rus, ingliz.
 
 ## Ishlash oqimi
@@ -19,6 +19,26 @@ rus, ingliz.
 6. Saxiyga Muhtojning duosi/minnatdorchiligi yetkaziladi — shu bilan ehson
    yetib borganiga ishonch hosil qilinadi.
 
+## Ma'lumotlar bazasi (bepul, doimiy PostgreSQL — Neon.tech)
+
+Bot ma'lumotlarni (foydalanuvchilar, ehsonlar, so'rovlar) saqlash uchun
+PostgreSQL talab qiladi. [Neon.tech](https://neon.tech) bepul va doimiy
+tarifni taklif qiladi (Render'ning bepul tarifidagi vaqtinchalik diskdan
+farqli o'laroq, ma'lumotlar qayta deploy qilinganda ham yo'qolmaydi):
+
+1. [neon.tech](https://neon.tech) saytida bepul ro'yxatdan o'ting.
+2. Yangi loyiha (**"New Project"**) yarating — nomini xohlagancha qo'ying
+   (masalan `ehson-bot`).
+3. Loyiha yaratilgach, **"Connection string"** (yoki "Connection details")
+   bo'limidan to'liq ulanish manzilini nusxalang — u
+   `postgresql://user:password@host/dbname?sslmode=require` ko'rinishida
+   bo'ladi.
+4. Shu manzilni `.env` fayliga (yoki hosting'ning Environment Variables
+   bo'limiga) `DATABASE_URL` sifatida qo'shing.
+
+Jadval (schema) botni birinchi marta ishga tushirganda avtomatik
+yaratiladi — qo'lda SQL yozish shart emas.
+
 ## O'rnatish
 
 ```bash
@@ -27,7 +47,9 @@ source venv/bin/activate   # Windows: venv\Scripts\activate
 pip install -r requirements.txt
 
 cp .env.example .env
-# .env faylini oching va BOT_TOKEN qiymatini @BotFather'dan olingan token bilan almashtiring
+# .env faylini oching:
+# - BOT_TOKEN'ni @BotFather'dan olingan token bilan almashtiring
+# - DATABASE_URL'ni Neon'dan olgan ulanish manzili bilan almashtiring
 ```
 
 ## Ishga tushirish
@@ -36,15 +58,15 @@ cp .env.example .env
 python run.py
 ```
 
-Bot polling rejimida ishga tushadi va ma'lumotlar `data/ehson.db` faylida
-(SQLite) saqlanadi.
+Bot polling rejimida ishga tushadi, ma'lumotlar `DATABASE_URL`
+ko'rsatgan PostgreSQL bazasida saqlanadi.
 
 ## Loyihaning tuzilishi
 
 ```
 bot/
 ├── config.py       # .env dan sozlamalarni o'qish
-├── database.py     # SQLite bilan ishlash (async)
+├── database.py     # PostgreSQL bilan ishlash (async, asyncpg)
 ├── texts.py        # 3 tildagi matnlar, bo'lim va status nomlari
 ├── states.py       # FSM holatlari
 ├── keyboards.py    # Inline/reply tugmalar
@@ -72,9 +94,12 @@ Render.com'ning bepul tarifidan foydalanish mumkin.
    - **Build Command**: `pip install -r requirements.txt`
    - **Start Command**: `python run.py`
    - **Instance Type**: `Free`
-5. **Environment Variables** bo'limida qo'shing: `BOT_TOKEN` = sizning
-   tokeningiz (BotFather'dan olingan). `PORT`ni Render o'zi avtomatik beradi
-   — qo'shish shart emas.
+5. **Environment Variables** bo'limida qo'shing:
+   - `BOT_TOKEN` — BotFather'dan olingan tokeningiz
+   - `DATABASE_URL` — Neon'dan olingan PostgreSQL ulanish manzili (yuqoridagi
+     "Ma'lumotlar bazasi" bo'limiga qarang)
+
+   `PORT`ni Render o'zi avtomatik beradi — qo'shish shart emas.
 6. **"Create Web Service"** ni bosing — bir necha daqiqada bot deploy bo'ladi.
 
 Render'ning bepul tarifi 15 daqiqa trafik bo'lmasa xizmatni "uxlatib"
