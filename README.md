@@ -50,6 +50,7 @@ bot/
 ├── keyboards.py    # Inline/reply tugmalar
 ├── utils.py        # Yordamchi funksiyalar
 ├── keepalive.py    # Bepul hosting uchun mini health-check server
+├── webpanel.py     # /admin statistika paneli (login/parol bilan himoyalangan)
 └── handlers/
     ├── start.py    # Til, rol tanlash, asosiy menyu
     ├── donor.py    # Saxiy oqimi: ehson qo'shish, yuborish
@@ -86,3 +87,20 @@ qo'yadi. Buning oldini olish uchun:
 
 Shu bilan bot 24/7 ishlab turadi, kompyuteringiz yoqilgan-o'chganiga
 bog'liq bo'lmaydi.
+
+## Admin panel (statistika)
+
+Bot bilan bir xil manzilda `/admin` sahifasi mavjud — umumiy statistikani
+(foydalanuvchilar, ehsonlar, status va bo'lim bo'yicha taqsimot, oxirgi
+ehsonlar) ko'rsatadi. Login/parol bilan himoyalangan.
+
+**Sozlash:**
+
+1. `.env` fayliga (yoki Render'ning Environment Variables bo'limiga) qo'shing:
+   - `ADMIN_USERNAME` — login (masalan `admin`)
+   - `ADMIN_PASSWORD` — o'zingiz o'ylab topgan kuchli parol
+2. Brauzerda `https://<sizning-render-manzilingiz>/admin` ni oching —
+   login/parol so'raladi.
+
+`ADMIN_PASSWORD` o'rnatilmagan bo'lsa, `/admin` sahifasi hech kimga
+ochilmaydi (xavfsiz standart holat).

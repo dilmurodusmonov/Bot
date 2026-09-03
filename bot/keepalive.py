@@ -2,6 +2,8 @@ import os
 
 from aiohttp import web
 
+from bot.webpanel import dashboard_handler
+
 
 async def _health(request: web.Request) -> web.Response:
     return web.Response(text="Ehson bot ishlayapti ✅")
@@ -12,10 +14,12 @@ async def start_webserver() -> None:
 
     Bunday xizmatlar processni "web xizmat" sifatida ko'radi va $PORT
     portini tinglashni talab qiladi; aks holda ishga tushmaydi yoki
-    uxlab qoladi.
+    uxlab qoladi. Shu server ustiga /admin — statistika paneli ham
+    qo'shilgan.
     """
     app = web.Application()
     app.router.add_get("/", _health)
+    app.router.add_get("/admin", dashboard_handler)
 
     runner = web.AppRunner(app)
     await runner.setup()

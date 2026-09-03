@@ -231,3 +231,43 @@ async def set_reservation_received(reservation_id: int, dua_text: str) -> None:
             (dua_text, _now(), reservation_id),
         )
         await db.commit()
+
+
+# --- statistika (admin panel uchun) ------------------------------------------
+
+async def get_stats() -> dict[str, Any]:
+    async with aiosqlite.connect(DB_PATH) as db:
+        stats: dict[str, Any] = {}
+
+        cursor = await db.execute("SELECT COUNT(*) FROM users")
+        stats["total_users"] = (await cursor.fetchone())[0]
+
+        cursor = await db.execute("SELECT COUNT(*) FROM users WHERE role = 'donor'")
+        stats["total_donors"] = (await cursor.fetchone())[0]
+
+        cursor = await db.execute("SELECT COUNT(*) FROM users WHERE role = 'needy'")
+        stats["total_needy"] = (await cursor.fetchone())[0]
+
+        cursor = await db.execute("SELECT COUNT(*) FROM donations")
+        stats["total_donations"] = (await cursor.fetchone())[0]
+
+        cursor = await db.execute("SELECT status, COUNT(*) FROM donations GROUP BY status")
+        stats["donations_by_status"] = dict(await cursor.fetchall())
+
+        cursor = await db.execute("SELECT category, COUNT(*) FROM donations GROUP BY category")
+        stats["donations_by_category"] = dict(await cursor.fetchall())
+
+        cursor = await db.execute("SELECT COUNT(*) FROM reservations WHERE status = 'received'")
+        stats["completed_donations"] = (await cursor.fetchone())[0]
+
+        return stats
+
+
+async def get_recent_donations(limit: int = 10) -> list[dict[str, Any]]:
+    async with aiosqlite.connect(DB_PATH) as db:
+        cursor = await db.execute(
+            "SELECT * FROM donations ORDER BY created_at DESC LIMIT ?", (limit,)
+        )
+        rows = await cursor.fetchall()
+        columns = [c[0] for c in cursor.description]
+        return [dict(zip(columns, row)) for row in rows]
