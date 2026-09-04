@@ -131,6 +131,12 @@ async def set_donation_status(donation_id: int, status: str) -> None:
     )
 
 
+async def delete_donation(donation_id: int) -> None:
+    await _get_pool().execute(
+        "DELETE FROM donations WHERE id = $1 AND status = 'available'", donation_id
+    )
+
+
 # --- reservations -------------------------------------------------------------
 
 async def create_reservation(
@@ -195,6 +201,28 @@ async def set_reservation_received(reservation_id: int, dua_text: str) -> None:
            WHERE id = $2""",
         dua_text,
         reservation_id,
+    )
+
+
+async def cancel_reservation(reservation_id: int) -> None:
+    await _get_pool().execute(
+        "DELETE FROM reservations WHERE id = $1 AND status = 'reserved'", reservation_id
+    )
+
+
+async def count_pending_ship(donor_id: int) -> int:
+    return await _get_pool().fetchval(
+        """SELECT COUNT(*) FROM reservations r
+           JOIN donations d ON d.id = r.donation_id
+           WHERE d.donor_id = $1 AND r.status = 'reserved'""",
+        donor_id,
+    )
+
+
+async def count_pending_receive(needy_id: int) -> int:
+    return await _get_pool().fetchval(
+        "SELECT COUNT(*) FROM reservations WHERE needy_id = $1 AND status = 'shipped'",
+        needy_id,
     )
 
 

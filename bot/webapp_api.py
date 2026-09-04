@@ -5,9 +5,13 @@ from aiogram.types import BufferedInputFile
 from aiohttp import web
 
 from bot.database import (
+    cancel_reservation,
+    count_pending_receive,
+    count_pending_ship,
     create_donation,
     create_reservation,
     create_user_if_missing,
+    delete_donation,
     get_active_reservation_for_donation,
     get_available_donations,
     get_donation,
@@ -250,6 +254,51 @@ async def api_confirm_received(request: web.Request) -> web.Response:
     return web.json_response({"ok": True})
 
 
+async def api_badges(request: web.Request) -> web.Response:
+    telegram_id = await _require_user_id(request)
+    donor_pending = await count_pending_ship(telegram_id)
+    needy_pending = await count_pending_receive(telegram_id)
+    return web.json_response({"donor_pending": donor_pending, "needy_pending": needy_pending})
+
+
+async def api_cancel_reservation(request: web.Request) -> web.Response:
+    telegram_id = await _require_user_id(request)
+    reservation_id = int(request.match_info["id"])
+
+    reservation = await get_reservation(reservation_id)
+    if not reservation or reservation["needy_id"] != telegram_id:
+        raise web.HTTPForbidden()
+    if reservation["status"] != "reserved":
+        raise web.HTTPConflict()
+
+    donation = await get_donation(reservation["donation_id"])
+    await cancel_reservation(reservation_id)
+    await set_donation_status(reservation["donation_id"], "available")
+
+    if donation:
+        donor_lang = await _lang_for(donation["donor_id"])
+        bot: Bot = request.app["bot"]
+        await bot.send_message(
+            donation["donor_id"],
+            t(donor_lang, "reservation_cancelled_notify_donor", description=donation["description"]),
+        )
+    return web.json_response({"ok": True})
+
+
+async def api_delete_donation(request: web.Request) -> web.Response:
+    telegram_id = await _require_user_id(request)
+    donation_id = int(request.match_info["id"])
+
+    donation = await get_donation(donation_id)
+    if not donation or donation["donor_id"] != telegram_id:
+        raise web.HTTPForbidden()
+    if donation["status"] != "available":
+        raise web.HTTPConflict()
+
+    await delete_donation(donation_id)
+    return web.json_response({"ok": True})
+
+
 async def api_create_donation(request: web.Request) -> web.Response:
     telegram_id = await _require_user_id(request)
     fields, photo_bytes, filename = await _read_multipart_photo(request)
@@ -330,6 +379,7 @@ def setup_api_routes(app: web.Application) -> None:
     app.router.add_post("/api/language", api_set_language)
     app.router.add_post("/api/role", api_set_role)
     app.router.add_get("/api/stats", api_stats)
+    app.router.add_get("/api/badges", api_badges)
     app.router.add_get("/api/categories", api_categories)
     app.router.add_get("/api/donations", api_donations)
     app.router.add_get("/api/my-donations", api_my_donations)
@@ -337,5 +387,7 @@ def setup_api_routes(app: web.Application) -> None:
     app.router.add_post("/api/reservations", api_create_reservation)
     app.router.add_post("/api/reservations/{id}/receive", api_confirm_received)
     app.router.add_post("/api/reservations/{id}/ship", api_ship_reservation)
+    app.router.add_post("/api/reservations/{id}/cancel", api_cancel_reservation)
     app.router.add_post("/api/donations", api_create_donation)
+    app.router.add_post("/api/donations/{id}/delete", api_delete_donation)
     app.router.add_get("/api/photo/{file_id}", api_photo)
