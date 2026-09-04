@@ -45,13 +45,14 @@
   .menu-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 12px; margin-bottom: 20px; }
   .menu-card {
     background: var(--section-bg); border: 1px solid var(--border); color: var(--text);
-    border-radius: 20px; padding: 14px 8px; font-size: 12.5px; font-weight: 600; text-align: center;
-    display: flex; flex-direction: column; align-items: center; gap: 6px; min-height: 80px; justify-content: center;
+    border-radius: 18px; padding: 10px 6px; font-size: 11.5px; font-weight: 400; text-align: center;
+    display: flex; flex-direction: column; align-items: center; gap: 5px; min-height: 66px; justify-content: center;
   }
   .menu-card .icon {
-    width: 36px; height: 36px; border-radius: 50%; border: 1.5px solid rgba(0,0,0,0.15);
-    display: flex; align-items: center; justify-content: center; font-size: 18px;
+    width: 32px; height: 32px; border-radius: 50%; border: 1.5px solid rgba(0,0,0,0.15);
+    display: flex; align-items: center; justify-content: center; font-size: 16px;
   }
+  .menu-card .icon svg { width: 16px; height: 16px; }
   label { display: block; font-size: 13.5px; color: var(--hint); margin: 16px 0 6px; }
   select, textarea, input {
     width: 100%; background: var(--section-bg); border: 1px solid var(--border); color: var(--text);
@@ -501,8 +502,8 @@
         var cards;
         if (state.me.role === "donor") {
           cards =
-            '<button class="menu-card" data-go="donor_add"><span class="icon">' + ICONS.plus + "</span>" + tr("add_donation") + "</button>" +
-            '<button class="menu-card" data-go="donor_cabinet"><span class="icon">' + ICONS.send + "</span>" + tr("my_donations") + "</button>";
+            '<button class="menu-card" data-go="donor_add"><span class="icon">' + ICONS.send + "</span>" + tr("add_donation") + "</button>" +
+            '<button class="menu-card" data-go="donor_cabinet"><span class="icon">' + ICONS.plus + "</span>" + tr("my_donations") + "</button>";
         } else {
           cards =
             '<button class="menu-card" data-go="needy_categories"><span class="icon">' + ICONS.search + "</span>" + tr("browse_donations") + "</button>" +
