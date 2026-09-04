@@ -85,6 +85,8 @@
     border-radius: 14px; padding: 18px 10px; font-size: 14px; font-weight: 500; text-align: center;
   }
   .error-box { background: rgba(229,72,77,0.15); color: #FF8A8F; border-radius: 10px; padding: 10px 12px; font-size: 13.5px; margin-top: 12px; }
+  .photo-preview { display: none; width: 100%; max-height: 220px; object-fit: cover; border-radius: 12px; margin-top: 10px; border: 1px solid var(--border); }
+  input[type="file"] { padding: 10px 12px; }
 </style>
 </head>
 <body>
@@ -106,7 +108,6 @@
       category_label: "Bo'lim", description_label: "Tavsif",
       description_placeholder: "Ehson haqida qisqacha yozing (holati, o'lchami va h.k.)",
       continue: "Davom etish",
-      photo_note: "Davom etgach, botga ehson rasmini yuborishingiz so'raladi.",
       empty_donations: "Hozircha ehsonlar yo'q.",
       take_it: "Qabul qilish",
       full_name_label: "Ism va familiya", address_label: "Manzil", phone_label: "Telefon raqami",
@@ -119,6 +120,13 @@
       already_taken: "Afsuski bu ehson allaqachon band qilingan.",
       fill_all: "Iltimos, barcha maydonlarni to'ldiring.",
       thanks_confirmed: "Rahmat! Tasdiqlandi.",
+      photo_label: "Rasm", choose_photo: "Rasm tanlash",
+      photo_note: "Ehson rasmini albatta biriktiring.",
+      photo_required: "Iltimos, rasm tanlang.",
+      receipt_note_label: "Izoh (ixtiyoriy)",
+      receipt_note_placeholder: "Masalan: qaysi kuryerlik orqali yuborildi",
+      donation_saved: "Ehsoningiz joylandi!",
+      shipment_saved: "Chek yuklandi, Muhtojga xabar berildi!",
     },
     ru: {
       choose_role: "Здравствуйте! Пожалуйста, выберите свой статус:",
@@ -129,7 +137,6 @@
       category_label: "Раздел", description_label: "Описание",
       description_placeholder: "Опишите пожертвование (состояние, размер и т.д.)",
       continue: "Продолжить",
-      photo_note: "После этого бот попросит отправить фото пожертвования.",
       empty_donations: "Пока нет доступных пожертвований.",
       take_it: "Забрать",
       full_name_label: "Полное имя", address_label: "Адрес", phone_label: "Номер телефона",
@@ -142,6 +149,13 @@
       already_taken: "К сожалению, это пожертвование уже забронировано.",
       fill_all: "Пожалуйста, заполните все поля.",
       thanks_confirmed: "Спасибо! Подтверждено.",
+      photo_label: "Фото", choose_photo: "Выбрать фото",
+      photo_note: "Обязательно прикрепите фото пожертвования.",
+      photo_required: "Пожалуйста, выберите фото.",
+      receipt_note_label: "Комментарий (необязательно)",
+      receipt_note_placeholder: "Например: через какую службу отправлено",
+      donation_saved: "Ваше пожертвование добавлено!",
+      shipment_saved: "Чек загружен, нуждающийся уведомлён!",
     },
     en: {
       choose_role: "Hello! Please choose your status:",
@@ -152,7 +166,6 @@
       category_label: "Category", description_label: "Description",
       description_placeholder: "Describe the donation (condition, size, etc.)",
       continue: "Continue",
-      photo_note: "After this, the bot will ask you to send a photo of the donation.",
       empty_donations: "No donations available yet.",
       take_it: "Take it",
       full_name_label: "Full name", address_label: "Address", phone_label: "Phone number",
@@ -165,6 +178,13 @@
       already_taken: "Sorry, this donation is already reserved.",
       fill_all: "Please fill in all fields.",
       thanks_confirmed: "Thank you! Confirmed.",
+      photo_label: "Photo", choose_photo: "Choose photo",
+      photo_note: "Please attach a photo of the donation.",
+      photo_required: "Please choose a photo.",
+      receipt_note_label: "Note (optional)",
+      receipt_note_placeholder: "e.g. which courier service",
+      donation_saved: "Your donation has been posted!",
+      shipment_saved: "Receipt uploaded, the recipient was notified!",
     }
   };
 
@@ -179,12 +199,18 @@
   }
 
   function api(method, path, body) {
-    var headers = { "Content-Type": "application/json" };
-    headers["X-Telegram-Init-Data"] = (tg && tg.initData) || "";
+    var headers = { "X-Telegram-Init-Data": (tg && tg.initData) || "" };
+    var payload;
+    if (body instanceof FormData) {
+      payload = body;
+    } else if (body !== undefined) {
+      headers["Content-Type"] = "application/json";
+      payload = JSON.stringify(body);
+    }
     return fetch(path, {
       method: method,
       headers: headers,
-      body: body !== undefined ? JSON.stringify(body) : undefined,
+      body: payload,
     }).then(function (res) {
       if (!res.ok) {
         return res.text().then(function () {
@@ -243,6 +269,21 @@
     box.className = "error-box";
     box.textContent = msg || tr("error");
     app.appendChild(box);
+  }
+
+  function wirePhotoPreview(inputId, previewId) {
+    var input = document.getElementById(inputId);
+    var preview = document.getElementById(previewId);
+    input.addEventListener("change", function () {
+      var file = input.files[0];
+      if (!file) { preview.style.display = "none"; return; }
+      var reader = new FileReader();
+      reader.onload = function (e) {
+        preview.src = e.target.result;
+        preview.style.display = "block";
+      };
+      reader.readAsDataURL(file);
+    });
   }
 
   // --- screens -----------------------------------------------------------
@@ -337,15 +378,33 @@
         '<select id="cat-select">' + options + "</select>" +
         "<label>" + tr("description_label") + "</label>" +
         '<textarea id="desc-input" placeholder="' + escapeHtml(tr("description_placeholder")) + '"></textarea>' +
+        "<label>" + tr("photo_label") + "</label>" +
+        '<input id="donation-photo-input" type="file" accept="image/*" capture="environment">' +
+        '<img id="donation-photo-preview" class="photo-preview">' +
         '<p class="note">' + tr("photo_note") + "</p>";
+
+      wirePhotoPreview("donation-photo-input", "donation-photo-preview");
 
       setMainButton(tr("continue"), function () {
         var category = document.getElementById("cat-select").value;
         var description = document.getElementById("desc-input").value.trim();
+        var file = document.getElementById("donation-photo-input").files[0];
         if (!description) { showError(tr("fill_all")); return; }
-        api("POST", "/api/donations/draft", { category: category, description: description })
-          .then(function () { if (tg) tg.close(); })
-          .catch(function () { showError(); });
+        if (!file) { showError(tr("photo_required")); return; }
+
+        var fd = new FormData();
+        fd.append("category", category);
+        fd.append("description", description);
+        fd.append("photo", file);
+
+        if (tg) tg.MainButton.showProgress();
+        api("POST", "/api/donations", fd)
+          .then(function () {
+            if (tg) { tg.MainButton.hideProgress(); if (tg.HapticFeedback) tg.HapticFeedback.notificationOccurred("success"); }
+            navStack = [];
+            goto("donor_cabinet", {}, false);
+          })
+          .catch(function () { if (tg) tg.MainButton.hideProgress(); showError(); });
       });
       setBackButton();
     }).catch(function () { showError(); });
@@ -388,15 +447,43 @@
       app.innerHTML = html;
       app.querySelectorAll("[data-ship]").forEach(function (btn) {
         btn.addEventListener("click", function () {
-          var reservationId = parseInt(btn.getAttribute("data-ship"), 10);
-          api("POST", "/api/reservations/" + reservationId + "/ship-request", {})
-            .then(function () { if (tg) tg.close(); })
-            .catch(function () { showError(); });
+          goto("donor_ship_form", { reservationId: parseInt(btn.getAttribute("data-ship"), 10) });
         });
       });
       hideMainButton();
       setBackButton();
     }).catch(function () { showError(); });
+  }
+
+  function renderDonorShipForm() {
+    app.innerHTML =
+      "<label>" + tr("photo_label") + "</label>" +
+      '<input id="ship-photo-input" type="file" accept="image/*" capture="environment">' +
+      '<img id="ship-photo-preview" class="photo-preview">' +
+      "<label>" + tr("receipt_note_label") + "</label>" +
+      '<textarea id="receipt-note-input" placeholder="' + escapeHtml(tr("receipt_note_placeholder")) + '"></textarea>';
+
+    wirePhotoPreview("ship-photo-input", "ship-photo-preview");
+
+    setMainButton(tr("send"), function () {
+      var file = document.getElementById("ship-photo-input").files[0];
+      if (!file) { showError(tr("photo_required")); return; }
+      var receiptNote = document.getElementById("receipt-note-input").value.trim();
+
+      var fd = new FormData();
+      fd.append("photo", file);
+      if (receiptNote) fd.append("receipt_note", receiptNote);
+
+      if (tg) tg.MainButton.showProgress();
+      api("POST", "/api/reservations/" + state.params.reservationId + "/ship", fd)
+        .then(function () {
+          if (tg) { tg.MainButton.hideProgress(); if (tg.HapticFeedback) tg.HapticFeedback.notificationOccurred("success"); }
+          navStack = [];
+          goto("donor_cabinet", {}, false);
+        })
+        .catch(function () { if (tg) tg.MainButton.hideProgress(); showError(); });
+    });
+    setBackButton();
   }
 
   function renderNeedyCategories() {
@@ -519,6 +606,7 @@
     home: renderHome,
     donor_add: renderDonorAdd,
     donor_cabinet: renderDonorCabinet,
+    donor_ship_form: renderDonorShipForm,
     needy_categories: renderNeedyCategories,
     needy_list: renderNeedyList,
     needy_reserve_form: renderNeedyReserveForm,

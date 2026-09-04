@@ -136,15 +136,16 @@ ochilmaydi (xavfsiz standart holat).
 
 ## Mini App (kabinet)
 
-Botning asosiy menyusida **"🏠 Kabinet"** tugmasi orqali ochiladigan
-to'liq maxsus veb-interfeys (Telegram Mini App) mavjud: til/rol tanlash,
-ehsonlarni chiroyli kartalar bilan ko'rish, Saxiy/Muhtoj kabineti, band
-qilish va "qabul qildim + duo" formalari — hammasi shu yerda. Faqat rasm
-yuklash (ehson surati, pochta cheki) texnik sabablarga ko'ra chatda
-qoladi: Mini App'da forma to'ldirilgach, bot "rasm yuboring" deb so'raydi.
+Botning asosiy menyusida **"Kabinet"** tugmasi (Telegram Menu Button)
+orqali ochiladigan to'liq maxsus veb-interfeys (Telegram Mini App)
+mavjud: til/rol tanlash, ehsonlarni chiroyli kartalar bilan ko'rish,
+Saxiy/Muhtoj kabineti, band qilish, rasm yuklash (ehson surati, pochta
+cheki) va "qabul qildim + duo" formalari — **barcha amallar shu yerda**,
+chatga chiqishning hojati yo'q.
 
-Eski chat-menyu (matnli tugmalar) ham ishlab turadi — Mini App muammoga
-duch kelsa, bot baribir to'liq ishlaydigan zaxira sifatida.
+Bot chati endi faqat bildirishnomalar uchun ishlatiladi: yangi so'rov,
+ehson yo'lga chiqqanligi va yetib borganligi haqidagi xabarlar shu yerga
+keladi, amallarning o'zi esa Mini App ichida bajariladi.
 
 **Sozlash:** hech narsa qilish shart emas — `WEBAPP_URL` Render'da
 avtomatik aniqlanadi (`RENDER_EXTERNAL_URL` orqali). Faqat Render deploy

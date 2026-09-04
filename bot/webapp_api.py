@@ -1,9 +1,11 @@
 from typing import Optional
 
 from aiogram import Bot
+from aiogram.types import BufferedInputFile
 from aiohttp import web
 
 from bot.database import (
+    create_donation,
     create_reservation,
     create_user_if_missing,
     get_active_reservation_for_donation,
@@ -14,8 +16,8 @@ from bot.database import (
     get_reservations_by_needy,
     get_user,
     set_donation_status,
-    set_pending_action,
     set_reservation_received,
+    set_reservation_shipped,
     set_user_language,
     set_user_role,
 )
@@ -39,6 +41,28 @@ async def _require_user_id(request: web.Request) -> int:
 async def _lang_for(telegram_id: int) -> str:
     user = await get_user(telegram_id)
     return (user and user["language"]) or "uz"
+
+
+async def _read_multipart_photo(request: web.Request) -> tuple[dict, bytes, str]:
+    """Mini App'dan multipart/form-data orqali kelgan matn maydonlari va rasmni o'qiydi."""
+    fields: dict[str, str] = {}
+    photo_bytes: Optional[bytes] = None
+    filename = "photo.jpg"
+
+    reader = await request.multipart()
+    while True:
+        field = await reader.next()
+        if field is None:
+            break
+        if field.name == "photo":
+            filename = field.filename or filename
+            photo_bytes = await field.read(decode=False)
+        else:
+            fields[field.name] = await field.text()
+
+    if not photo_bytes:
+        raise web.HTTPBadRequest(text="photo required")
+    return fields, photo_bytes, filename
 
 
 def _donation_json(d: dict, lang: str) -> dict:
@@ -211,26 +235,39 @@ async def api_confirm_received(request: web.Request) -> web.Response:
     return web.json_response({"ok": True})
 
 
-async def api_donation_draft(request: web.Request) -> web.Response:
+async def api_create_donation(request: web.Request) -> web.Response:
     telegram_id = await _require_user_id(request)
-    body = await request.json()
-    category = body.get("category")
-    description = (body.get("description") or "").strip()
+    fields, photo_bytes, filename = await _read_multipart_photo(request)
+    category = fields.get("category")
+    description = (fields.get("description") or "").strip()
     if category not in CATEGORIES or not description:
         raise web.HTTPBadRequest(text="missing fields")
 
     await create_user_if_missing(telegram_id)
-    await set_pending_action(
-        telegram_id, "add_donation", {"category": category, "description": description}
+    lang = await _lang_for(telegram_id)
+    bot: Bot = request.app["bot"]
+
+    sent = await bot.send_photo(
+        chat_id=telegram_id,
+        photo=BufferedInputFile(photo_bytes, filename=filename),
+        caption=t(lang, "donation_added"),
     )
-    return web.json_response({"ok": True})
+    photo_file_id = sent.photo[-1].file_id
+
+    donation_id = await create_donation(
+        donor_id=telegram_id,
+        category=category,
+        photo_file_id=photo_file_id,
+        description=description,
+    )
+    return web.json_response({"ok": True, "donation_id": donation_id})
 
 
-async def api_ship_request(request: web.Request) -> web.Response:
+async def api_ship_reservation(request: web.Request) -> web.Response:
     telegram_id = await _require_user_id(request)
     reservation_id = int(request.match_info["id"])
-    body = await request.json()
-    receipt_note = (body.get("receipt_note") or "").strip() or None
+    fields, photo_bytes, filename = await _read_multipart_photo(request)
+    receipt_note = (fields.get("receipt_note") or "").strip() or None
 
     reservation = await get_reservation(reservation_id)
     if not reservation or reservation["status"] != "reserved":
@@ -240,10 +277,24 @@ async def api_ship_request(request: web.Request) -> web.Response:
     if not donation or donation["donor_id"] != telegram_id:
         raise web.HTTPForbidden()
 
-    await set_pending_action(
-        telegram_id,
-        "ship_reservation",
-        {"reservation_id": reservation_id, "receipt_note": receipt_note},
+    lang = await _lang_for(telegram_id)
+    bot: Bot = request.app["bot"]
+
+    sent = await bot.send_photo(
+        chat_id=telegram_id,
+        photo=BufferedInputFile(photo_bytes, filename=filename),
+        caption=t(lang, "shipped_saved_donor"),
+    )
+    photo_file_id = sent.photo[-1].file_id
+
+    await set_reservation_shipped(reservation_id, photo_file_id, receipt_note)
+    await set_donation_status(donation["id"], "shipped")
+
+    needy_lang = await _lang_for(reservation["needy_id"])
+    await bot.send_photo(
+        chat_id=reservation["needy_id"],
+        photo=photo_file_id,
+        caption=t(needy_lang, "shipped_notify_needy"),
     )
     return web.json_response({"ok": True})
 
@@ -269,6 +320,6 @@ def setup_api_routes(app: web.Application) -> None:
     app.router.add_get("/api/my-requests", api_my_requests)
     app.router.add_post("/api/reservations", api_create_reservation)
     app.router.add_post("/api/reservations/{id}/receive", api_confirm_received)
-    app.router.add_post("/api/reservations/{id}/ship-request", api_ship_request)
-    app.router.add_post("/api/donations/draft", api_donation_draft)
+    app.router.add_post("/api/reservations/{id}/ship", api_ship_reservation)
+    app.router.add_post("/api/donations", api_create_donation)
     app.router.add_get("/api/photo/{file_id}", api_photo)
