@@ -26,7 +26,7 @@ async def start_webserver(bot: Bot) -> None:
     uxlab qoladi. Shu server ustiga /admin (statistika paneli) va
     /webapp + /api/* (Telegram Mini App) ham qo'shilgan.
     """
-    app = web.Application()
+    app = web.Application(client_max_size=10 * 1024 * 1024)
     app["bot"] = bot
     app.router.add_get("/", _health)
     app.router.add_get("/admin", dashboard_handler)

@@ -9,7 +9,7 @@ from aiogram.types import MenuButtonWebApp, WebAppInfo
 
 from bot.config import BOT_TOKEN, WEBAPP_URL
 from bot.database import init_db
-from bot.handlers import donor, needy, start, webapp
+from bot.handlers import start
 from bot.keepalive import start_webserver
 
 
@@ -21,9 +21,6 @@ async def main() -> None:
     dp = Dispatcher(storage=MemoryStorage())
 
     dp.include_router(start.router)
-    dp.include_router(donor.router)
-    dp.include_router(needy.router)
-    dp.include_router(webapp.router)
 
     await start_webserver(bot)
 
