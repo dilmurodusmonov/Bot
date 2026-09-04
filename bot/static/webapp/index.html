@@ -95,17 +95,18 @@
   .stats-label { color: var(--hint); font-size: 13px; }
   .stats-value { font-size: 34px; font-weight: 800; margin: 4px 0; letter-spacing: -0.5px; }
   .stats-delivered { color: #3FCF7F; font-size: 13.5px; font-weight: 600; }
-  .ads-row {
-    display: flex; gap: 10px; overflow-x: auto; margin-bottom: 20px; padding-bottom: 2px;
-    scroll-snap-type: x mandatory;
+  .ad-banner { position: relative; height: 84px; border-radius: 16px; overflow: hidden; margin-bottom: 10px; }
+  .ad-slide {
+    position: absolute; inset: 0; display: flex; align-items: center; padding: 0 18px;
+    color: #fff; font-weight: 600; font-size: 14px; opacity: 0; transition: opacity .5s ease;
   }
-  .ad-card {
-    flex: 0 0 82%; scroll-snap-align: start; height: 84px; border-radius: 16px;
-    display: flex; align-items: center; padding: 0 18px; color: #fff; font-weight: 600; font-size: 14px;
-    background: linear-gradient(135deg, var(--accent1), var(--accent2));
-  }
-  .ad-card.ad-2 { background: linear-gradient(135deg, #4EA4F5, #7C6CF5); }
-  .ad-card.ad-3 { background: linear-gradient(135deg, #3FCF7F, #2AA968); }
+  .ad-slide.active { opacity: 1; }
+  .ad-slide.ad-1 { background: linear-gradient(135deg, var(--accent1), var(--accent2)); }
+  .ad-slide.ad-2 { background: linear-gradient(135deg, #4EA4F5, #7C6CF5); }
+  .ad-slide.ad-3 { background: linear-gradient(135deg, #3FCF7F, #2AA968); }
+  .ad-dots { display: flex; gap: 6px; justify-content: center; margin-bottom: 20px; }
+  .ad-dot { width: 6px; height: 6px; border-radius: 3px; background: var(--border); transition: all .3s ease; }
+  .ad-dot.active { width: 18px; background: var(--blue); }
   .section-title { font-size: 13.5px; color: var(--hint); margin: 4px 0 10px; }
   .cat-list { display: flex; flex-direction: column; gap: 8px; }
   .cat-row {
@@ -236,6 +237,9 @@
 
   var state = { screen: "loading", params: {}, me: { language: null, role: null }, lang: "uz" };
   var navStack = [];
+  var adTimer = null;
+  var AD_COUNT = 3;
+  var AD_INTERVAL_MS = 4000;
 
   function tr(key) { return (UI[state.lang] && UI[state.lang][key]) || UI.uz[key] || key; }
   function escapeHtml(s) {
@@ -451,10 +455,15 @@
         }
 
         var adsHtml =
-          '<div class="ads-row">' +
-          '<div class="ad-card ad-1">' + escapeHtml(tr("ad_placeholder")) + " 1</div>" +
-          '<div class="ad-card ad-2">' + escapeHtml(tr("ad_placeholder")) + " 2</div>" +
-          '<div class="ad-card ad-3">' + escapeHtml(tr("ad_placeholder")) + " 3</div>" +
+          '<div class="ad-banner" id="ad-banner">' +
+          '<div class="ad-slide ad-1 active">' + escapeHtml(tr("ad_placeholder")) + " 1</div>" +
+          '<div class="ad-slide ad-2">' + escapeHtml(tr("ad_placeholder")) + " 2</div>" +
+          '<div class="ad-slide ad-3">' + escapeHtml(tr("ad_placeholder")) + " 3</div>" +
+          "</div>" +
+          '<div class="ad-dots" id="ad-dots">' +
+          '<span class="ad-dot active" data-i="0"></span>' +
+          '<span class="ad-dot" data-i="1"></span>' +
+          '<span class="ad-dot" data-i="2"></span>' +
           "</div>";
 
         var catsHtml = '<div class="cat-list">' + categories.map(function (c) {
@@ -485,6 +494,7 @@
         var cameraEl = document.getElementById("camera-btn");
         if (cameraEl) cameraEl.addEventListener("click", function () { goto("donor_add"); });
 
+        startAdCarousel();
         hideMainButton();
         setBackButton();
       })
@@ -744,9 +754,26 @@
   };
 
   function render() {
+    if (adTimer) { clearInterval(adTimer); adTimer = null; }
     var fn = screens[state.screen] || renderHome;
     fn();
     updateBottomNav();
+  }
+
+  function startAdCarousel() {
+    var index = 0;
+    adTimer = setInterval(function () {
+      index = (index + 1) % AD_COUNT;
+      var banner = document.getElementById("ad-banner");
+      var dots = document.getElementById("ad-dots");
+      if (!banner || !dots) { clearInterval(adTimer); adTimer = null; return; }
+      banner.querySelectorAll(".ad-slide").forEach(function (el, i) {
+        el.classList.toggle("active", i === index);
+      });
+      dots.querySelectorAll(".ad-dot").forEach(function (el, i) {
+        el.classList.toggle("active", i === index);
+      });
+    }, AD_INTERVAL_MS);
   }
 
   api("GET", "/api/me")
