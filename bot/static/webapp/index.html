@@ -114,13 +114,17 @@
   }
   .ad-dot { width: 6px; height: 6px; border-radius: 3px; background: rgba(255,255,255,0.45); transition: all .3s ease; }
   .ad-dot.active { width: 18px; background: #fff; }
-  .section-title { font-size: 13.5px; color: var(--hint); margin: 4px 0 10px; }
-  .cat-list { display: flex; flex-direction: column; gap: 8px; }
+  .section-card {
+    background: #F2F3F5; border-radius: 20px; padding: 14px 12px; margin-bottom: 20px;
+  }
+  .section-title-blue { font-size: 13.5px; color: #1C93F3; font-weight: 700; margin: 2px 6px 10px; }
+  .cat-list { display: flex; flex-direction: column; }
   .cat-row {
     display: flex; align-items: center; gap: 12px; width: 100%; text-align: left;
-    background: var(--section-bg); border: 1px solid var(--border); color: var(--text);
-    border-radius: 14px; padding: 14px; font-size: 15px;
+    background: none; border: none; border-bottom: 1px solid rgba(0,0,0,0.07);
+    color: #1C1C1E; padding: 12px 6px; font-size: 15px;
   }
+  .cat-row:last-child { border-bottom: none; }
   .cat-row-icon {
     width: 40px; height: 40px; border-radius: 50%; flex-shrink: 0;
     background: rgba(120,140,160,0.15); display: flex; align-items: center; justify-content: center;
@@ -129,9 +133,9 @@
   .cat-row-name { flex: 1; }
   .cat-row-stats { display: flex; align-items: baseline; gap: 1px; font-weight: 700; font-size: 14.5px; }
   .cat-row-total { color: var(--accent2); }
-  .cat-row-slash { color: var(--hint); }
+  .cat-row-slash { color: #9AA3AF; }
   .cat-row-delivered { color: #3FCF7F; }
-  .cat-row-arrow { color: var(--hint); font-size: 18px; }
+  .cat-row-arrow { color: #9AA3AF; font-size: 18px; }
   .bottom-nav {
     position: fixed; left: 50%; bottom: max(12px, env(safe-area-inset-bottom));
     transform: translateX(-50%);
@@ -528,8 +532,10 @@
           "</div>" +
           '<div class="menu-grid">' + cards + "</div>" +
           adsHtml +
-          '<div class="section-title">' + tr("browse_donations") + "</div>" +
-          catsHtml;
+          '<div class="section-card">' +
+          '<div class="section-title-blue">' + tr("browse_donations") + "</div>" +
+          catsHtml +
+          "</div>";
 
         app.querySelectorAll("[data-go]").forEach(function (btn) {
           btn.addEventListener("click", function () { goto(btn.getAttribute("data-go")); });
