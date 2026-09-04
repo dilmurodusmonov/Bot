@@ -121,6 +121,11 @@
     background: var(--section-bg); border: 1px solid var(--border); color: var(--text);
     border-radius: 14px; padding: 14px; font-size: 15px;
   }
+  .cat-row-icon {
+    width: 40px; height: 40px; border-radius: 50%; flex-shrink: 0;
+    background: rgba(120,140,160,0.15); display: flex; align-items: center; justify-content: center;
+    font-size: 20px;
+  }
   .cat-row-name { flex: 1; }
   .cat-row-stats { display: flex; align-items: baseline; gap: 1px; font-weight: 700; font-size: 14.5px; }
   .cat-row-total { color: var(--accent2); }
@@ -500,8 +505,12 @@
 
         var catsHtml = '<div class="cat-list">' + categories.map(function (c) {
           var cs = (stats.by_category && stats.by_category[c.key]) || { total: 0, delivered: 0 };
+          var labelParts = c.label.split(" ");
+          var emoji = labelParts[0];
+          var name = labelParts.slice(1).join(" ");
           return '<button class="cat-row" data-cat="' + c.key + '">' +
-            '<span class="cat-row-name">' + escapeHtml(c.label) + "</span>" +
+            '<span class="cat-row-icon">' + escapeHtml(emoji) + "</span>" +
+            '<span class="cat-row-name">' + escapeHtml(name) + "</span>" +
             '<span class="cat-row-stats">' +
             '<span class="cat-row-total">' + formatCount(cs.total) + "</span>" +
             '<span class="cat-row-slash">/</span>' +
