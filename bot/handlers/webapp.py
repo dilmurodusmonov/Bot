@@ -1,38 +1,63 @@
-import json
-
 from aiogram import F, Router
-from aiogram.fsm.context import FSMContext
+from aiogram.filters import StateFilter
 from aiogram.types import Message
 
-from bot.states import DonorAddDonation, DonorShipment
-from bot.utils import get_lang, with_cancel_hint
+from bot.database import (
+    clear_pending_action,
+    create_donation,
+    get_pending_action,
+    get_reservation,
+    set_donation_status,
+    set_reservation_shipped,
+)
+from bot.keyboards import confirm_received_keyboard
+from bot.texts import t
+from bot.utils import get_lang
 
 router = Router()
 
 
-@router.message(F.web_app_data)
-async def web_app_data_received(message: Message, state: FSMContext) -> None:
-    lang = await get_lang(message.from_user.id)
-    try:
-        payload = json.loads(message.web_app_data.data)
-    except (ValueError, AttributeError):
+@router.message(StateFilter(None), F.photo)
+async def photo_for_pending_action(message: Message) -> None:
+    """Mini App orqali boshlangan (ehson qo'shish / chek yuklash) amalni
+    chatdan kelgan rasm bilan yakunlaydi. Faqat hech qanday chat-FSM
+    holati faol bo'lmaganda ishlaydi — eski chat oqimiga xalaqit bermaydi.
+    """
+    pending = await get_pending_action(message.from_user.id)
+    if not pending:
         return
 
-    action = payload.get("type")
+    lang = await get_lang(message.from_user.id)
+    photo_file_id = message.photo[-1].file_id
+    payload = pending["payload"]
 
-    if action == "start_add_donation":
-        category = payload.get("category")
-        description = (payload.get("description") or "").strip()
-        if not category or not description:
-            return
-        await state.set_state(DonorAddDonation.uploading_photo)
-        await state.update_data(category=category, description=description)
-        await message.answer(with_cancel_hint(lang, "ask_photo"))
+    if pending["action"] == "add_donation":
+        await create_donation(
+            donor_id=message.from_user.id,
+            category=payload["category"],
+            photo_file_id=photo_file_id,
+            description=payload["description"],
+        )
+        await clear_pending_action(message.from_user.id)
+        await message.answer(t(lang, "donation_added"))
 
-    elif action == "start_shipment":
-        reservation_id = payload.get("reservation_id")
-        if not reservation_id:
+    elif pending["action"] == "ship_reservation":
+        reservation_id = payload["reservation_id"]
+        reservation = await get_reservation(reservation_id)
+        if not reservation:
+            await clear_pending_action(message.from_user.id)
             return
-        await state.set_state(DonorShipment.uploading_receipt)
-        await state.update_data(reservation_id=reservation_id)
-        await message.answer(with_cancel_hint(lang, "ask_receipt_photo"))
+
+        await set_reservation_shipped(reservation_id, photo_file_id, payload.get("receipt_note"))
+        await set_donation_status(reservation["donation_id"], "shipped")
+        await clear_pending_action(message.from_user.id)
+
+        await message.answer(t(lang, "shipped_saved_donor"))
+
+        needy_lang = await get_lang(reservation["needy_id"])
+        await message.bot.send_photo(
+            chat_id=reservation["needy_id"],
+            photo=photo_file_id,
+            caption=t(needy_lang, "shipped_notify_needy"),
+            reply_markup=confirm_received_keyboard(needy_lang, reservation_id),
+        )

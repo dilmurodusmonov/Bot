@@ -343,9 +343,9 @@
         var category = document.getElementById("cat-select").value;
         var description = document.getElementById("desc-input").value.trim();
         if (!description) { showError(tr("fill_all")); return; }
-        if (tg) {
-          tg.sendData(JSON.stringify({ type: "start_add_donation", category: category, description: description }));
-        }
+        api("POST", "/api/donations/draft", { category: category, description: description })
+          .then(function () { if (tg) tg.close(); })
+          .catch(function () { showError(); });
       });
       setBackButton();
     }).catch(function () { showError(); });
@@ -389,9 +389,9 @@
       app.querySelectorAll("[data-ship]").forEach(function (btn) {
         btn.addEventListener("click", function () {
           var reservationId = parseInt(btn.getAttribute("data-ship"), 10);
-          if (tg) {
-            tg.sendData(JSON.stringify({ type: "start_shipment", reservation_id: reservationId }));
-          }
+          api("POST", "/api/reservations/" + reservationId + "/ship-request", {})
+            .then(function () { if (tg) tg.close(); })
+            .catch(function () { showError(); });
         });
       });
       hideMainButton();

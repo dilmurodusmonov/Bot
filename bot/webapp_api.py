@@ -1,4 +1,3 @@
-import logging
 from typing import Optional
 
 from aiogram import Bot
@@ -15,6 +14,7 @@ from bot.database import (
     get_reservations_by_needy,
     get_user,
     set_donation_status,
+    set_pending_action,
     set_reservation_received,
     set_user_language,
     set_user_role,
@@ -26,12 +26,6 @@ from bot.webapp_auth import validate_init_data
 def _auth_telegram_id(request: web.Request) -> Optional[int]:
     init_data = request.headers.get("X-Telegram-Init-Data", "")
     user = validate_init_data(init_data)
-    logging.info(
-        "WEBAPP AUTH DEBUG: header_len=%d raw=%r result=%r",
-        len(init_data),
-        init_data,
-        user,
-    )
     return user["id"] if user else None
 
 
@@ -217,6 +211,43 @@ async def api_confirm_received(request: web.Request) -> web.Response:
     return web.json_response({"ok": True})
 
 
+async def api_donation_draft(request: web.Request) -> web.Response:
+    telegram_id = await _require_user_id(request)
+    body = await request.json()
+    category = body.get("category")
+    description = (body.get("description") or "").strip()
+    if category not in CATEGORIES or not description:
+        raise web.HTTPBadRequest(text="missing fields")
+
+    await create_user_if_missing(telegram_id)
+    await set_pending_action(
+        telegram_id, "add_donation", {"category": category, "description": description}
+    )
+    return web.json_response({"ok": True})
+
+
+async def api_ship_request(request: web.Request) -> web.Response:
+    telegram_id = await _require_user_id(request)
+    reservation_id = int(request.match_info["id"])
+    body = await request.json()
+    receipt_note = (body.get("receipt_note") or "").strip() or None
+
+    reservation = await get_reservation(reservation_id)
+    if not reservation or reservation["status"] != "reserved":
+        raise web.HTTPConflict()
+
+    donation = await get_donation(reservation["donation_id"])
+    if not donation or donation["donor_id"] != telegram_id:
+        raise web.HTTPForbidden()
+
+    await set_pending_action(
+        telegram_id,
+        "ship_reservation",
+        {"reservation_id": reservation_id, "receipt_note": receipt_note},
+    )
+    return web.json_response({"ok": True})
+
+
 async def api_photo(request: web.Request) -> web.Response:
     file_id = request.match_info["file_id"]
     bot: Bot = request.app["bot"]
@@ -238,4 +269,6 @@ def setup_api_routes(app: web.Application) -> None:
     app.router.add_get("/api/my-requests", api_my_requests)
     app.router.add_post("/api/reservations", api_create_reservation)
     app.router.add_post("/api/reservations/{id}/receive", api_confirm_received)
+    app.router.add_post("/api/reservations/{id}/ship-request", api_ship_request)
+    app.router.add_post("/api/donations/draft", api_donation_draft)
     app.router.add_get("/api/photo/{file_id}", api_photo)
