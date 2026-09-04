@@ -228,6 +228,17 @@ async def get_stats() -> dict[str, Any]:
     return stats
 
 
+async def get_category_stats() -> dict[str, dict[str, int]]:
+    rows = await _get_pool().fetch(
+        """SELECT category,
+                  COUNT(*) AS total,
+                  COUNT(*) FILTER (WHERE status = 'received') AS delivered
+           FROM donations
+           GROUP BY category"""
+    )
+    return {row["category"]: {"total": row["total"], "delivered": row["delivered"]} for row in rows}
+
+
 async def get_recent_donations(limit: int = 10) -> list[dict[str, Any]]:
     rows = await _get_pool().fetch(
         "SELECT * FROM donations ORDER BY created_at DESC LIMIT $1", limit

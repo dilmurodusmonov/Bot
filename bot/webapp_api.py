@@ -13,6 +13,7 @@ from bot.database import (
     get_donation,
     get_donations_by_donor,
     get_reservation,
+    get_category_stats,
     get_reservations_by_needy,
     get_stats,
     get_user,
@@ -110,10 +111,12 @@ async def api_set_role(request: web.Request) -> web.Response:
 async def api_stats(request: web.Request) -> web.Response:
     await _require_user_id(request)
     stats = await get_stats()
+    by_category = await get_category_stats()
     return web.json_response(
         {
             "total_donations": stats["total_donations"],
             "delivered_donations": stats["completed_donations"],
+            "by_category": by_category,
         }
     )
 

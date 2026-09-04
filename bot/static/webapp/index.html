@@ -122,6 +122,9 @@
     border-radius: 14px; padding: 14px; font-size: 15px;
   }
   .cat-row-name { flex: 1; }
+  .cat-row-stats { display: flex; flex-direction: column; align-items: flex-end; }
+  .cat-row-total { font-weight: 700; font-size: 14.5px; }
+  .cat-row-delivered { color: #3FCF7F; font-size: 11.5px; font-weight: 600; margin-top: 2px; }
   .cat-row-arrow { color: var(--hint); font-size: 18px; }
   .bottom-nav {
     position: fixed; left: 50%; bottom: max(12px, env(safe-area-inset-bottom));
@@ -495,8 +498,14 @@
           "</div>";
 
         var catsHtml = '<div class="cat-list">' + categories.map(function (c) {
-          return '<button class="cat-row" data-cat="' + c.key + '"><span class="cat-row-name">' +
-            escapeHtml(c.label) + '</span><span class="cat-row-arrow">›</span></button>';
+          var cs = (stats.by_category && stats.by_category[c.key]) || { total: 0, delivered: 0 };
+          return '<button class="cat-row" data-cat="' + c.key + '">' +
+            '<span class="cat-row-name">' + escapeHtml(c.label) + "</span>" +
+            '<span class="cat-row-stats">' +
+            '<span class="cat-row-total">' + formatCount(cs.total) + "</span>" +
+            '<span class="cat-row-delivered">✅ ' + formatCount(cs.delivered) + "</span>" +
+            "</span>" +
+            '<span class="cat-row-arrow">›</span></button>';
         }).join("") + "</div>";
 
         app.innerHTML =
