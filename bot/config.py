@@ -9,6 +9,9 @@ DATABASE_URL = os.getenv("DATABASE_URL")
 ADMIN_USERNAME = os.getenv("ADMIN_USERNAME", "admin")
 ADMIN_PASSWORD = os.getenv("ADMIN_PASSWORD", "")
 
+_base_url = (os.getenv("WEBAPP_URL") or os.getenv("RENDER_EXTERNAL_URL") or "").rstrip("/")
+WEBAPP_URL = f"{_base_url}/webapp" if _base_url else None
+
 if not BOT_TOKEN:
     raise RuntimeError(
         "BOT_TOKEN topilmadi. .env faylini yarating (.env.example asosida) "

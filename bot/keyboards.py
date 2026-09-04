@@ -3,11 +3,19 @@ from aiogram.types import (
     InlineKeyboardMarkup,
     KeyboardButton,
     ReplyKeyboardMarkup,
+    WebAppInfo,
 )
 
+from bot.config import WEBAPP_URL
 from bot.texts import CATEGORIES, LANGUAGES, t
 
 LANGUAGE_FLAGS = {"uz": "🇺🇿 O'zbekcha", "ru": "🇷🇺 Русский", "en": "🇬🇧 English"}
+
+
+def _kabinet_row(lang: str) -> list[KeyboardButton]:
+    if not WEBAPP_URL:
+        return []
+    return [KeyboardButton(text=t(lang, "btn_kabinet"), web_app=WebAppInfo(url=WEBAPP_URL))]
 
 
 def language_keyboard() -> InlineKeyboardMarkup:
@@ -37,31 +45,29 @@ def category_keyboard(lang: str) -> InlineKeyboardMarkup:
 
 
 def donor_main_menu(lang: str) -> ReplyKeyboardMarkup:
-    return ReplyKeyboardMarkup(
-        keyboard=[
-            [KeyboardButton(text=t(lang, "btn_add_donation"))],
-            [KeyboardButton(text=t(lang, "btn_my_donations"))],
-            [
-                KeyboardButton(text=t(lang, "btn_change_language")),
-                KeyboardButton(text=t(lang, "btn_change_role")),
-            ],
+    rows = [
+        _kabinet_row(lang),
+        [KeyboardButton(text=t(lang, "btn_add_donation"))],
+        [KeyboardButton(text=t(lang, "btn_my_donations"))],
+        [
+            KeyboardButton(text=t(lang, "btn_change_language")),
+            KeyboardButton(text=t(lang, "btn_change_role")),
         ],
-        resize_keyboard=True,
-    )
+    ]
+    return ReplyKeyboardMarkup(keyboard=[row for row in rows if row], resize_keyboard=True)
 
 
 def needy_main_menu(lang: str) -> ReplyKeyboardMarkup:
-    return ReplyKeyboardMarkup(
-        keyboard=[
-            [KeyboardButton(text=t(lang, "btn_browse_donations"))],
-            [KeyboardButton(text=t(lang, "btn_my_requests"))],
-            [
-                KeyboardButton(text=t(lang, "btn_change_language")),
-                KeyboardButton(text=t(lang, "btn_change_role")),
-            ],
+    rows = [
+        _kabinet_row(lang),
+        [KeyboardButton(text=t(lang, "btn_browse_donations"))],
+        [KeyboardButton(text=t(lang, "btn_my_requests"))],
+        [
+            KeyboardButton(text=t(lang, "btn_change_language")),
+            KeyboardButton(text=t(lang, "btn_change_role")),
         ],
-        resize_keyboard=True,
-    )
+    ]
+    return ReplyKeyboardMarkup(keyboard=[row for row in rows if row], resize_keyboard=True)
 
 
 def main_menu(lang: str, role: str) -> ReplyKeyboardMarkup:

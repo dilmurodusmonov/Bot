@@ -45,7 +45,22 @@ async def category_chosen(callback: CallbackQuery, state: FSMContext) -> None:
 @router.message(DonorAddDonation.uploading_photo, F.photo)
 async def photo_uploaded(message: Message, state: FSMContext) -> None:
     lang = await get_lang(message.from_user.id)
-    await state.update_data(photo_file_id=message.photo[-1].file_id)
+    photo_file_id = message.photo[-1].file_id
+    data = await state.get_data()
+
+    if "description" in data:
+        # Kabinet (Mini App) orqali kategoriya va tavsif allaqachon yuborilgan.
+        await create_donation(
+            donor_id=message.from_user.id,
+            category=data["category"],
+            photo_file_id=photo_file_id,
+            description=data["description"],
+        )
+        await state.clear()
+        await message.answer(t(lang, "donation_added"))
+        return
+
+    await state.update_data(photo_file_id=photo_file_id)
     await state.set_state(DonorAddDonation.entering_description)
     await message.answer(with_cancel_hint(lang, "ask_description"))
 
