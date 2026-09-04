@@ -10,15 +10,15 @@
 <script src="https://telegram.org/js/telegram-web-app.js"></script>
 <style>
   :root {
-    --bg: var(--tg-theme-bg-color, #0E1420);
-    --secondary-bg: var(--tg-theme-secondary-bg-color, #171E27);
-    --text: var(--tg-theme-text-color, #E8EDF2);
-    --hint: var(--tg-theme-hint-color, #7C8A99);
-    --section-bg: var(--tg-theme-section-bg-color, #171E27);
-    --border: rgba(255,255,255,0.08);
+    --bg: var(--tg-theme-bg-color, #F2F3F5);
+    --secondary-bg: var(--tg-theme-secondary-bg-color, #FFFFFF);
+    --text: var(--tg-theme-text-color, #1C1C1E);
+    --hint: var(--tg-theme-hint-color, #8E96A3);
+    --section-bg: var(--tg-theme-section-bg-color, #FFFFFF);
+    --border: rgba(0,0,0,0.08);
     --accent1: #FF9A5C;
     --accent2: #E5484D;
-    --blue: var(--tg-theme-link-color, #4EA4F5);
+    --blue: var(--tg-theme-link-color, #1C93F3);
   }
   * { box-sizing: border-box; -webkit-tap-highlight-color: transparent; }
   html, body {
@@ -66,13 +66,13 @@
   .card-desc { font-size: 15px; line-height: 1.4; margin-bottom: 8px; }
   .pill {
     display: inline-block; padding: 3px 10px; border-radius: 20px; font-size: 12px;
-    background: rgba(255,255,255,0.08); margin-bottom: 8px;
+    background: rgba(0,0,0,0.06); margin-bottom: 8px;
   }
   .pill-available { color: #9AA7B3; }
   .pill-reserved { color: #FFB454; }
   .pill-shipped { color: #4EA4F5; }
   .pill-received { color: #3FCF7F; }
-  .info-box { background: rgba(255,255,255,0.05); border-radius: 10px; padding: 10px 12px; font-size: 13.5px; line-height: 1.6; margin-top: 8px; }
+  .info-box { background: rgba(0,0,0,0.04); border-radius: 10px; padding: 10px 12px; font-size: 13.5px; line-height: 1.6; margin-top: 8px; }
   .info-box .row { display: flex; gap: 6px; }
   .card-btn {
     margin-top: 10px; width: 100%; background: linear-gradient(135deg, var(--accent1), var(--accent2));
@@ -84,7 +84,7 @@
     background: var(--section-bg); border: 1px solid var(--border); color: var(--text);
     border-radius: 14px; padding: 18px 10px; font-size: 14px; font-weight: 500; text-align: center;
   }
-  .error-box { background: rgba(229,72,77,0.15); color: #FF8A8F; border-radius: 10px; padding: 10px 12px; font-size: 13.5px; margin-top: 12px; }
+  .error-box { background: rgba(229,72,77,0.12); color: #C0392B; border-radius: 10px; padding: 10px 12px; font-size: 13.5px; margin-top: 12px; }
   .photo-preview { display: none; width: 100%; max-height: 220px; object-fit: cover; border-radius: 12px; margin-top: 10px; border: 1px solid var(--border); }
   input[type="file"] { padding: 10px 12px; }
 
@@ -115,7 +115,7 @@
   .ad-dot { width: 6px; height: 6px; border-radius: 3px; background: rgba(255,255,255,0.45); transition: all .3s ease; }
   .ad-dot.active { width: 18px; background: #fff; }
   .section-card {
-    background: #F2F3F5; border-radius: 20px; padding: 14px 12px; margin-bottom: 20px;
+    background: #FFFFFF; border-radius: 20px; padding: 14px 12px; margin-bottom: 20px;
   }
   .section-title-blue { font-size: 13.5px; color: #1C93F3; font-weight: 700; margin: 2px 6px 10px; }
   .cat-list { display: flex; flex-direction: column; }
