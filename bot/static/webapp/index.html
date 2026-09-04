@@ -22,7 +22,7 @@
     margin: 0; padding: 0; background: var(--bg); color: var(--text);
     font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Helvetica, Arial, sans-serif;
   }
-  #app { min-height: 100vh; padding: 16px 16px 32px; }
+  #app { min-height: 100vh; padding: 16px 16px 90px; }
   .center-loader { display: flex; align-items: center; justify-content: center; height: 80vh; color: var(--hint); }
   .brand { display: flex; align-items: center; gap: 12px; margin-bottom: 20px; }
   .avatar {
@@ -45,10 +45,6 @@
     display: flex; flex-direction: column; align-items: center; gap: 8px; min-height: 96px; justify-content: center;
   }
   .menu-card .icon { font-size: 26px; }
-  .link-btn {
-    background: none; border: none; color: var(--blue); font-size: 14.5px; padding: 10px 0;
-    display: block; width: 100%; text-align: center;
-  }
   label { display: block; font-size: 13.5px; color: var(--hint); margin: 16px 0 6px; }
   select, textarea, input {
     width: 100%; background: var(--section-bg); border: 1px solid var(--border); color: var(--text);
@@ -87,10 +83,57 @@
   .error-box { background: rgba(229,72,77,0.15); color: #FF8A8F; border-radius: 10px; padding: 10px 12px; font-size: 13.5px; margin-top: 12px; }
   .photo-preview { display: none; width: 100%; max-height: 220px; object-fit: cover; border-radius: 12px; margin-top: 10px; border: 1px solid var(--border); }
   input[type="file"] { padding: 10px 12px; }
+
+  .top-bar { display: flex; align-items: center; justify-content: space-between; margin-bottom: 18px; }
+  .avatar-img { width: 44px; height: 44px; border-radius: 50%; object-fit: cover; flex-shrink: 0; }
+  .icon-btn {
+    width: 44px; height: 44px; border-radius: 50%; background: var(--section-bg);
+    border: 1px solid var(--border); color: var(--text); font-size: 19px;
+    display: flex; align-items: center; justify-content: center; flex-shrink: 0;
+  }
+  .stats-block { text-align: center; margin-bottom: 20px; }
+  .stats-label { color: var(--hint); font-size: 13px; }
+  .stats-value { font-size: 34px; font-weight: 800; margin: 4px 0; letter-spacing: -0.5px; }
+  .stats-delivered { color: #3FCF7F; font-size: 13.5px; font-weight: 600; }
+  .ads-row {
+    display: flex; gap: 10px; overflow-x: auto; margin-bottom: 20px; padding-bottom: 2px;
+    scroll-snap-type: x mandatory;
+  }
+  .ad-card {
+    flex: 0 0 82%; scroll-snap-align: start; height: 84px; border-radius: 16px;
+    display: flex; align-items: center; padding: 0 18px; color: #fff; font-weight: 600; font-size: 14px;
+    background: linear-gradient(135deg, var(--accent1), var(--accent2));
+  }
+  .ad-card.ad-2 { background: linear-gradient(135deg, #4EA4F5, #7C6CF5); }
+  .ad-card.ad-3 { background: linear-gradient(135deg, #3FCF7F, #2AA968); }
+  .section-title { font-size: 13.5px; color: var(--hint); margin: 4px 0 10px; }
+  .cat-list { display: flex; flex-direction: column; gap: 8px; }
+  .cat-row {
+    display: flex; align-items: center; gap: 12px; width: 100%; text-align: left;
+    background: var(--section-bg); border: 1px solid var(--border); color: var(--text);
+    border-radius: 14px; padding: 14px; font-size: 15px;
+  }
+  .cat-row-name { flex: 1; }
+  .cat-row-arrow { color: var(--hint); font-size: 18px; }
+  .bottom-nav {
+    position: fixed; left: 0; right: 0; bottom: 0; display: flex;
+    background: var(--secondary-bg); border-top: 1px solid var(--border);
+    padding: 8px 0 max(8px, env(safe-area-inset-bottom)); z-index: 10;
+  }
+  .nav-tab {
+    flex: 1; display: flex; flex-direction: column; align-items: center; gap: 2px;
+    background: none; border: none; color: var(--hint); font-size: 11.5px; padding: 6px 0;
+  }
+  .nav-tab.active { color: var(--blue); }
+  .nav-icon { font-size: 20px; }
 </style>
 </head>
 <body>
 <div id="app"><div class="center-loader">Yuklanmoqda...</div></div>
+<div id="bottom-nav" class="bottom-nav" hidden>
+  <button class="nav-tab" data-role="donor"><span class="nav-icon">🤲</span><span data-tab-label="donor">Saxiy</span></button>
+  <button class="nav-tab" data-role="needy"><span class="nav-icon">🙏</span><span data-tab-label="needy">Muhtoj</span></button>
+</div>
 <script>
 (function () {
   "use strict";
@@ -104,7 +147,6 @@
       role_donor: "Saxiy", role_needy: "Muhtoj",
       add_donation: "Ehson qo'shish", my_donations: "Mening ehsonlarim",
       browse_donations: "Ehsonlarni ko'rish", my_requests: "Mening so'rovlarim",
-      switch_role: "Rolni almashtirish",
       category_label: "Bo'lim", description_label: "Tavsif",
       description_placeholder: "Ehson haqida qisqacha yozing (holati, o'lchami va h.k.)",
       continue: "Davom etish",
@@ -127,13 +169,14 @@
       receipt_note_placeholder: "Masalan: qaysi kuryerlik orqali yuborildi",
       donation_saved: "Ehsoningiz joylandi!",
       shipment_saved: "Chek yuklandi, Muhtojga xabar berildi!",
+      stats_label: "Jami ehsonlar", delivered_suffix: "ta yetkazildi",
+      ad_placeholder: "Reklama joyi",
     },
     ru: {
       choose_role: "Здравствуйте! Пожалуйста, выберите свой статус:",
       role_donor: "Благотворитель", role_needy: "Нуждающийся",
       add_donation: "Добавить пожертвование", my_donations: "Мои пожертвования",
       browse_donations: "Посмотреть пожертвования", my_requests: "Мои заявки",
-      switch_role: "Сменить статус",
       category_label: "Раздел", description_label: "Описание",
       description_placeholder: "Опишите пожертвование (состояние, размер и т.д.)",
       continue: "Продолжить",
@@ -156,13 +199,14 @@
       receipt_note_placeholder: "Например: через какую службу отправлено",
       donation_saved: "Ваше пожертвование добавлено!",
       shipment_saved: "Чек загружен, нуждающийся уведомлён!",
+      stats_label: "Всего пожертвований", delivered_suffix: "доставлено",
+      ad_placeholder: "Место для рекламы",
     },
     en: {
       choose_role: "Hello! Please choose your status:",
       role_donor: "Donor", role_needy: "In need",
       add_donation: "Add donation", my_donations: "My donations",
       browse_donations: "Browse donations", my_requests: "My requests",
-      switch_role: "Switch status",
       category_label: "Category", description_label: "Description",
       description_placeholder: "Describe the donation (condition, size, etc.)",
       continue: "Continue",
@@ -185,6 +229,8 @@
       receipt_note_placeholder: "e.g. which courier service",
       donation_saved: "Your donation has been posted!",
       shipment_saved: "Receipt uploaded, the recipient was notified!",
+      stats_label: "Total donations", delivered_suffix: "delivered",
+      ad_placeholder: "Ad space",
     }
   };
 
@@ -271,6 +317,40 @@
     app.appendChild(box);
   }
 
+  function formatCount(n) {
+    n = n || 0;
+    if (n >= 1000000) return (n / 1000000).toFixed(1).replace(/\.0$/, "") + "M";
+    if (n >= 1000) return (n / 1000).toFixed(1).replace(/\.0$/, "") + "K";
+    return String(n);
+  }
+
+  function updateBottomNav() {
+    var nav = document.getElementById("bottom-nav");
+    if (!state.me.role) { nav.hidden = true; return; }
+    nav.hidden = false;
+    nav.querySelectorAll(".nav-tab").forEach(function (btn) {
+      btn.classList.toggle("active", btn.getAttribute("data-role") === state.me.role);
+    });
+    var donorLabel = nav.querySelector('[data-tab-label="donor"]');
+    var needyLabel = nav.querySelector('[data-tab-label="needy"]');
+    if (donorLabel) donorLabel.textContent = tr("role_donor");
+    if (needyLabel) needyLabel.textContent = tr("role_needy");
+  }
+
+  document.querySelectorAll("#bottom-nav .nav-tab").forEach(function (btn) {
+    btn.addEventListener("click", function () {
+      var role = btn.getAttribute("data-role");
+      if (role === state.me.role) { navStack = []; goto("home", {}, false); return; }
+      api("POST", "/api/role", { role: role })
+        .then(function () {
+          state.me.role = role;
+          navStack = [];
+          goto("home", {}, false);
+        })
+        .catch(function () { showError(); });
+    });
+  });
+
   function wirePhotoPreview(inputId, previewId) {
     var input = document.getElementById(inputId);
     var preview = document.getElementById(previewId);
@@ -342,30 +422,73 @@
   }
 
   function renderHome() {
-    var cards;
-    if (state.me.role === "donor") {
-      cards =
-        '<button class="menu-card" data-go="donor_add"><span class="icon">➕</span>' + tr("add_donation") + "</button>" +
-        '<button class="menu-card" data-go="donor_cabinet"><span class="icon">📦</span>' + tr("my_donations") + "</button>";
-    } else {
-      cards =
-        '<button class="menu-card" data-go="needy_categories"><span class="icon">🔍</span>' + tr("browse_donations") + "</button>" +
-        '<button class="menu-card" data-go="needy_cabinet"><span class="icon">📋</span>' + tr("my_requests") + "</button>";
-    }
-    app.innerHTML =
-      '<div class="brand"><div class="avatar">EB</div><h1>Ehson bot</h1></div>' +
-      '<div class="menu-grid">' + cards + "</div>" +
-      '<button class="link-btn" id="switch-role-btn">🔄 ' + tr("switch_role") + "</button>";
-    app.querySelectorAll("[data-go]").forEach(function (btn) {
-      btn.addEventListener("click", function () { goto(btn.getAttribute("data-go")); });
-    });
-    document.getElementById("switch-role-btn").addEventListener("click", function () {
-      navStack = [];
-      goto("role", {}, false);
-    });
-    hideMainButton();
     navStack = [];
-    setBackButton();
+    Promise.all([api("GET", "/api/categories"), api("GET", "/api/stats")])
+      .then(function (results) {
+        var categories = results[0];
+        var stats = results[1];
+
+        var user = tg && tg.initDataUnsafe && tg.initDataUnsafe.user;
+        var photoUrl = user && user.photo_url;
+        var initial = ((user && user.first_name) || "E").charAt(0).toUpperCase();
+        var avatarHtml = photoUrl
+          ? '<img class="avatar-img" src="' + photoUrl + '" alt="">'
+          : '<div class="avatar">' + escapeHtml(initial) + "</div>";
+
+        var cameraBtn = state.me.role === "donor"
+          ? '<button class="icon-btn" id="camera-btn">📷</button>'
+          : '<span style="width:44px"></span>';
+
+        var cards;
+        if (state.me.role === "donor") {
+          cards =
+            '<button class="menu-card" data-go="donor_add"><span class="icon">➕</span>' + tr("add_donation") + "</button>" +
+            '<button class="menu-card" data-go="donor_cabinet"><span class="icon">📦</span>' + tr("my_donations") + "</button>";
+        } else {
+          cards =
+            '<button class="menu-card" data-go="needy_categories"><span class="icon">🔍</span>' + tr("browse_donations") + "</button>" +
+            '<button class="menu-card" data-go="needy_cabinet"><span class="icon">📋</span>' + tr("my_requests") + "</button>";
+        }
+
+        var adsHtml =
+          '<div class="ads-row">' +
+          '<div class="ad-card ad-1">' + escapeHtml(tr("ad_placeholder")) + " 1</div>" +
+          '<div class="ad-card ad-2">' + escapeHtml(tr("ad_placeholder")) + " 2</div>" +
+          '<div class="ad-card ad-3">' + escapeHtml(tr("ad_placeholder")) + " 3</div>" +
+          "</div>";
+
+        var catsHtml = '<div class="cat-list">' + categories.map(function (c) {
+          return '<button class="cat-row" data-cat="' + c.key + '"><span class="cat-row-name">' +
+            escapeHtml(c.label) + '</span><span class="cat-row-arrow">›</span></button>';
+        }).join("") + "</div>";
+
+        app.innerHTML =
+          '<div class="top-bar">' + avatarHtml + cameraBtn + "</div>" +
+          '<div class="stats-block">' +
+          '<div class="stats-label">' + tr("stats_label") + "</div>" +
+          '<div class="stats-value">' + formatCount(stats.total_donations) + "</div>" +
+          '<div class="stats-delivered">✅ ' + formatCount(stats.delivered_donations) + " " + tr("delivered_suffix") + "</div>" +
+          "</div>" +
+          '<div class="menu-grid">' + cards + "</div>" +
+          adsHtml +
+          '<div class="section-title">' + tr("browse_donations") + "</div>" +
+          catsHtml;
+
+        app.querySelectorAll("[data-go]").forEach(function (btn) {
+          btn.addEventListener("click", function () { goto(btn.getAttribute("data-go")); });
+        });
+        app.querySelectorAll("[data-cat]").forEach(function (btn) {
+          btn.addEventListener("click", function () {
+            goto("needy_list", { category: btn.getAttribute("data-cat") });
+          });
+        });
+        var cameraEl = document.getElementById("camera-btn");
+        if (cameraEl) cameraEl.addEventListener("click", function () { goto("donor_add"); });
+
+        hideMainButton();
+        setBackButton();
+      })
+      .catch(function () { showError(); });
   }
 
   function renderDonorAdd() {
@@ -510,15 +633,21 @@
         setBackButton();
         return;
       }
+      var canReserve = state.me.role === "needy";
       app.innerHTML = donations.map(function (d) {
-        return donationCardHtml(d) +
-          '<button class="card-btn" data-take="' + d.id + '">' + tr("take_it") + "</button></div></div>";
+        var body = donationCardHtml(d);
+        if (canReserve) {
+          body += '<button class="card-btn" data-take="' + d.id + '">' + tr("take_it") + "</button>";
+        }
+        return body + "</div></div>";
       }).join("");
-      app.querySelectorAll("[data-take]").forEach(function (btn) {
-        btn.addEventListener("click", function () {
-          goto("needy_reserve_form", { donationId: parseInt(btn.getAttribute("data-take"), 10) });
+      if (canReserve) {
+        app.querySelectorAll("[data-take]").forEach(function (btn) {
+          btn.addEventListener("click", function () {
+            goto("needy_reserve_form", { donationId: parseInt(btn.getAttribute("data-take"), 10) });
+          });
         });
-      });
+      }
       hideMainButton();
       setBackButton();
     }).catch(function () { showError(); });
@@ -617,6 +746,7 @@
   function render() {
     var fn = screens[state.screen] || renderHome;
     fn();
+    updateBottomNav();
   }
 
   api("GET", "/api/me")

@@ -14,6 +14,7 @@ from bot.database import (
     get_donations_by_donor,
     get_reservation,
     get_reservations_by_needy,
+    get_stats,
     get_user,
     set_donation_status,
     set_reservation_received,
@@ -104,6 +105,17 @@ async def api_set_role(request: web.Request) -> web.Response:
     await create_user_if_missing(telegram_id)
     await set_user_role(telegram_id, role)
     return web.json_response({"ok": True})
+
+
+async def api_stats(request: web.Request) -> web.Response:
+    await _require_user_id(request)
+    stats = await get_stats()
+    return web.json_response(
+        {
+            "total_donations": stats["total_donations"],
+            "delivered_donations": stats["completed_donations"],
+        }
+    )
 
 
 async def api_categories(request: web.Request) -> web.Response:
@@ -314,6 +326,7 @@ def setup_api_routes(app: web.Application) -> None:
     app.router.add_get("/api/me", api_me)
     app.router.add_post("/api/language", api_set_language)
     app.router.add_post("/api/role", api_set_role)
+    app.router.add_get("/api/stats", api_stats)
     app.router.add_get("/api/categories", api_categories)
     app.router.add_get("/api/donations", api_donations)
     app.router.add_get("/api/my-donations", api_my_donations)
