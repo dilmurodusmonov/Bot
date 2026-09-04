@@ -120,12 +120,13 @@
   .cat-row-name { flex: 1; }
   .cat-row-arrow { color: var(--hint); font-size: 18px; }
   .bottom-nav {
-    position: fixed; left: 16px; right: 16px; bottom: max(12px, env(safe-area-inset-bottom));
+    position: fixed; left: 50%; bottom: max(12px, env(safe-area-inset-bottom));
+    transform: translateX(-50%);
     display: flex; gap: 4px; background: #fff; border: 1px solid rgba(0,0,0,0.06);
     border-radius: 999px; padding: 5px; box-shadow: 0 6px 18px rgba(0,0,0,0.18); z-index: 10;
   }
   .nav-tab {
-    flex: 1; display: flex; flex-direction: column; align-items: center; gap: 1px;
+    flex: 0 0 auto; min-width: 86px; display: flex; flex-direction: column; align-items: center; gap: 1px;
     background: none; border: none; border-radius: 999px; color: #8E96A3; font-size: 10.5px;
     padding: 6px 4px; transition: background .2s ease, color .2s ease;
   }
