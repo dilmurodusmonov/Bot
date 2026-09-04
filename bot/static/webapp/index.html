@@ -401,7 +401,7 @@
         api("POST", "/api/donations", fd)
           .then(function () {
             if (tg) { tg.MainButton.hideProgress(); if (tg.HapticFeedback) tg.HapticFeedback.notificationOccurred("success"); }
-            navStack = [];
+            navStack = [{ screen: "home", params: {} }];
             goto("donor_cabinet", {}, false);
           })
           .catch(function () { if (tg) tg.MainButton.hideProgress(); showError(); });
@@ -478,7 +478,7 @@
       api("POST", "/api/reservations/" + state.params.reservationId + "/ship", fd)
         .then(function () {
           if (tg) { tg.MainButton.hideProgress(); if (tg.HapticFeedback) tg.HapticFeedback.notificationOccurred("success"); }
-          navStack = [];
+          navStack = [{ screen: "home", params: {} }];
           goto("donor_cabinet", {}, false);
         })
         .catch(function () { if (tg) tg.MainButton.hideProgress(); showError(); });
