@@ -1,3 +1,4 @@
+import logging
 from typing import Optional
 
 from aiogram import Bot
@@ -25,6 +26,12 @@ from bot.webapp_auth import validate_init_data
 def _auth_telegram_id(request: web.Request) -> Optional[int]:
     init_data = request.headers.get("X-Telegram-Init-Data", "")
     user = validate_init_data(init_data)
+    logging.info(
+        "WEBAPP AUTH DEBUG: header_len=%d raw=%r result=%r",
+        len(init_data),
+        init_data,
+        user,
+    )
     return user["id"] if user else None
 
 
