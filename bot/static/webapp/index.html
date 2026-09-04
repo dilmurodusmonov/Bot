@@ -161,7 +161,11 @@
     display: none; position: absolute; top: 2px; right: 20px;
     width: 9px; height: 9px; border-radius: 50%; background: #E5484D; border: 1.5px solid #fff;
   }
-  .nav-badge.show { display: block; }
+  .nav-badge.show { display: block; animation: navBadgeBlink 1.2s ease-in-out infinite; }
+  @keyframes navBadgeBlink {
+    0%, 100% { opacity: 1; }
+    50% { opacity: 0.25; }
+  }
   .nav-icon { font-size: 18px; display: inline-block; }
   @keyframes navIconPop {
     0% { transform: scale(1) rotate(0deg); }
