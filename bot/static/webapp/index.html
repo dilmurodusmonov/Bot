@@ -130,7 +130,15 @@
     padding: 8px 0; transition: background .2s ease, color .2s ease;
   }
   .nav-tab.active { color: var(--blue); background: rgba(78,164,245,0.15); }
-  .nav-icon { font-size: 20px; }
+  .nav-icon { font-size: 20px; display: inline-block; }
+  @keyframes navIconPop {
+    0% { transform: scale(1) rotate(0deg); }
+    25% { transform: scale(1.28) rotate(-12deg); }
+    50% { transform: scale(0.92) rotate(9deg); }
+    75% { transform: scale(1.12) rotate(-5deg); }
+    100% { transform: scale(1) rotate(0deg); }
+  }
+  .nav-icon-pop { animation: navIconPop 0.5s ease; }
 </style>
 </head>
 <body>
@@ -332,13 +340,24 @@
     return String(n);
   }
 
+  var lastActiveNavRole = null;
+
   function updateBottomNav() {
     var nav = document.getElementById("bottom-nav");
-    if (!state.me.role) { nav.hidden = true; return; }
+    if (!state.me.role) { nav.hidden = true; lastActiveNavRole = null; return; }
     nav.hidden = false;
+    var roleChanged = state.me.role !== lastActiveNavRole;
     nav.querySelectorAll(".nav-tab").forEach(function (btn) {
-      btn.classList.toggle("active", btn.getAttribute("data-role") === state.me.role);
+      var isActive = btn.getAttribute("data-role") === state.me.role;
+      btn.classList.toggle("active", isActive);
+      if (isActive && roleChanged) {
+        var icon = btn.querySelector(".nav-icon");
+        icon.classList.remove("nav-icon-pop");
+        void icon.offsetWidth;
+        icon.classList.add("nav-icon-pop");
+      }
     });
+    lastActiveNavRole = state.me.role;
     var donorLabel = nav.querySelector('[data-tab-label="donor"]');
     var needyLabel = nav.querySelector('[data-tab-label="needy"]');
     if (donorLabel) donorLabel.textContent = tr("role_donor");
