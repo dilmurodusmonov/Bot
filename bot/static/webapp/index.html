@@ -117,7 +117,7 @@
   .section-card {
     background: #FFFFFF; border-radius: 20px; padding: 14px 12px; margin-bottom: 20px;
   }
-  .section-title-blue { font-size: 13.5px; color: #1C93F3; font-weight: 700; margin: 2px 6px 10px; }
+  .section-title-blue { font-size: 17px; color: #1C93F3; font-weight: 700; margin: 2px 6px 10px; }
   .cat-list { display: flex; flex-direction: column; }
   .cat-row {
     display: flex; align-items: center; gap: 12px; width: 100%; text-align: left;
@@ -177,6 +177,7 @@
       role_donor: "Saxiy", role_needy: "Muhtoj",
       add_donation: "Ehson qo'shish", my_donations: "Mening ehsonlarim",
       browse_donations: "Ehsonlarni ko'rish", my_requests: "Mening so'rovlarim",
+      donations_section_title: "Ehsonlar",
       category_label: "Bo'lim", description_label: "Tavsif",
       description_placeholder: "Ehson haqida qisqacha yozing (holati, o'lchami va h.k.)",
       continue: "Davom etish",
@@ -207,6 +208,7 @@
       role_donor: "Благотворитель", role_needy: "Нуждающийся",
       add_donation: "Добавить пожертвование", my_donations: "Мои пожертвования",
       browse_donations: "Посмотреть пожертвования", my_requests: "Мои заявки",
+      donations_section_title: "Пожертвования",
       category_label: "Раздел", description_label: "Описание",
       description_placeholder: "Опишите пожертвование (состояние, размер и т.д.)",
       continue: "Продолжить",
@@ -237,6 +239,7 @@
       role_donor: "Donor", role_needy: "In need",
       add_donation: "Add donation", my_donations: "My donations",
       browse_donations: "Browse donations", my_requests: "My requests",
+      donations_section_title: "Donations",
       category_label: "Category", description_label: "Description",
       description_placeholder: "Describe the donation (condition, size, etc.)",
       continue: "Continue",
@@ -532,7 +535,7 @@
           '<div class="menu-grid">' + cards + "</div>" +
           adsHtml +
           '<div class="section-card">' +
-          '<div class="section-title-blue">' + tr("browse_donations") + "</div>" +
+          '<div class="section-title-blue">' + tr("donations_section_title") + "</div>" +
           catsHtml +
           "</div>";
 
