@@ -540,7 +540,19 @@
       else { goto("home", {}, false); }
     })
     .catch(function () {
-      app.innerHTML = '<div class="empty-state">Ulanishda xatolik. Botni Telegram ichidan qayta oching.</div>';
+      var debug = {
+        tg_exists: !!tg,
+        initData_len: tg ? (tg.initData || "").length : null,
+        initDataUnsafe: tg ? tg.initDataUnsafe : null,
+        version: tg ? tg.version : null,
+        platform: tg ? tg.platform : null,
+        ua: navigator.userAgent,
+      };
+      app.innerHTML =
+        '<div class="empty-state">Ulanishda xatolik.</div>' +
+        '<pre style="text-align:left;white-space:pre-wrap;word-break:break-all;font-size:11px;background:var(--section-bg);padding:12px;border-radius:10px;">' +
+        escapeHtml(JSON.stringify(debug, null, 2)) +
+        "</pre>";
     });
 })();
 </script>
