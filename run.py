@@ -8,14 +8,13 @@ from aiogram.fsm.storage.memory import MemoryStorage
 
 from bot.config import BOT_TOKEN
 from bot.database import init_db
-from bot.handlers import donor, needy, start
+from bot.handlers import donor, needy, start, webapp
 from bot.keepalive import start_webserver
 
 
 async def main() -> None:
     logging.basicConfig(level=logging.INFO)
     await init_db()
-    await start_webserver()
 
     bot = Bot(token=BOT_TOKEN, default=DefaultBotProperties(parse_mode=ParseMode.HTML))
     dp = Dispatcher(storage=MemoryStorage())
@@ -23,6 +22,9 @@ async def main() -> None:
     dp.include_router(start.router)
     dp.include_router(donor.router)
     dp.include_router(needy.router)
+    dp.include_router(webapp.router)
+
+    await start_webserver(bot)
 
     await bot.delete_webhook(drop_pending_updates=True)
     await dp.start_polling(bot)

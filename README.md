@@ -73,10 +73,14 @@ bot/
 ├── utils.py        # Yordamchi funksiyalar
 ├── keepalive.py    # Bepul hosting uchun mini health-check server
 ├── webpanel.py     # /admin statistika paneli (login/parol bilan himoyalangan)
+├── webapp_auth.py  # Telegram Mini App initData'ni tekshirish (HMAC)
+├── webapp_api.py   # Mini App uchun /api/* REST endpointlari
+├── static/webapp/  # Mini App'ning frontend fayli (index.html)
 └── handlers/
     ├── start.py    # Til, rol tanlash, asosiy menyu
     ├── donor.py    # Saxiy oqimi: ehson qo'shish, yuborish
-    └── needy.py    # Muhtoj oqimi: ehson tanlash, qabul qilish
+    ├── needy.py    # Muhtoj oqimi: ehson tanlash, qabul qilish
+    └── webapp.py   # Mini App'dan kelgan ma'lumotni qabul qilish
 run.py              # Botni ishga tushirish nuqtasi
 ```
 
@@ -129,3 +133,21 @@ ehsonlar) ko'rsatadi. Login/parol bilan himoyalangan.
 
 `ADMIN_PASSWORD` o'rnatilmagan bo'lsa, `/admin` sahifasi hech kimga
 ochilmaydi (xavfsiz standart holat).
+
+## Mini App (kabinet)
+
+Botning asosiy menyusida **"🏠 Kabinet"** tugmasi orqali ochiladigan
+to'liq maxsus veb-interfeys (Telegram Mini App) mavjud: til/rol tanlash,
+ehsonlarni chiroyli kartalar bilan ko'rish, Saxiy/Muhtoj kabineti, band
+qilish va "qabul qildim + duo" formalari — hammasi shu yerda. Faqat rasm
+yuklash (ehson surati, pochta cheki) texnik sabablarga ko'ra chatda
+qoladi: Mini App'da forma to'ldirilgach, bot "rasm yuboring" deb so'raydi.
+
+Eski chat-menyu (matnli tugmalar) ham ishlab turadi — Mini App muammoga
+duch kelsa, bot baribir to'liq ishlaydigan zaxira sifatida.
+
+**Sozlash:** hech narsa qilish shart emas — `WEBAPP_URL` Render'da
+avtomatik aniqlanadi (`RENDER_EXTERNAL_URL` orqali). Faqat Render deploy
+qilingandan keyin "🏠 Kabinet" tugmasi paydo bo'ladi. Boshqa hostingda
+ishlatilsa, `WEBAPP_URL` environment variable'ni qo'lda kiriting (masalan
+`https://sizning-domeningiz.com`) — Telegram Mini App uchun HTTPS shart.
