@@ -83,6 +83,10 @@
     margin-top: 10px; width: 100%; background: linear-gradient(135deg, var(--accent1), var(--accent2));
     color: #fff; border: none; border-radius: 10px; padding: 12px; font-size: 14.5px; font-weight: 600;
   }
+  .card-btn-outline {
+    margin-top: 8px; width: 100%; background: none; color: #C0392B;
+    border: 1.5px solid #C0392B; border-radius: 10px; padding: 11px; font-size: 14px; font-weight: 600;
+  }
   .empty-state { text-align: center; color: var(--hint); padding: 60px 20px; font-size: 14.5px; }
   .cat-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 10px; }
   .cat-card {
@@ -147,11 +151,17 @@
     border-radius: 999px; padding: 5px; box-shadow: 0 6px 18px rgba(0,0,0,0.18); z-index: 10;
   }
   .nav-tab {
+    position: relative;
     flex: 0 0 auto; min-width: 108px; display: flex; flex-direction: column; align-items: center; gap: 1px;
     background: none; border: none; border-radius: 999px; color: #000000; font-size: 11px;
     font-weight: 600; font-family: inherit; padding: 6px 4px; transition: background .2s ease, color .2s ease;
   }
   .nav-tab.active { color: #1C93F3; background: rgba(28,147,243,0.12); }
+  .nav-badge {
+    display: none; position: absolute; top: 2px; right: 20px;
+    width: 9px; height: 9px; border-radius: 50%; background: #E5484D; border: 1.5px solid #fff;
+  }
+  .nav-badge.show { display: block; }
   .nav-icon { font-size: 18px; display: inline-block; }
   @keyframes navIconPop {
     0% { transform: scale(1) rotate(0deg); }
@@ -166,8 +176,8 @@
 <body>
 <div id="app"><div class="center-loader">Yuklanmoqda...</div></div>
 <div id="bottom-nav" class="bottom-nav" hidden>
-  <button class="nav-tab" data-role="donor"><span class="nav-icon">🫴</span><span data-tab-label="donor">Saxiy</span></button>
-  <button class="nav-tab" data-role="needy"><span class="nav-icon">🤲</span><span data-tab-label="needy">Muhtoj</span></button>
+  <button class="nav-tab" data-role="donor"><span class="nav-badge" id="badge-donor"></span><span class="nav-icon">🫴</span><span data-tab-label="donor">Saxiy</span></button>
+  <button class="nav-tab" data-role="needy"><span class="nav-badge" id="badge-needy"></span><span class="nav-icon">🤲</span><span data-tab-label="needy">Muhtoj</span></button>
 </div>
 <script>
 (function () {
@@ -202,6 +212,9 @@
       send: "Yuborish", reservation_sent: "So'rovingiz yuborildi! Saxiyga ma'lumotlaringiz yuborildi.",
       waiting: "Kutilmoqda", reserved: "Band qilingan", shipped: "Yo'lda", received: "Yetib bordi",
       ship_receipt: "Chek yuklash", confirm_received: "Qabul qildim",
+      delete_donation: "O'chirish", cancel_reservation: "Bekor qilish",
+      confirm_delete_donation: "Ehsonni o'chirishga ishonchingiz komilmi?",
+      confirm_cancel_reservation: "So'rovni bekor qilishga ishonchingiz komilmi?",
       dua_label: "Duo / minnatdorchilik so'zlaringiz", dua_placeholder: "Rahmat sizga...",
       submit: "Tasdiqlash", empty_requests: "Sizda hali so'rovlar yo'q.",
       error: "Xatolik yuz berdi, qayta urinib ko'ring.",
@@ -233,6 +246,9 @@
       send: "Отправить", reservation_sent: "Ваша заявка отправлена! Данные переданы благотворителю.",
       waiting: "Ожидает", reserved: "Забронировано", shipped: "В пути", received: "Доставлено",
       ship_receipt: "Загрузить чек", confirm_received: "Я получил(а)",
+      delete_donation: "Удалить", cancel_reservation: "Отменить",
+      confirm_delete_donation: "Вы уверены, что хотите удалить пожертвование?",
+      confirm_cancel_reservation: "Вы уверены, что хотите отменить заявку?",
       dua_label: "Слова благодарности", dua_placeholder: "Спасибо вам...",
       submit: "Подтвердить", empty_requests: "У вас пока нет заявок.",
       error: "Произошла ошибка, попробуйте снова.",
@@ -264,6 +280,9 @@
       send: "Send", reservation_sent: "Your request was sent! Details were shared with the donor.",
       waiting: "Waiting", reserved: "Reserved", shipped: "On the way", received: "Delivered",
       ship_receipt: "Upload receipt", confirm_received: "I received it",
+      delete_donation: "Delete", cancel_reservation: "Cancel",
+      confirm_delete_donation: "Are you sure you want to delete this donation?",
+      confirm_cancel_reservation: "Are you sure you want to cancel this request?",
       dua_label: "Words of thanks", dua_placeholder: "Thank you...",
       submit: "Confirm", empty_requests: "You don't have any requests yet.",
       error: "Something went wrong, please try again.",
@@ -397,6 +416,16 @@
     var needyLabel = nav.querySelector('[data-tab-label="needy"]');
     if (donorLabel) donorLabel.textContent = tr("role_donor");
     if (needyLabel) needyLabel.textContent = tr("role_needy");
+    refreshBadges();
+  }
+
+  function refreshBadges() {
+    api("GET", "/api/badges").then(function (badges) {
+      var donorBadge = document.getElementById("badge-donor");
+      var needyBadge = document.getElementById("badge-needy");
+      if (donorBadge) donorBadge.classList.toggle("show", badges.donor_pending > 0);
+      if (needyBadge) needyBadge.classList.toggle("show", badges.needy_pending > 0);
+    }).catch(function () {});
   }
 
   document.querySelectorAll("#bottom-nav .nav-tab").forEach(function (btn) {
@@ -645,6 +674,8 @@
             '<button class="card-btn" data-ship="' + r.id + '">' + tr("ship_receipt") + "</button>";
         } else if (d.reservation && d.status === "received" && d.reservation.dua_text) {
           body += '<div class="info-box">💬 ' + escapeHtml(d.reservation.dua_text) + "</div>";
+        } else if (d.status === "available") {
+          body += '<button class="card-btn-outline" data-delete-donation="' + d.id + '">' + tr("delete_donation") + "</button>";
         }
         return body + "</div></div>";
       }).join("");
@@ -652,6 +683,18 @@
       app.querySelectorAll("[data-ship]").forEach(function (btn) {
         btn.addEventListener("click", function () {
           goto("donor_ship_form", { reservationId: parseInt(btn.getAttribute("data-ship"), 10) });
+        });
+      });
+      app.querySelectorAll("[data-delete-donation]").forEach(function (btn) {
+        btn.addEventListener("click", function () {
+          if (!window.confirm(tr("confirm_delete_donation"))) return;
+          var donationId = btn.getAttribute("data-delete-donation");
+          api("POST", "/api/donations/" + donationId + "/delete", {})
+            .then(function () {
+              if (tg && tg.HapticFeedback) tg.HapticFeedback.notificationOccurred("success");
+              renderDonorCabinet();
+            })
+            .catch(function () { showError(); });
         });
       });
       hideMainButton();
@@ -772,7 +815,9 @@
       var html = reservations.map(function (r) {
         if (!r.donation) return "";
         var body = donationCardHtml(r.donation);
-        if (r.status === "shipped") {
+        if (r.status === "reserved") {
+          body += '<button class="card-btn-outline" data-cancel="' + r.reservation_id + '">' + tr("cancel_reservation") + "</button>";
+        } else if (r.status === "shipped") {
           body += '<button class="card-btn" data-confirm="' + r.reservation_id + '">' + tr("confirm_received") + "</button>";
         } else if (r.status === "received" && r.dua_text) {
           body += '<div class="info-box">💬 ' + escapeHtml(r.dua_text) + "</div>";
@@ -783,6 +828,18 @@
       app.querySelectorAll("[data-confirm]").forEach(function (btn) {
         btn.addEventListener("click", function () {
           goto("needy_dua_form", { reservationId: parseInt(btn.getAttribute("data-confirm"), 10) });
+        });
+      });
+      app.querySelectorAll("[data-cancel]").forEach(function (btn) {
+        btn.addEventListener("click", function () {
+          if (!window.confirm(tr("confirm_cancel_reservation"))) return;
+          var reservationId = btn.getAttribute("data-cancel");
+          api("POST", "/api/reservations/" + reservationId + "/cancel", {})
+            .then(function () {
+              if (tg && tg.HapticFeedback) tg.HapticFeedback.notificationOccurred("success");
+              renderNeedyCabinet();
+            })
+            .catch(function () { showError(); });
         });
       });
       hideMainButton();

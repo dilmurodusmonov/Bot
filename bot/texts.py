@@ -46,6 +46,10 @@ TEXTS = {
             "Muhtojning duosi/minnatdorchiligi:\n\"{dua_text}\""
         ),
         "unknown_command": "Iltimos, \"Kabinet\" ilovasidan foydalaning.",
+        "reservation_cancelled_notify_donor": (
+            "ℹ️ Muhtoj \"{description}\" ehsoningizga bo'lgan so'rovini bekor qildi.\n\n"
+            "Ehson yana \"mavjud\" holatiga qaytarildi."
+        ),
     },
     "ru": {
         "choose_language": "🌐 Выберите язык:",
@@ -76,6 +80,10 @@ TEXTS = {
             "Слова благодарности от нуждающегося:\n\"{dua_text}\""
         ),
         "unknown_command": "Пожалуйста, используйте приложение \"Kabinet\".",
+        "reservation_cancelled_notify_donor": (
+            "ℹ️ Нуждающийся отменил заявку на пожертвование \"{description}\".\n\n"
+            "Пожертвование снова доступно."
+        ),
     },
     "en": {
         "choose_language": "🌐 Choose your language:",
@@ -106,6 +114,10 @@ TEXTS = {
             "Words of thanks from the recipient:\n\"{dua_text}\""
         ),
         "unknown_command": "Please use the \"Kabinet\" app.",
+        "reservation_cancelled_notify_donor": (
+            "ℹ️ The recipient cancelled their request for \"{description}\".\n\n"
+            "The donation is available again."
+        ),
     },
 }
 
