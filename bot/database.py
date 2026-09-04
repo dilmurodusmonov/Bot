@@ -1,3 +1,4 @@
+import json
 from typing import Any, Optional
 
 import asyncpg
@@ -36,6 +37,13 @@ CREATE TABLE IF NOT EXISTS reservations (
     created_at TIMESTAMPTZ NOT NULL DEFAULT now(),
     shipped_at TIMESTAMPTZ,
     received_at TIMESTAMPTZ
+);
+
+CREATE TABLE IF NOT EXISTS pending_actions (
+    telegram_id BIGINT PRIMARY KEY REFERENCES users(telegram_id),
+    action TEXT NOT NULL,
+    payload TEXT NOT NULL,
+    created_at TIMESTAMPTZ NOT NULL DEFAULT now()
 );
 """
 
@@ -233,3 +241,32 @@ async def get_recent_donations(limit: int = 10) -> list[dict[str, Any]]:
         "SELECT * FROM donations ORDER BY created_at DESC LIMIT $1", limit
     )
     return [dict(row) for row in rows]
+
+
+# --- kutilayotgan amallar (Mini App -> chat orqali rasm yuklash) -------------
+
+async def set_pending_action(telegram_id: int, action: str, payload: dict) -> None:
+    await _get_pool().execute(
+        """INSERT INTO pending_actions (telegram_id, action, payload, created_at)
+           VALUES ($1, $2, $3, now())
+           ON CONFLICT (telegram_id)
+           DO UPDATE SET action = $2, payload = $3, created_at = now()""",
+        telegram_id,
+        action,
+        json.dumps(payload),
+    )
+
+
+async def get_pending_action(telegram_id: int) -> Optional[dict[str, Any]]:
+    row = await _get_pool().fetchrow(
+        "SELECT action, payload FROM pending_actions WHERE telegram_id = $1", telegram_id
+    )
+    if not row:
+        return None
+    return {"action": row["action"], "payload": json.loads(row["payload"])}
+
+
+async def clear_pending_action(telegram_id: int) -> None:
+    await _get_pool().execute(
+        "DELETE FROM pending_actions WHERE telegram_id = $1", telegram_id
+    )
