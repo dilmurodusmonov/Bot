@@ -7,6 +7,7 @@ CATEGORIES = {
     "toys": {"uz": "🧸 O'yinchoqlar", "ru": "🧸 Игрушки", "en": "🧸 Toys"},
     "books": {"uz": "📚 Kitoblar", "ru": "📚 Книги", "en": "📚 Books"},
     "appliances": {"uz": "🔌 Maishiy texnikalar", "ru": "🔌 Бытовая техника", "en": "🔌 Home appliances"},
+    "phones": {"uz": "📱 Telefon va aksessuarlar", "ru": "📱 Телефоны и аксессуары", "en": "📱 Phones and accessories"},
 }
 
 STATUS_LABELS = {
