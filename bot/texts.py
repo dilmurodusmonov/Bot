@@ -2,10 +2,11 @@ LANGUAGES = ("uz", "ru", "en")
 
 CATEGORIES = {
     "clothes": {"uz": "👕 Kiyim-kechaklar", "ru": "👕 Одежда", "en": "👕 Clothes"},
-    "books": {"uz": "📚 Kitoblar", "ru": "📚 Книги", "en": "📚 Books"},
     "shoes": {"uz": "👟 Oyoq kiyimlar", "ru": "👟 Обувь", "en": "👟 Shoes"},
     "household": {"uz": "🏠 Uy-ro'zg'or buyumlari", "ru": "🏠 Хозтовары", "en": "🏠 Household items"},
     "toys": {"uz": "🧸 O'yinchoqlar", "ru": "🧸 Игрушки", "en": "🧸 Toys"},
+    "books": {"uz": "📚 Kitoblar", "ru": "📚 Книги", "en": "📚 Books"},
+    "appliances": {"uz": "🔌 Maishiy texnikalar", "ru": "🔌 Бытовая техника", "en": "🔌 Home appliances"},
 }
 
 STATUS_LABELS = {
