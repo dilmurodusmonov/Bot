@@ -114,63 +114,46 @@
     padding: 2px 7px; border-radius: 10px; white-space: nowrap;
   }
   .delivery-stage { position: relative; height: 38px; max-width: 200px; overflow: hidden; margin: 0 auto; }
-  .delivery-scooter-layer {
-    position: absolute; inset: 0; display: flex; align-items: center; justify-content: center;
-    animation: scooterPhase 18s ease-in-out infinite;
-  }
-  .delivery-scooter-layer .scooter {
-    position: absolute; top: 50%; left: 105%; font-size: 15px;
-    transform: translateY(-50%); animation: scooterDrive 18s linear infinite;
-  }
-  @keyframes scooterDrive {
-    0% { left: 105%; }
-    26% { left: -15%; }
-    100% { left: -15%; }
-  }
-  @keyframes scooterPhase {
-    0%, 24% { opacity: 1; }
-    30%, 100% { opacity: 0; }
-  }
   .delivery-fireworks-layer {
-    position: absolute; inset: 0; opacity: 0; animation: fireworksPhase 18s ease-in-out infinite;
+    position: absolute; inset: 0; opacity: 0; animation: fireworksPhase 12s ease-in-out infinite;
   }
   .salute { position: absolute; width: 4px; height: 4px; transform: translate(-50%, -50%); }
   .salute .particle {
     position: absolute; top: 0; left: 0; width: var(--size, 4px); height: var(--size, 4px);
     border-radius: 50%; background: var(--spark-color, #FF9A5C);
     transform: rotate(var(--angle, 0deg)) translateX(0);
-    animation: particleBurst 18s ease-out infinite;
+    animation: particleBurst 12s ease-out infinite;
     animation-delay: var(--delay, 0s);
   }
   @keyframes fireworksPhase {
-    0%, 30% { opacity: 0; }
-    33%, 44% { opacity: 1; }
-    48%, 100% { opacity: 0; }
+    0%, 16% { opacity: 1; }
+    20%, 100% { opacity: 0; }
   }
   @keyframes particleBurst {
-    0%, 30% { transform: rotate(var(--angle, 0deg)) translateX(0); opacity: 0; }
-    36% { transform: rotate(var(--angle, 0deg)) translateX(calc(var(--dist, 28px) * 0.55)); opacity: 1; }
-    46% { transform: rotate(var(--angle, 0deg)) translateX(var(--dist, 28px)); opacity: 0; }
+    0% { transform: rotate(var(--angle, 0deg)) translateX(0); opacity: 0; }
+    5% { transform: rotate(var(--angle, 0deg)) translateX(0); opacity: 1; }
+    10% { transform: rotate(var(--angle, 0deg)) translateX(calc(var(--dist, 28px) * 0.55)); opacity: 1; }
+    16% { transform: rotate(var(--angle, 0deg)) translateX(var(--dist, 28px)); opacity: 0; }
     100% { transform: rotate(var(--angle, 0deg)) translateX(var(--dist, 28px)); opacity: 0; }
   }
   .delivery-value-layer {
     position: absolute; inset: 0; overflow: hidden; opacity: 0;
-    animation: deliveryValuePhase 18s ease-in-out infinite;
+    animation: deliveryValuePhase 12s ease-in-out infinite;
   }
   .delivery-value-layer .value-convoy {
     position: absolute; top: 50%; left: 100%; white-space: nowrap;
     display: flex; align-items: center; gap: 4px;
-    transform: translateY(-50%); animation: valueSlide 18s linear infinite;
+    transform: translateY(-50%); animation: valueSlide 12s linear infinite;
   }
   .delivery-value-layer .scooter-mini { font-size: 15px; }
   .delivery-value-layer .value-text { font-size: 13.5px; font-weight: 700; color: #1C93F3; }
   @keyframes deliveryValuePhase {
-    0%, 47% { opacity: 0; }
-    49%, 96% { opacity: 1; }
+    0%, 24% { opacity: 0; }
+    26%, 96% { opacity: 1; }
     100% { opacity: 0; }
   }
   @keyframes valueSlide {
-    0%, 47% { left: 100%; }
+    0%, 24% { left: 100%; }
     96% { left: -120%; }
     100% { left: -120%; }
   }
@@ -685,7 +668,6 @@
           '<div class="stats-label">' + tr("stats_label") + "</div>" +
           '<div class="stats-value-wrap"><span class="stats-value">' + formatCount(stats.total_donations) + "</span>" + newBadgeHtml + "</div>" +
           '<div class="delivery-stage">' +
-          '<div class="delivery-scooter-layer"><span class="scooter">🛵</span></div>' +
           '<div class="delivery-fireworks-layer">' + fireworksHtml + "</div>" +
           '<div class="delivery-value-layer">' +
           '<div class="value-convoy">' +
