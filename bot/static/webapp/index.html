@@ -113,7 +113,7 @@
     background: rgba(28,147,243,0.12); color: #1C93F3; font-size: 12px; font-weight: 700;
     padding: 2px 7px; border-radius: 10px; white-space: nowrap;
   }
-  .delivery-stage { position: relative; height: 20px; max-width: 200px; overflow: hidden; margin: 0 auto; }
+  .delivery-stage { position: relative; height: 38px; max-width: 200px; overflow: hidden; margin: 0 auto; }
   .delivery-scooter-layer {
     position: absolute; inset: 0; display: flex; align-items: center; justify-content: center;
     animation: scooterPhase 18s ease-in-out infinite;
@@ -132,15 +132,15 @@
     30%, 100% { opacity: 0; }
   }
   .delivery-fireworks-layer {
-    position: absolute; inset: 0; display: flex; align-items: center; justify-content: center;
-    opacity: 0; animation: fireworksPhase 18s ease-in-out infinite;
+    position: absolute; inset: 0; opacity: 0; animation: fireworksPhase 18s ease-in-out infinite;
   }
-  .firework-burst { position: relative; width: 4px; height: 4px; }
-  .firework-burst .particle {
+  .salute { position: absolute; width: 4px; height: 4px; transform: translate(-50%, -50%); }
+  .salute .particle {
     position: absolute; top: 0; left: 0; width: var(--size, 4px); height: var(--size, 4px);
     border-radius: 50%; background: var(--spark-color, #FF9A5C);
     transform: rotate(var(--angle, 0deg)) translateX(0);
     animation: particleBurst 18s ease-out infinite;
+    animation-delay: var(--delay, 0s);
   }
   @keyframes fireworksPhase {
     0%, 30% { opacity: 0; }
@@ -650,19 +650,32 @@
           : "";
 
         var fireworkColors = ["#FF9A5C", "#1C93F3", "#E5484D", "#FFD23F", "#7C5CFF", "#2ECC71"];
-        var fireworkCount = 14;
-        var fireworkParticles = [];
-        for (var fi = 0; fi < fireworkCount; fi++) {
-          var fAngle = Math.round(fi * (360 / fireworkCount));
-          var fColor = fireworkColors[fi % fireworkColors.length];
-          var fSize = 3 + (fi % 3) * 1.5;
-          var fDist = 20 + (fi % 4) * 5;
-          fireworkParticles.push(
-            '<span class="particle" style="--angle:' + fAngle + "deg;--spark-color:" + fColor +
-            ";--size:" + fSize + "px;--dist:" + fDist + 'px"></span>'
-          );
+        var salutePositions = [
+          { left: 12, top: 78, delay: 0 },
+          { left: 38, top: 18, delay: 0.1 },
+          { left: 64, top: 55, delay: 0.05 },
+          { left: 88, top: 32, delay: 0.15 },
+        ];
+        var saluteParticleCount = 7;
+        var salutesHtml = "";
+        for (var si = 0; si < salutePositions.length; si++) {
+          var pos = salutePositions[si];
+          var particles = [];
+          for (var pi = 0; pi < saluteParticleCount; pi++) {
+            var angle = Math.round(pi * (360 / saluteParticleCount)) + si * 12;
+            var color = fireworkColors[(si + pi) % fireworkColors.length];
+            var size = 2.5 + (pi % 3) * 1;
+            var dist = 10 + (pi % 3) * 3;
+            particles.push(
+              '<span class="particle" style="--angle:' + angle + "deg;--spark-color:" + color +
+              ";--size:" + size + "px;--dist:" + dist + 'px"></span>'
+            );
+          }
+          salutesHtml +=
+            '<div class="salute" style="left:' + pos.left + "%;top:" + pos.top + "%;--delay:" + pos.delay + 's">' +
+            particles.join("") + "</div>";
         }
-        var fireworksHtml = '<div class="firework-burst">' + fireworkParticles.join("") + "</div>";
+        var fireworksHtml = salutesHtml;
 
         app.innerHTML =
           '<div class="top-bar">' + avatarHtml + cameraBtn + "</div>" +
