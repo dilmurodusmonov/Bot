@@ -305,3 +305,9 @@ async def increment_ad_views(slide: int) -> int:
            RETURNING views""",
         slide,
     )
+
+
+async def count_new_donations_last_24h() -> int:
+    return await _get_pool().fetchval(
+        "SELECT COUNT(*) FROM donations WHERE created_at > now() - interval '24 hours'"
+    )

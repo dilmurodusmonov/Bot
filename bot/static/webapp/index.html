@@ -106,8 +106,33 @@
   }
   .stats-block { text-align: center; margin-bottom: 20px; }
   .stats-label { color: var(--hint); font-size: 13px; }
-  .stats-value { font-size: 34px; font-weight: 800; margin: 4px 0; letter-spacing: -0.5px; }
-  .stats-delivered { color: #3FCF7F; font-size: 13.5px; font-weight: 600; }
+  .stats-value-wrap { position: relative; display: inline-block; margin: 4px 0; }
+  .stats-value { font-size: 42px; font-weight: 800; letter-spacing: -0.5px; }
+  .stats-badge-new {
+    position: absolute; top: -4px; right: -34px;
+    background: rgba(28,147,243,0.12); color: #1C93F3; font-size: 12px; font-weight: 700;
+    padding: 2px 7px; border-radius: 10px; white-space: nowrap;
+  }
+  .delivery-row { display: flex; align-items: center; justify-content: center; gap: 8px; font-size: 13.5px; font-weight: 600; color: #1C1C1E; }
+  .delivery-track { position: relative; width: 70px; height: 18px; flex-shrink: 0; }
+  .delivery-track .dots {
+    position: absolute; left: 0; right: 0; top: 50%;
+    border-top: 2px dotted #C7CCD1; transform: translateY(-50%);
+  }
+  .delivery-track .scooter {
+    position: absolute; top: 50%; left: -15%; font-size: 15px;
+    transform: translateY(-50%); animation: scooterDrive 3s linear infinite;
+  }
+  @keyframes scooterDrive {
+    0% { left: -15%; }
+    100% { left: 105%; }
+  }
+  .delivery-result { display: flex; align-items: center; gap: 4px; white-space: nowrap; }
+  .delivery-spark { display: inline-block; animation: sparkPulse 1.6s ease-in-out infinite; }
+  @keyframes sparkPulse {
+    0%, 100% { transform: scale(1); opacity: 0.85; }
+    50% { transform: scale(1.3); opacity: 1; }
+  }
   .ad-banner { position: relative; height: 104px; border-radius: 16px; overflow: hidden; margin-bottom: 20px; }
   .ad-slide {
     position: absolute; inset: 0; display: flex; align-items: center; padding: 0 18px;
@@ -239,7 +264,7 @@
       receipt_note_placeholder: "Masalan: qaysi kuryerlik orqali yuborildi",
       donation_saved: "Ehsoningiz joylandi!",
       shipment_saved: "Chek yuklandi, Muhtojga xabar berildi!",
-      stats_label: "Jami ehsonlar", delivered_suffix: "ta yetkazildi",
+      stats_label: "Ehsonlar", delivered_suffix: "ta yetkazildi",
       ad_placeholder: "REKLAMA",
     },
     ru: {
@@ -581,12 +606,23 @@
             '<span class="cat-row-arrow">›</span></button>';
         }).join("") + "</div>";
 
+        var newBadgeHtml = stats.new_last_24h > 0
+          ? '<span class="stats-badge-new">+' + formatCount(stats.new_last_24h) + "</span>"
+          : "";
+
         app.innerHTML =
           '<div class="top-bar">' + avatarHtml + cameraBtn + "</div>" +
           '<div class="stats-block">' +
           '<div class="stats-label">' + tr("stats_label") + "</div>" +
-          '<div class="stats-value">' + formatCount(stats.total_donations) + "</div>" +
-          '<div class="stats-delivered">✅ ' + formatCount(stats.delivered_donations) + " " + tr("delivered_suffix") + "</div>" +
+          '<div class="stats-value-wrap"><span class="stats-value">' + formatCount(stats.total_donations) + "</span>" + newBadgeHtml + "</div>" +
+          '<div class="delivery-row">' +
+          '<div class="delivery-track"><span class="dots"></span><span class="scooter">🛵</span></div>' +
+          '<div class="delivery-result">' +
+          '<span class="delivery-spark">🎉</span>' +
+          "<span>" + formatCount(stats.delivered_donations) + " " + tr("delivered_suffix") + "</span>" +
+          '<span class="delivery-spark">🎉</span>' +
+          "</div>" +
+          "</div>" +
           "</div>" +
           '<div class="menu-grid">' + cards + "</div>" +
           adsHtml +
