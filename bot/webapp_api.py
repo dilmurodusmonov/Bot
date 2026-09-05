@@ -12,6 +12,7 @@ from bot.database import (
     create_reservation,
     create_user_if_missing,
     delete_donation,
+    increment_ad_views,
     get_active_reservation_for_donation,
     get_available_donations,
     get_donation,
@@ -254,6 +255,12 @@ async def api_confirm_received(request: web.Request) -> web.Response:
     return web.json_response({"ok": True})
 
 
+async def api_ad_view(request: web.Request) -> web.Response:
+    await _require_user_id(request)
+    views = await increment_ad_views()
+    return web.json_response({"views": views})
+
+
 async def api_badges(request: web.Request) -> web.Response:
     telegram_id = await _require_user_id(request)
     donor_pending = await count_pending_ship(telegram_id)
@@ -380,6 +387,7 @@ def setup_api_routes(app: web.Application) -> None:
     app.router.add_post("/api/role", api_set_role)
     app.router.add_get("/api/stats", api_stats)
     app.router.add_get("/api/badges", api_badges)
+    app.router.add_post("/api/ad-view", api_ad_view)
     app.router.add_get("/api/categories", api_categories)
     app.router.add_get("/api/donations", api_donations)
     app.router.add_get("/api/my-donations", api_my_donations)
