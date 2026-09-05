@@ -113,7 +113,7 @@
     background: rgba(28,147,243,0.12); color: #1C93F3; font-size: 12px; font-weight: 700;
     padding: 2px 7px; border-radius: 10px; white-space: nowrap;
   }
-  .delivery-stage { position: relative; height: 38px; max-width: 200px; overflow: hidden; margin: 0 auto; }
+  .delivery-stage { position: relative; height: 46px; max-width: 200px; overflow: hidden; margin: 0 auto; }
   .delivery-fireworks-layer {
     position: absolute; inset: 0; opacity: 0; animation: fireworksPhase 12s ease-in-out infinite;
   }
@@ -649,8 +649,8 @@
           for (var pi = 0; pi < saluteParticleCount; pi++) {
             var angle = Math.round(pi * (360 / saluteParticleCount)) + si * 12;
             var color = fireworkColors[(si + pi) % fireworkColors.length];
-            var size = 2.5 + (pi % 3) * 1;
-            var dist = 10 + (pi % 3) * 3;
+            var size = 4 + (pi % 3) * 1.5;
+            var dist = 16 + (pi % 3) * 5;
             particles.push(
               '<span class="particle" style="--angle:' + angle + "deg;--spark-color:" + color +
               ";--size:" + size + "px;--dist:" + dist + 'px"></span>'
