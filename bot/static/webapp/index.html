@@ -607,7 +607,6 @@
         if (cameraEl) cameraEl.addEventListener("click", function () { goto("donor_add"); });
 
         startAdCarousel();
-        recordAdView(1);
         hideMainButton();
         setBackButton();
       })
@@ -901,6 +900,8 @@
     updateBottomNav();
   }
 
+  var currentAdIndex = 0;
+
   function recordAdView(slide) {
     api("POST", "/api/ad-view", { slide: slide }).then(function (res) {
       var countEl = document.getElementById("ad-views-count");
@@ -908,21 +909,54 @@
     }).catch(function () {});
   }
 
+  function showAdSlide(index) {
+    currentAdIndex = ((index % AD_COUNT) + AD_COUNT) % AD_COUNT;
+    var banner = document.getElementById("ad-banner");
+    var dots = document.getElementById("ad-dots");
+    if (!banner || !dots) return;
+    banner.querySelectorAll(".ad-slide").forEach(function (el, i) {
+      el.classList.toggle("active", i === currentAdIndex);
+    });
+    dots.querySelectorAll(".ad-dot").forEach(function (el, i) {
+      el.classList.toggle("active", i === currentAdIndex);
+    });
+    recordAdView(currentAdIndex + 1);
+  }
+
+  function restartAdTimer() {
+    if (adTimer) clearInterval(adTimer);
+    adTimer = setInterval(function () { showAdSlide(currentAdIndex + 1); }, AD_INTERVAL_MS);
+  }
+
   function startAdCarousel() {
-    var index = 0;
-    adTimer = setInterval(function () {
-      index = (index + 1) % AD_COUNT;
-      var banner = document.getElementById("ad-banner");
-      var dots = document.getElementById("ad-dots");
-      if (!banner || !dots) { clearInterval(adTimer); adTimer = null; return; }
-      banner.querySelectorAll(".ad-slide").forEach(function (el, i) {
-        el.classList.toggle("active", i === index);
+    showAdSlide(0);
+    restartAdTimer();
+
+    var banner = document.getElementById("ad-banner");
+    var dots = document.getElementById("ad-dots");
+    if (!banner) return;
+
+    var touchStartX = null;
+    banner.addEventListener("touchstart", function (e) {
+      touchStartX = e.touches[0].clientX;
+    }, { passive: true });
+    banner.addEventListener("touchend", function (e) {
+      if (touchStartX === null) return;
+      var dx = e.changedTouches[0].clientX - touchStartX;
+      touchStartX = null;
+      if (Math.abs(dx) < 30) return;
+      showAdSlide(currentAdIndex + (dx < 0 ? 1 : -1));
+      restartAdTimer();
+    }, { passive: true });
+
+    if (dots) {
+      dots.querySelectorAll(".ad-dot").forEach(function (dot, i) {
+        dot.addEventListener("click", function () {
+          showAdSlide(i);
+          restartAdTimer();
+        });
       });
-      dots.querySelectorAll(".ad-dot").forEach(function (el, i) {
-        el.classList.toggle("active", i === index);
-      });
-      recordAdView(index + 1);
-    }, AD_INTERVAL_MS);
+    }
   }
 
   api("GET", "/api/me")
