@@ -157,11 +157,13 @@
     position: absolute; inset: 0; overflow: hidden; opacity: 0;
     animation: deliveryValuePhase 18s ease-in-out infinite;
   }
-  .delivery-value-layer .value-text {
+  .delivery-value-layer .value-convoy {
     position: absolute; top: 50%; left: 100%; white-space: nowrap;
-    transform: translateY(-50%); font-size: 13.5px; font-weight: 700; color: #1C93F3;
-    animation: valueSlide 18s linear infinite;
+    display: flex; align-items: center; gap: 4px;
+    transform: translateY(-50%); animation: valueSlide 18s linear infinite;
   }
+  .delivery-value-layer .scooter-mini { font-size: 15px; }
+  .delivery-value-layer .value-text { font-size: 13.5px; font-weight: 700; color: #1C93F3; }
   @keyframes deliveryValuePhase {
     0%, 47% { opacity: 0; }
     49%, 96% { opacity: 1; }
@@ -686,7 +688,10 @@
           '<div class="delivery-scooter-layer"><span class="scooter">🛵</span></div>' +
           '<div class="delivery-fireworks-layer">' + fireworksHtml + "</div>" +
           '<div class="delivery-value-layer">' +
+          '<div class="value-convoy">' +
+          '<span class="scooter-mini">🛵</span>' +
           '<span class="value-text">' + formatCount(stats.delivered_donations) + " " + tr("delivered_suffix") + "</span>" +
+          "</div>" +
           "</div>" +
           "</div>" +
           "</div>" +
