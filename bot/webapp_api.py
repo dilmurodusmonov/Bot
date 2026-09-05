@@ -11,6 +11,7 @@ from bot.database import (
     create_donation,
     create_reservation,
     create_user_if_missing,
+    count_new_donations_last_24h,
     delete_donation,
     increment_ad_views,
     get_active_reservation_for_donation,
@@ -117,10 +118,12 @@ async def api_stats(request: web.Request) -> web.Response:
     await _require_user_id(request)
     stats = await get_stats()
     by_category = await get_category_stats()
+    new_last_24h = await count_new_donations_last_24h()
     return web.json_response(
         {
             "total_donations": stats["total_donations"],
             "delivered_donations": stats["completed_donations"],
+            "new_last_24h": new_last_24h,
             "by_category": by_category,
         }
     )
