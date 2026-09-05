@@ -257,8 +257,12 @@ async def api_confirm_received(request: web.Request) -> web.Response:
 
 async def api_ad_view(request: web.Request) -> web.Response:
     await _require_user_id(request)
-    views = await increment_ad_views()
-    return web.json_response({"views": views})
+    body = await request.json()
+    slide = body.get("slide")
+    if slide not in (1, 2, 3):
+        raise web.HTTPBadRequest(text="invalid slide")
+    views = await increment_ad_views(slide)
+    return web.json_response({"slide": slide, "views": views})
 
 
 async def api_badges(request: web.Request) -> web.Response:

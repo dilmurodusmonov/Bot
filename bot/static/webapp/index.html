@@ -607,10 +607,7 @@
         if (cameraEl) cameraEl.addEventListener("click", function () { goto("donor_add"); });
 
         startAdCarousel();
-        api("POST", "/api/ad-view", {}).then(function (res) {
-          var countEl = document.getElementById("ad-views-count");
-          if (countEl) countEl.textContent = formatCount(res.views);
-        }).catch(function () {});
+        recordAdView(1);
         hideMainButton();
         setBackButton();
       })
@@ -904,6 +901,13 @@
     updateBottomNav();
   }
 
+  function recordAdView(slide) {
+    api("POST", "/api/ad-view", { slide: slide }).then(function (res) {
+      var countEl = document.getElementById("ad-views-count");
+      if (countEl) countEl.textContent = formatCount(res.views);
+    }).catch(function () {});
+  }
+
   function startAdCarousel() {
     var index = 0;
     adTimer = setInterval(function () {
@@ -917,6 +921,7 @@
       dots.querySelectorAll(".ad-dot").forEach(function (el, i) {
         el.classList.toggle("active", i === index);
       });
+      recordAdView(index + 1);
     }, AD_INTERVAL_MS);
   }
 
