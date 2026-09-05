@@ -97,6 +97,25 @@
   .photo-preview { display: none; width: 100%; max-height: 220px; object-fit: cover; border-radius: 12px; margin-top: 10px; border: 1px solid var(--border); }
   input[type="file"] { padding: 10px 12px; }
 
+  .camera-overlay {
+    position: fixed; inset: 0; background: #000; z-index: 1000;
+    display: flex; align-items: center; justify-content: center;
+  }
+  .camera-overlay video { width: 100%; height: 100%; object-fit: cover; }
+  .camera-close-btn {
+    position: absolute; top: 16px; right: 16px; width: 36px; height: 36px; border-radius: 50%;
+    background: rgba(0,0,0,0.5); color: #fff; border: none; font-size: 18px;
+    display: flex; align-items: center; justify-content: center;
+  }
+  .camera-overlay-controls {
+    position: absolute; bottom: 28px; left: 0; right: 0;
+    display: flex; align-items: center; justify-content: center;
+  }
+  .camera-shutter-btn {
+    width: 64px; height: 64px; border-radius: 50%; background: #fff;
+    border: 4px solid rgba(255,255,255,0.4);
+  }
+
   .top-bar { display: flex; align-items: center; justify-content: space-between; margin-bottom: 18px; }
   .avatar-img { width: 44px; height: 44px; border-radius: 50%; object-fit: cover; flex-shrink: 0; }
   .icon-btn {
@@ -517,6 +536,47 @@
     });
   }
 
+  function openCameraCapture(onCapture, onFallback) {
+    if (!navigator.mediaDevices || !navigator.mediaDevices.getUserMedia) {
+      onFallback();
+      return;
+    }
+    navigator.mediaDevices.getUserMedia({ video: { facingMode: "environment" }, audio: false })
+      .then(function (stream) {
+        var overlay = document.createElement("div");
+        overlay.className = "camera-overlay";
+        overlay.innerHTML =
+          "<video autoplay playsinline></video>" +
+          '<button class="camera-close-btn">✕</button>' +
+          '<div class="camera-overlay-controls"><button class="camera-shutter-btn"></button></div>';
+        document.body.appendChild(overlay);
+
+        var video = overlay.querySelector("video");
+        video.srcObject = stream;
+
+        function stopAndRemove() {
+          stream.getTracks().forEach(function (t) { t.stop(); });
+          overlay.remove();
+        }
+
+        overlay.querySelector(".camera-close-btn").addEventListener("click", function () {
+          stopAndRemove();
+        });
+
+        overlay.querySelector(".camera-shutter-btn").addEventListener("click", function () {
+          var canvas = document.createElement("canvas");
+          canvas.width = video.videoWidth;
+          canvas.height = video.videoHeight;
+          canvas.getContext("2d").drawImage(video, 0, 0);
+          canvas.toBlob(function (blob) {
+            stopAndRemove();
+            if (blob) onCapture(blob);
+          }, "image/jpeg", 0.9);
+        });
+      })
+      .catch(function () { onFallback(); });
+  }
+
   // --- screens -----------------------------------------------------------
 
   function renderLoading() {
@@ -693,7 +753,15 @@
           });
         });
         var cameraEl = document.getElementById("camera-btn");
-        if (cameraEl) cameraEl.addEventListener("click", function () { goto("donor_add", { autoCamera: true }); });
+        if (cameraEl) cameraEl.addEventListener("click", function () {
+          openCameraCapture(
+            function (blob) {
+              var file = new File([blob], "donation-photo.jpg", { type: "image/jpeg" });
+              goto("donor_add", { capturedPhoto: file });
+            },
+            function () { goto("donor_add", { autoCamera: true }); }
+          );
+        });
 
         startAdCarousel();
         hideMainButton();
@@ -703,6 +771,7 @@
   }
 
   function renderDonorAdd() {
+    var capturedPhotoFile = state.params && state.params.capturedPhoto ? state.params.capturedPhoto : null;
     api("GET", "/api/categories").then(function (categories) {
       var options = categories.map(function (c) {
         return '<option value="' + c.key + '">' + escapeHtml(c.label) + "</option>";
@@ -719,7 +788,11 @@
 
       wirePhotoPreview("donation-photo-input", "donation-photo-preview");
 
-      if (state.params && state.params.autoCamera) {
+      if (capturedPhotoFile) {
+        var preview = document.getElementById("donation-photo-preview");
+        preview.src = URL.createObjectURL(capturedPhotoFile);
+        preview.style.display = "block";
+      } else if (state.params && state.params.autoCamera) {
         var photoInput = document.getElementById("donation-photo-input");
         if (photoInput) photoInput.click();
       }
@@ -727,7 +800,7 @@
       setMainButton(tr("continue"), function () {
         var category = document.getElementById("cat-select").value;
         var description = document.getElementById("desc-input").value.trim();
-        var file = document.getElementById("donation-photo-input").files[0];
+        var file = document.getElementById("donation-photo-input").files[0] || capturedPhotoFile;
         if (!description) { showError(tr("fill_all")); return; }
         if (!file) { showError(tr("photo_required")); return; }
 
