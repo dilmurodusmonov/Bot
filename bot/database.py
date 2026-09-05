@@ -39,9 +39,8 @@ CREATE TABLE IF NOT EXISTS reservations (
 );
 
 CREATE TABLE IF NOT EXISTS ad_stats (
-    id INTEGER PRIMARY KEY DEFAULT 1,
-    views BIGINT NOT NULL DEFAULT 0,
-    CHECK (id = 1)
+    slide INTEGER PRIMARY KEY,
+    views BIGINT NOT NULL DEFAULT 0
 );
 """
 
@@ -59,6 +58,23 @@ async def init_db() -> None:
     _pool = await asyncpg.create_pool(DATABASE_URL, min_size=1, max_size=5)
     async with _pool.acquire() as conn:
         await conn.execute(SCHEMA)
+        await _migrate_ad_stats(conn)
+
+
+async def _migrate_ad_stats(conn: asyncpg.Connection) -> None:
+    """Eski ad_stats jadvali bitta umumiy hisoblagich edi (id, doim id=1).
+    Endi har bir banner slaydi o'z hisobiga ega bo'lishi uchun 'slide'
+    ustuniga o'tkaziladi — mavjud son slide=1 sifatida saqlanib qoladi."""
+    has_old_column = await conn.fetchval(
+        """SELECT EXISTS (
+               SELECT 1 FROM information_schema.columns
+               WHERE table_name = 'ad_stats' AND column_name = 'id'
+           )"""
+    )
+    if has_old_column:
+        await conn.execute("ALTER TABLE ad_stats RENAME COLUMN id TO slide")
+        await conn.execute("ALTER TABLE ad_stats DROP CONSTRAINT IF EXISTS ad_stats_id_check")
+        await conn.execute("ALTER TABLE ad_stats ALTER COLUMN slide DROP DEFAULT")
 
 
 # --- users -----------------------------------------------------------------
@@ -282,9 +298,10 @@ async def get_recent_donations(limit: int = 10) -> list[dict[str, Any]]:
 
 # --- reklama banneri ko'rishlar soni -----------------------------------------
 
-async def increment_ad_views() -> int:
+async def increment_ad_views(slide: int) -> int:
     return await _get_pool().fetchval(
-        """INSERT INTO ad_stats (id, views) VALUES (1, 1)
-           ON CONFLICT (id) DO UPDATE SET views = ad_stats.views + 1
-           RETURNING views"""
+        """INSERT INTO ad_stats (slide, views) VALUES ($1, 1)
+           ON CONFLICT (slide) DO UPDATE SET views = ad_stats.views + 1
+           RETURNING views""",
+        slide,
     )
