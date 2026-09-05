@@ -113,25 +113,57 @@
     background: rgba(28,147,243,0.12); color: #1C93F3; font-size: 12px; font-weight: 700;
     padding: 2px 7px; border-radius: 10px; white-space: nowrap;
   }
-  .delivery-row { display: flex; align-items: center; justify-content: center; gap: 8px; font-size: 13.5px; font-weight: 600; color: #1C1C1E; }
-  .delivery-track { position: relative; width: 70px; height: 18px; flex-shrink: 0; }
-  .delivery-track .dots {
-    position: absolute; left: 0; right: 0; top: 50%;
+  .delivery-stage { position: relative; height: 20px; max-width: 200px; margin: 0 auto; }
+  .delivery-scooter-layer {
+    position: absolute; inset: 0; display: flex; align-items: center; justify-content: center;
+    animation: scooterPhase 6s ease-in-out infinite;
+  }
+  .delivery-scooter-layer .dots {
+    position: absolute; left: 15%; right: 15%; top: 50%;
     border-top: 2px dotted #C7CCD1; transform: translateY(-50%);
   }
-  .delivery-track .scooter {
+  .delivery-scooter-layer .scooter {
     position: absolute; top: 50%; left: -15%; font-size: 15px;
-    transform: translateY(-50%); animation: scooterDrive 3s linear infinite;
+    transform: translateY(-50%); animation: scooterDrive 6s linear infinite;
   }
   @keyframes scooterDrive {
     0% { left: -15%; }
+    35% { left: 105%; }
     100% { left: 105%; }
   }
-  .delivery-result { display: flex; align-items: center; gap: 4px; white-space: nowrap; }
-  .delivery-spark { display: inline-block; animation: sparkPulse 1.6s ease-in-out infinite; }
-  @keyframes sparkPulse {
-    0%, 100% { transform: scale(1); opacity: 0.85; }
-    50% { transform: scale(1.3); opacity: 1; }
+  @keyframes scooterPhase {
+    0%, 33% { opacity: 1; }
+    38%, 100% { opacity: 0; }
+  }
+  .delivery-fireworks-layer {
+    position: absolute; inset: 0; display: flex; align-items: center; justify-content: center;
+    gap: 8px; opacity: 0; animation: fireworksPhase 6s ease-in-out infinite;
+  }
+  .delivery-fireworks-layer .spark {
+    display: inline-block; font-size: 16px; animation: fireworkBurst 6s ease-in-out infinite;
+  }
+  .delivery-fireworks-layer .spark:nth-child(2) { animation-delay: 0.08s; }
+  .delivery-fireworks-layer .spark:nth-child(3) { animation-delay: 0.16s; }
+  @keyframes fireworksPhase {
+    0%, 36% { opacity: 0; }
+    40%, 60% { opacity: 1; }
+    65%, 100% { opacity: 0; }
+  }
+  @keyframes fireworkBurst {
+    0%, 36% { transform: scale(0.3) rotate(0deg); }
+    46% { transform: scale(1.3) rotate(-12deg); }
+    56% { transform: scale(1) rotate(12deg); }
+    65%, 100% { transform: scale(0.3) rotate(0deg); }
+  }
+  .delivery-value-layer {
+    position: absolute; inset: 0; display: flex; align-items: center; justify-content: center;
+    gap: 4px; white-space: nowrap; font-size: 13.5px; font-weight: 600; color: #1C1C1E;
+    opacity: 0; animation: deliveryValuePhase 6s ease-in-out infinite;
+  }
+  @keyframes deliveryValuePhase {
+    0%, 60% { opacity: 0; transform: scale(0.85); }
+    68%, 92% { opacity: 1; transform: scale(1); }
+    100% { opacity: 0; transform: scale(0.85); }
   }
   .ad-banner { position: relative; height: 104px; border-radius: 16px; overflow: hidden; margin-bottom: 20px; }
   .ad-slide {
@@ -615,12 +647,11 @@
           '<div class="stats-block">' +
           '<div class="stats-label">' + tr("stats_label") + "</div>" +
           '<div class="stats-value-wrap"><span class="stats-value">' + formatCount(stats.total_donations) + "</span>" + newBadgeHtml + "</div>" +
-          '<div class="delivery-row">' +
-          '<div class="delivery-track"><span class="dots"></span><span class="scooter">🛵</span></div>' +
-          '<div class="delivery-result">' +
-          '<span class="delivery-spark">🎉</span>' +
+          '<div class="delivery-stage">' +
+          '<div class="delivery-scooter-layer"><span class="dots"></span><span class="scooter">🛵</span></div>' +
+          '<div class="delivery-fireworks-layer"><span class="spark">🎉</span><span class="spark">✨</span><span class="spark">🎉</span></div>' +
+          '<div class="delivery-value-layer">' +
           "<span>" + formatCount(stats.delivered_donations) + " " + tr("delivered_suffix") + "</span>" +
-          '<span class="delivery-spark">🎉</span>' +
           "</div>" +
           "</div>" +
           "</div>" +
