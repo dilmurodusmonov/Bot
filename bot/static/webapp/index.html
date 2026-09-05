@@ -901,11 +901,20 @@
   }
 
   var currentAdIndex = 0;
+  var adViewedInSession = {};
+  var adViewCache = {};
+
+  function displayAdCount(slide) {
+    var countEl = document.getElementById("ad-views-count");
+    if (countEl && adViewCache[slide] !== undefined) {
+      countEl.textContent = formatCount(adViewCache[slide]);
+    }
+  }
 
   function recordAdView(slide) {
     api("POST", "/api/ad-view", { slide: slide }).then(function (res) {
-      var countEl = document.getElementById("ad-views-count");
-      if (countEl) countEl.textContent = formatCount(res.views);
+      adViewCache[slide] = res.views;
+      displayAdCount(slide);
     }).catch(function () {});
   }
 
@@ -920,7 +929,13 @@
     dots.querySelectorAll(".ad-dot").forEach(function (el, i) {
       el.classList.toggle("active", i === currentAdIndex);
     });
-    recordAdView(currentAdIndex + 1);
+    var slideNum = currentAdIndex + 1;
+    if (!adViewedInSession[slideNum]) {
+      adViewedInSession[slideNum] = true;
+      recordAdView(slideNum);
+    } else {
+      displayAdCount(slideNum);
+    }
   }
 
   function restartAdTimer() {
@@ -929,6 +944,7 @@
   }
 
   function startAdCarousel() {
+    adViewedInSession = {};
     showAdSlide(0);
     restartAdTimer();
 
