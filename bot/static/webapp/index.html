@@ -122,6 +122,12 @@
     display: flex; gap: 6px; justify-content: center;
   }
   .ad-dot { width: 6px; height: 6px; border-radius: 3px; background: rgba(255,255,255,0.45); transition: all .3s ease; }
+  .ad-views {
+    position: absolute; bottom: 8px; right: 10px; z-index: 2;
+    display: flex; align-items: center; gap: 3px; background: rgba(0,0,0,0.4);
+    color: #fff; font-size: 11px; font-weight: 600; padding: 2px 8px; border-radius: 10px;
+  }
+  .ad-views svg { width: 12px; height: 12px; }
   .ad-dot.active { width: 18px; background: #fff; }
   .section-card {
     background: #FFFFFF; border-radius: 20px; padding: 14px 12px; margin-bottom: 20px;
@@ -197,7 +203,8 @@
     search: '<svg ' + SVG_ATTRS + '><circle cx="11" cy="11" r="8"></circle><line x1="21" y1="21" x2="16.65" y2="16.65"></line></svg>',
     list: '<svg ' + SVG_ATTRS + '><line x1="8" y1="6" x2="21" y2="6"></line><line x1="8" y1="12" x2="21" y2="12"></line><line x1="8" y1="18" x2="21" y2="18"></line><line x1="3" y1="6" x2="3.01" y2="6"></line><line x1="3" y1="12" x2="3.01" y2="12"></line><line x1="3" y1="18" x2="3.01" y2="18"></line></svg>',
     camera: '<svg ' + SVG_ATTRS + '><path d="M23 19a2 2 0 0 1-2 2H3a2 2 0 0 1-2-2V8a2 2 0 0 1 2-2h4l2-3h6l2 3h4a2 2 0 0 1 2 2z"></path><circle cx="12" cy="13" r="4"></circle></svg>',
-    gift: '<svg ' + SVG_ATTRS + '><polyline points="20 12 20 22 4 22 4 12"></polyline><rect x="2" y="7" width="20" height="5"></rect><line x1="12" y1="22" x2="12" y2="7"></line><path d="M12 7H7.5a2.5 2.5 0 0 1 0-5C11 2 12 7 12 7z"></path><path d="M12 7h4.5a2.5 2.5 0 0 0 0-5C13 2 12 7 12 7z"></path></svg>'
+    gift: '<svg ' + SVG_ATTRS + '><polyline points="20 12 20 22 4 22 4 12"></polyline><rect x="2" y="7" width="20" height="5"></rect><line x1="12" y1="22" x2="12" y2="7"></line><path d="M12 7H7.5a2.5 2.5 0 0 1 0-5C11 2 12 7 12 7z"></path><path d="M12 7h4.5a2.5 2.5 0 0 0 0-5C13 2 12 7 12 7z"></path></svg>',
+    eye: '<svg ' + SVG_ATTRS + '><path d="M1 12s4-8 11-8 11 8 11 8-4 8-11 8-11-8-11-8z"></path><circle cx="12" cy="12" r="3"></circle></svg>'
   };
 
   var UI = {
@@ -555,6 +562,7 @@
           '<span class="ad-dot" data-i="1"></span>' +
           '<span class="ad-dot" data-i="2"></span>' +
           "</div>" +
+          '<div class="ad-views" id="ad-views">' + ICONS.eye + '<span id="ad-views-count">0</span></div>' +
           "</div>";
 
         var catsHtml = '<div class="cat-list">' + categories.map(function (c) {
@@ -599,6 +607,10 @@
         if (cameraEl) cameraEl.addEventListener("click", function () { goto("donor_add"); });
 
         startAdCarousel();
+        api("POST", "/api/ad-view", {}).then(function (res) {
+          var countEl = document.getElementById("ad-views-count");
+          if (countEl) countEl.textContent = formatCount(res.views);
+        }).catch(function () {});
         hideMainButton();
         setBackButton();
       })

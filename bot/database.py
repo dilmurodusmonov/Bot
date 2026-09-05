@@ -37,6 +37,12 @@ CREATE TABLE IF NOT EXISTS reservations (
     shipped_at TIMESTAMPTZ,
     received_at TIMESTAMPTZ
 );
+
+CREATE TABLE IF NOT EXISTS ad_stats (
+    id INTEGER PRIMARY KEY DEFAULT 1,
+    views BIGINT NOT NULL DEFAULT 0,
+    CHECK (id = 1)
+);
 """
 
 _pool: Optional[asyncpg.Pool] = None
@@ -272,3 +278,13 @@ async def get_recent_donations(limit: int = 10) -> list[dict[str, Any]]:
         "SELECT * FROM donations ORDER BY created_at DESC LIMIT $1", limit
     )
     return [dict(row) for row in rows]
+
+
+# --- reklama banneri ko'rishlar soni -----------------------------------------
+
+async def increment_ad_views() -> int:
+    return await _get_pool().fetchval(
+        """INSERT INTO ad_stats (id, views) VALUES (1, 1)
+           ON CONFLICT (id) DO UPDATE SET views = ad_stats.views + 1
+           RETURNING views"""
+    )
