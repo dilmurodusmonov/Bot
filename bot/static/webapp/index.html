@@ -458,7 +458,7 @@
 
   function updateBottomNav() {
     var nav = document.getElementById("bottom-nav");
-    if (!state.me.role) { nav.hidden = true; lastActiveNavRole = null; return; }
+    if (!state.me.role || state.screen !== "home") { nav.hidden = true; lastActiveNavRole = null; return; }
     nav.hidden = false;
     var roleChanged = state.me.role !== lastActiveNavRole;
     nav.querySelectorAll(".nav-tab").forEach(function (btn) {
