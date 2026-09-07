@@ -249,6 +249,7 @@
   <button class="nav-tab" data-role="donor"><span class="nav-badge" id="badge-donor"></span><span class="nav-icon">🫴</span><span data-tab-label="donor">Saxiy</span></button>
   <button class="nav-tab" data-role="needy"><span class="nav-badge" id="badge-needy"></span><span class="nav-icon">🤲</span><span data-tab-label="needy">Muhtoj</span></button>
 </div>
+<input id="global-camera-input" type="file" accept="image/*" capture="environment" class="visually-hidden">
 <script>
 (function () {
   "use strict";
@@ -513,6 +514,16 @@
     });
   });
 
+  var globalCameraInputEl = document.getElementById("global-camera-input");
+  if (globalCameraInputEl) {
+    globalCameraInputEl.addEventListener("change", function () {
+      var file = globalCameraInputEl.files[0];
+      globalCameraInputEl.value = "";
+      if (!file) return;
+      goto("donor_add", { capturedPhoto: file });
+    });
+  }
+
   function photoPickerHtml(inputId) {
     return '<div class="photo-picker-row">' +
       '<input id="' + inputId + '" type="file" accept="image/*" capture="environment" class="visually-hidden">' +
@@ -711,7 +722,10 @@
           });
         });
         var cameraEl = document.getElementById("camera-btn");
-        if (cameraEl) cameraEl.addEventListener("click", function () { goto("donor_add", { autoCamera: true }); });
+        if (cameraEl) cameraEl.addEventListener("click", function () {
+          var globalCameraInput = document.getElementById("global-camera-input");
+          if (globalCameraInput) globalCameraInput.click();
+        });
 
         startAdCarousel();
         hideMainButton();
@@ -721,6 +735,7 @@
   }
 
   function renderDonorAdd() {
+    var capturedPhotoFile = state.params && state.params.capturedPhoto ? state.params.capturedPhoto : null;
     api("GET", "/api/categories").then(function (categories) {
       var options = categories.map(function (c) {
         return '<option value="' + c.key + '">' + escapeHtml(c.label) + "</option>";
@@ -737,15 +752,16 @@
 
       wirePhotoPreview("donation-photo-input", "donation-photo-preview");
 
-      if (state.params && state.params.autoCamera) {
-        var photoInput = document.getElementById("donation-photo-input");
-        if (photoInput) photoInput.click();
+      if (capturedPhotoFile) {
+        var preview = document.getElementById("donation-photo-preview");
+        preview.src = URL.createObjectURL(capturedPhotoFile);
+        preview.style.display = "block";
       }
 
       setMainButton(tr("continue"), function () {
         var category = document.getElementById("cat-select").value;
         var description = document.getElementById("desc-input").value.trim();
-        var file = document.getElementById("donation-photo-input").files[0];
+        var file = document.getElementById("donation-photo-input").files[0] || capturedPhotoFile;
         if (!description) { showError(tr("fill_all")); return; }
         if (!file) { showError(tr("photo_required")); return; }
 
