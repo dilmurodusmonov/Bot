@@ -15,7 +15,16 @@ async def _health(request: web.Request) -> web.Response:
 
 
 async def _webapp_index(request: web.Request) -> web.Response:
-    return web.FileResponse(WEBAPP_INDEX)
+    html = WEBAPP_INDEX.read_text(encoding="utf-8")
+    return web.Response(
+        text=html,
+        content_type="text/html",
+        headers={
+            "Cache-Control": "no-cache, no-store, must-revalidate",
+            "Pragma": "no-cache",
+            "Expires": "0",
+        },
+    )
 
 
 async def start_webserver(bot: Bot) -> None:
