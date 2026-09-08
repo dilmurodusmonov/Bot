@@ -262,7 +262,7 @@ async def api_ad_view(request: web.Request) -> web.Response:
     await _require_user_id(request)
     body = await request.json()
     slide = body.get("slide")
-    if slide not in (1, 2, 3):
+    if slide not in (1, 2, 3, 4):
         raise web.HTTPBadRequest(text="invalid slide")
     views = await increment_ad_views(slide)
     return web.json_response({"slide": slide, "views": views})
