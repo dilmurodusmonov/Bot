@@ -28,7 +28,7 @@ async def main() -> None:
 
     if WEBAPP_URL:
         await bot.set_chat_menu_button(
-            menu_button=MenuButtonWebApp(text="Kabinet", web_app=WebAppInfo(url=WEBAPP_URL))
+            menu_button=MenuButtonWebApp(text="Ehson", web_app=WebAppInfo(url=WEBAPP_URL))
         )
 
     await dp.start_polling(bot)
