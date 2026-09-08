@@ -178,6 +178,13 @@
   .ad-slide.ad-1 { background: linear-gradient(135deg, #B79CFF, #8B6EF5); }
   .ad-slide.ad-2 { background: linear-gradient(135deg, #4EA4F5, #7C6CF5); }
   .ad-slide.ad-3 { background: linear-gradient(135deg, #3FCF7F, #2AA968); }
+  .hadith-slide {
+    flex-direction: column; align-items: flex-start; justify-content: center;
+    gap: 3px; padding: 12px 16px;
+  }
+  .hadith-intro { font-size: 11.5px; font-weight: 600; letter-spacing: normal; opacity: 0.9; }
+  .hadith-quote { font-size: 12.5px; font-weight: 600; letter-spacing: normal; line-height: 1.32; }
+  .hadith-source { font-size: 10.5px; font-weight: 500; letter-spacing: normal; opacity: 0.85; margin-top: 2px; }
   .ad-dots {
     position: absolute; left: 0; right: 0; bottom: 10px; z-index: 2;
     display: flex; gap: 6px; justify-content: center;
@@ -674,7 +681,11 @@
 
         var adsHtml =
           '<div class="ad-banner" id="ad-banner">' +
-          '<div class="ad-slide ad-1 active">' + escapeHtml(tr("ad_placeholder")) + "</div>" +
+          '<div class="ad-slide ad-1 active hadith-slide">' +
+          '<div class="hadith-intro">Rasululloh ﷺ dedilar:</div>' +
+          '<div class="hadith-quote">«Kim bir mo\'minning dunyodagi bir g\'amini aritsa, Alloh uning Qiyomat kunidagi g\'amlaridan birini aritadi.»</div>' +
+          '<div class="hadith-source">📚 Sahih Muslim</div>' +
+          "</div>" +
           '<div class="ad-slide ad-2">' + escapeHtml(tr("ad_placeholder")) + "</div>" +
           '<div class="ad-slide ad-3">' + escapeHtml(tr("ad_placeholder")) + "</div>" +
           '<div class="ad-dots" id="ad-dots">' +
