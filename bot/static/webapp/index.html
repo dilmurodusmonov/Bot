@@ -110,6 +110,7 @@
 
   .top-bar { display: flex; align-items: center; justify-content: space-between; margin-bottom: 18px; }
   .avatar-img { width: 44px; height: 44px; border-radius: 50%; object-fit: cover; flex-shrink: 0; }
+  #avatar-btn { cursor: pointer; }
   .icon-btn {
     width: 44px; height: 44px; border-radius: 50%; background: var(--section-bg);
     border: 1px solid var(--border); color: var(--text); font-size: 19px;
@@ -613,8 +614,8 @@
         var photoUrl = user && user.photo_url;
         var initial = ((user && user.first_name) || "E").charAt(0).toUpperCase();
         var avatarHtml = photoUrl
-          ? '<img class="avatar-img" src="' + photoUrl + '" alt="">'
-          : '<div class="avatar">' + escapeHtml(initial) + "</div>";
+          ? '<img class="avatar-img" id="avatar-btn" src="' + photoUrl + '" alt="">'
+          : '<div class="avatar" id="avatar-btn">' + escapeHtml(initial) + "</div>";
 
         var cameraBtn = state.me.role === "donor"
           ? '<button class="icon-btn" id="camera-btn">' + ICONS.camera + "</button>"
@@ -726,6 +727,10 @@
         if (cameraEl) cameraEl.addEventListener("click", function () {
           var globalCameraInput = document.getElementById("global-camera-input");
           if (globalCameraInput) globalCameraInput.click();
+        });
+        var avatarEl = document.getElementById("avatar-btn");
+        if (avatarEl) avatarEl.addEventListener("click", function () {
+          goto(state.me.role === "donor" ? "donor_cabinet" : "needy_cabinet");
         });
 
         startAdCarousel();
