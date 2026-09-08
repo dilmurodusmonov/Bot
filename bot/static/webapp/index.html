@@ -184,6 +184,7 @@
     flex-direction: column; align-items: flex-start; justify-content: center;
     gap: 3px; padding: 12px 16px;
   }
+  .ad-slide-placeholder { justify-content: center; font-size: 20px; font-weight: 800; letter-spacing: 2px; text-transform: uppercase; opacity: 0.85; }
   .hadith-intro { font-size: 11.5px; font-weight: 600; letter-spacing: normal; opacity: 0.9; }
   .hadith-quote { font-size: 14px; font-weight: 600; letter-spacing: normal; line-height: 1.32; }
   .hadith-source { font-size: 10.5px; font-weight: 500; letter-spacing: normal; opacity: 0.85; margin-top: 10px; }
@@ -650,6 +651,7 @@
   var state = { screen: "loading", params: {}, me: { language: null, role: null }, lang: "uz" };
   var navStack = [];
   var adTimer = null;
+  var ad2Timer = null;
   var AD_COUNT = 4;
   var AD_INTERVAL_MS = 7000;
 
@@ -960,6 +962,20 @@
           ? '<span class="stats-badge-new">+' + formatCount(stats.new_last_24h) + "</span>"
           : "";
 
+        var ads2Html =
+          '<div class="ad-banner" id="ad-banner-2">' +
+          '<div class="ad-slide ad-1 active ad-slide-placeholder">' + tr("ad_placeholder") + "</div>" +
+          '<div class="ad-slide ad-2 ad-slide-placeholder">' + tr("ad_placeholder") + "</div>" +
+          '<div class="ad-slide ad-3 ad-slide-placeholder">' + tr("ad_placeholder") + "</div>" +
+          '<div class="ad-slide ad-4 ad-slide-placeholder">' + tr("ad_placeholder") + "</div>" +
+          '<div class="ad-dots" id="ad-dots-2">' +
+          '<span class="ad-dot active" data-i="0"></span>' +
+          '<span class="ad-dot" data-i="1"></span>' +
+          '<span class="ad-dot" data-i="2"></span>' +
+          '<span class="ad-dot" data-i="3"></span>' +
+          "</div>" +
+          "</div>";
+
         var fireworkColors = ["#FF9A5C", "#1C93F3", "#E5484D", "#FFD23F", "#7C5CFF", "#2ECC71"];
         var salutePositions = [
           { left: 12, top: 78, delay: 0 },
@@ -1008,7 +1024,8 @@
           '<div class="section-card">' +
           '<div class="section-title-blue">' + tr("donations_section_title") + "</div>" +
           catsHtml +
-          "</div>";
+          "</div>" +
+          ads2Html;
 
         app.querySelectorAll("[data-go]").forEach(function (btn) {
           btn.addEventListener("click", function () { goto(btn.getAttribute("data-go")); });
@@ -1028,6 +1045,7 @@
         refreshAvatarRing();
 
         startAdCarousel();
+        ad2Timer = startSimpleCarousel("ad-banner-2", "ad-dots-2");
         hideMainButton();
         setBackButton();
       })
@@ -1442,6 +1460,7 @@
 
   function render() {
     if (adTimer) { clearInterval(adTimer); adTimer = null; }
+    if (ad2Timer) { ad2Timer.stop(); ad2Timer = null; }
     var fn = screens[state.screen] || renderHome;
     fn();
     updateBottomNav();
@@ -1540,6 +1559,41 @@
         });
       });
     }
+  }
+
+  function startSimpleCarousel(bannerId, dotsId) {
+    var banner = document.getElementById(bannerId);
+    var dots = document.getElementById(dotsId);
+    if (!banner) return null;
+    var index = 0;
+    var slides = banner.querySelectorAll(".ad-slide");
+    var dotEls = dots ? dots.querySelectorAll(".ad-dot") : [];
+
+    function show(i) {
+      index = ((i % slides.length) + slides.length) % slides.length;
+      slides.forEach(function (el, idx) { el.classList.toggle("active", idx === index); });
+      dotEls.forEach(function (el, idx) { el.classList.toggle("active", idx === index); });
+    }
+
+    var timer = setInterval(function () { show(index + 1); }, AD_INTERVAL_MS);
+    function restart() { clearInterval(timer); timer = setInterval(function () { show(index + 1); }, AD_INTERVAL_MS); }
+
+    var touchStartX = null;
+    banner.addEventListener("touchstart", function (e) { touchStartX = e.touches[0].clientX; }, { passive: true });
+    banner.addEventListener("touchend", function (e) {
+      if (touchStartX === null) return;
+      var dx = e.changedTouches[0].clientX - touchStartX;
+      touchStartX = null;
+      if (Math.abs(dx) < 30) return;
+      show(index + (dx < 0 ? 1 : -1));
+      restart();
+    }, { passive: true });
+
+    dotEls.forEach(function (dot, i) {
+      dot.addEventListener("click", function () { show(i); restart(); });
+    });
+
+    return { stop: function () { clearInterval(timer); } };
   }
 
   api("GET", "/api/me")
