@@ -231,6 +231,13 @@
   .settings-row-value { color: var(--hint); font-size: 14px; }
   .settings-row-arrow { color: #9AA3AF; font-size: 18px; }
   .settings-row-check { color: #1C93F3; font-size: 16px; font-weight: 700; }
+  .home-shortcut-title { font-weight: 700; font-size: 15px; margin-bottom: 4px; }
+  .home-shortcut-desc { color: var(--hint); font-size: 13.5px; line-height: 1.4; }
+  .home-shortcut-divider { border-top: 1px solid var(--border); margin: 12px 0; }
+  .home-shortcut-action {
+    background: none; border: none; color: #1C93F3; font-weight: 700; font-size: 15px;
+    padding: 0; font-family: inherit;
+  }
   .bottom-nav {
     position: fixed; left: 50%; bottom: max(12px, env(safe-area-inset-bottom));
     transform: translateX(-50%);
@@ -326,6 +333,9 @@
       stats_label: "Ehsonlar", delivered_suffix: "dona ehsonlar yetkazildi",
       ad_placeholder: "REKLAMA",
       settings_title: "Umumiy sozlamalar", language_label: "Til",
+      add_to_home_title: "Ehsonni bir urinishda oching",
+      add_to_home_desc: "Ilovani bir zumda ochish uchun Ehsonni bosh ekranga qo'shing.",
+      add_to_home_action: "Qo'shish",
     },
     ru: {
       choose_role: "Здравствуйте! Пожалуйста, выберите свой статус:",
@@ -361,6 +371,9 @@
       stats_label: "Всего пожертвований", delivered_suffix: "доставлено",
       ad_placeholder: "РЕКЛАМА",
       settings_title: "Общие настройки", language_label: "Язык",
+      add_to_home_title: "Открывайте Ehson в один клик",
+      add_to_home_desc: "Чтобы открывать приложение мгновенно, добавьте Ehson на главный экран.",
+      add_to_home_action: "Добавить",
     },
     en: {
       choose_role: "Hello! Please choose your status:",
@@ -396,6 +409,9 @@
       stats_label: "Total donations", delivered_suffix: "delivered",
       ad_placeholder: "AD",
       settings_title: "General settings", language_label: "Language",
+      add_to_home_title: "Open Ehson in one tap",
+      add_to_home_desc: "Add Ehson to your home screen to open the app instantly.",
+      add_to_home_action: "Add",
     }
   };
 
@@ -1045,11 +1061,23 @@
     var subHtml = user && user.username ? '<div class="profile-sub">@' + escapeHtml(user.username) + "</div>" : "";
     var langNames = { uz: "O'zbekcha", ru: "Русский", en: "English" };
 
+    var homeShortcutHtml = "";
+    if (tg && typeof tg.addToHomeScreen === "function") {
+      homeShortcutHtml =
+        '<div class="section-card">' +
+        '<div class="home-shortcut-title">' + tr("add_to_home_title") + "</div>" +
+        '<div class="home-shortcut-desc">' + tr("add_to_home_desc") + "</div>" +
+        '<div class="home-shortcut-divider"></div>' +
+        '<button class="home-shortcut-action" id="add-to-home-btn">' + tr("add_to_home_action") + "</button>" +
+        "</div>";
+    }
+
     app.innerHTML =
       '<div class="profile-header">' + avatarHtml +
       '<div class="profile-name">' + escapeHtml(fullName) + "</div>" +
       subHtml +
       "</div>" +
+      homeShortcutHtml +
       '<div class="section-card">' +
       '<div class="section-title-blue">' + tr("settings_title") + "</div>" +
       '<button class="settings-row" id="lang-setting-row">' +
@@ -1063,6 +1091,9 @@
     document.getElementById("lang-setting-row").addEventListener("click", function () {
       goto("profile_language");
     });
+
+    var addHomeBtn = document.getElementById("add-to-home-btn");
+    if (addHomeBtn) addHomeBtn.addEventListener("click", function () { tg.addToHomeScreen(); });
 
     hideMainButton();
     setBackButton();
