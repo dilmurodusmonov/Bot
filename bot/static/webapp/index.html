@@ -249,6 +249,18 @@
     display: flex; align-items: center; justify-content: center; flex-shrink: 0;
   }
   .settings-row-icon-red { background: #E5484D; }
+  .settings-row-icon.bell-shake svg { animation: bellShake 1.8s ease-in-out infinite; transform-origin: 50% 10%; }
+  @keyframes bellShake {
+    0%, 96%, 100% { transform: rotate(0deg); }
+    2% { transform: rotate(14deg); }
+    4% { transform: rotate(-12deg); }
+    6% { transform: rotate(10deg); }
+    8% { transform: rotate(-8deg); }
+    10% { transform: rotate(6deg); }
+    12% { transform: rotate(-4deg); }
+    14% { transform: rotate(2deg); }
+    16% { transform: rotate(0deg); }
+  }
   .settings-row-icon svg { width: 18px; height: 18px; }
   .settings-row-label { flex: 1; font-weight: 700; }
   .settings-row-value { color: var(--hint); font-size: 14px; }
@@ -1175,7 +1187,7 @@
       '<div class="section-card">' +
       '<div class="section-title-blue">' + tr("settings_title") + "</div>" +
       '<button class="settings-row" id="notif-setting-row">' +
-      '<span class="settings-row-icon settings-row-icon-red">' + ICONS.bell + "</span>" +
+      '<span class="settings-row-icon settings-row-icon-red" id="notif-bell-icon">' + ICONS.bell + "</span>" +
       '<span class="settings-row-label">' + tr("notifications_label") + "</span>" +
       '<span class="settings-row-value" id="notif-setting-count"></span>' +
       '<span class="settings-row-arrow">›</span>' +
@@ -1194,7 +1206,11 @@
     api("GET", "/api/badges").then(function (badges) {
       var pending = state.me.role === "donor" ? badges.donor_pending : badges.needy_pending;
       var countEl = document.getElementById("notif-setting-count");
-      if (countEl && pending > 0) countEl.textContent = String(pending);
+      var bellEl = document.getElementById("notif-bell-icon");
+      if (pending > 0) {
+        if (countEl) countEl.textContent = String(pending);
+        if (bellEl) bellEl.classList.add("bell-shake");
+      }
     }).catch(function () {});
 
     document.getElementById("lang-setting-row").addEventListener("click", function () {
