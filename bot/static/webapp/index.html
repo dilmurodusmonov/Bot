@@ -211,6 +211,26 @@
   .cat-row-slash { color: #9AA3AF; }
   .cat-row-delivered { color: #1C93F3; }
   .cat-row-arrow { color: #9AA3AF; font-size: 18px; }
+  .profile-header { text-align: center; margin: 4px 0 24px; }
+  .avatar-lg { width: 88px; height: 88px; margin: 0 auto 14px; font-size: 32px; }
+  .avatar-img-lg { width: 88px; height: 88px; border-radius: 50%; object-fit: cover; margin: 0 auto 14px; display: block; }
+  .profile-name { font-size: 20px; font-weight: 700; color: var(--text); }
+  .profile-sub { color: var(--hint); font-size: 14px; margin-top: 2px; }
+  .settings-row {
+    display: flex; align-items: center; gap: 12px; width: 100%; text-align: left;
+    background: none; border: none; color: var(--text); padding: 12px 6px; font-size: 15px;
+    font-family: inherit;
+  }
+  .settings-row:not(:last-child) { border-bottom: 1px solid var(--border); }
+  .settings-row-icon {
+    width: 34px; height: 34px; border-radius: 9px; background: #8E44AD; color: #fff;
+    display: flex; align-items: center; justify-content: center; flex-shrink: 0;
+  }
+  .settings-row-icon svg { width: 18px; height: 18px; }
+  .settings-row-label { flex: 1; font-weight: 700; }
+  .settings-row-value { color: var(--hint); font-size: 14px; }
+  .settings-row-arrow { color: #9AA3AF; font-size: 18px; }
+  .settings-row-check { color: #1C93F3; font-size: 16px; font-weight: 700; }
   .bottom-nav {
     position: fixed; left: 50%; bottom: max(12px, env(safe-area-inset-bottom));
     transform: translateX(-50%);
@@ -267,7 +287,8 @@
     list: '<svg ' + SVG_ATTRS + '><line x1="8" y1="6" x2="21" y2="6"></line><line x1="8" y1="12" x2="21" y2="12"></line><line x1="8" y1="18" x2="21" y2="18"></line><line x1="3" y1="6" x2="3.01" y2="6"></line><line x1="3" y1="12" x2="3.01" y2="12"></line><line x1="3" y1="18" x2="3.01" y2="18"></line></svg>',
     camera: '<svg viewBox="0 0 24 24" width="24" height="24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M23 19a2 2 0 0 1-2 2H3a2 2 0 0 1-2-2V8a2 2 0 0 1 2-2h4l2-3h6l2 3h4a2 2 0 0 1 2 2z"></path><circle cx="12" cy="13" r="4"></circle></svg>',
     gift: '<svg ' + SVG_ATTRS + '><polyline points="20 12 20 22 4 22 4 12"></polyline><rect x="2" y="7" width="20" height="5"></rect><line x1="12" y1="22" x2="12" y2="7"></line><path d="M12 7H7.5a2.5 2.5 0 0 1 0-5C11 2 12 7 12 7z"></path><path d="M12 7h4.5a2.5 2.5 0 0 0 0-5C13 2 12 7 12 7z"></path></svg>',
-    eye: '<svg ' + SVG_ATTRS + '><path d="M1 12s4-8 11-8 11 8 11 8-4 8-11 8-11-8-11-8z"></path><circle cx="12" cy="12" r="3"></circle></svg>'
+    eye: '<svg ' + SVG_ATTRS + '><path d="M1 12s4-8 11-8 11 8 11 8-4 8-11 8-11-8-11-8z"></path><circle cx="12" cy="12" r="3"></circle></svg>',
+    globe: '<svg ' + SVG_ATTRS + '><circle cx="12" cy="12" r="10"></circle><line x1="2" y1="12" x2="22" y2="12"></line><path d="M12 2a15.3 15.3 0 0 1 4 10 15.3 15.3 0 0 1-4 10 15.3 15.3 0 0 1-4-10 15.3 15.3 0 0 1 4-10z"></path></svg>'
   };
 
   var UI = {
@@ -304,6 +325,7 @@
       shipment_saved: "Chek yuklandi, Muhtojga xabar berildi!",
       stats_label: "Ehsonlar", delivered_suffix: "dona ehsonlar yetkazildi",
       ad_placeholder: "REKLAMA",
+      settings_title: "Umumiy sozlamalar", language_label: "Til",
     },
     ru: {
       choose_role: "Здравствуйте! Пожалуйста, выберите свой статус:",
@@ -338,6 +360,7 @@
       shipment_saved: "Чек загружен, нуждающийся уведомлён!",
       stats_label: "Всего пожертвований", delivered_suffix: "доставлено",
       ad_placeholder: "РЕКЛАМА",
+      settings_title: "Общие настройки", language_label: "Язык",
     },
     en: {
       choose_role: "Hello! Please choose your status:",
@@ -372,6 +395,7 @@
       shipment_saved: "Receipt uploaded, the recipient was notified!",
       stats_label: "Total donations", delivered_suffix: "delivered",
       ad_placeholder: "AD",
+      settings_title: "General settings", language_label: "Language",
     }
   };
 
@@ -729,9 +753,7 @@
           if (globalCameraInput) globalCameraInput.click();
         });
         var avatarEl = document.getElementById("avatar-btn");
-        if (avatarEl) avatarEl.addEventListener("click", function () {
-          goto(state.me.role === "donor" ? "donor_cabinet" : "needy_cabinet");
-        });
+        if (avatarEl) avatarEl.addEventListener("click", function () { goto("profile"); });
 
         startAdCarousel();
         hideMainButton();
@@ -1012,6 +1034,75 @@
     setBackButton();
   }
 
+  function renderProfile() {
+    var user = tg && tg.initDataUnsafe && tg.initDataUnsafe.user;
+    var photoUrl = user && user.photo_url;
+    var initial = ((user && user.first_name) || "E").charAt(0).toUpperCase();
+    var avatarHtml = photoUrl
+      ? '<img class="avatar-img-lg" src="' + photoUrl + '" alt="">'
+      : '<div class="avatar avatar-lg">' + escapeHtml(initial) + "</div>";
+    var fullName = user ? [user.first_name, user.last_name].filter(Boolean).join(" ") : "";
+    var subHtml = user && user.username ? '<div class="profile-sub">@' + escapeHtml(user.username) + "</div>" : "";
+    var langNames = { uz: "O'zbekcha", ru: "Русский", en: "English" };
+
+    app.innerHTML =
+      '<div class="profile-header">' + avatarHtml +
+      '<div class="profile-name">' + escapeHtml(fullName) + "</div>" +
+      subHtml +
+      "</div>" +
+      '<div class="section-card">' +
+      '<div class="section-title-blue">' + tr("settings_title") + "</div>" +
+      '<button class="settings-row" id="lang-setting-row">' +
+      '<span class="settings-row-icon">' + ICONS.globe + "</span>" +
+      '<span class="settings-row-label">' + tr("language_label") + "</span>" +
+      '<span class="settings-row-value">' + (langNames[state.lang] || "") + "</span>" +
+      '<span class="settings-row-arrow">›</span>' +
+      "</button>" +
+      "</div>";
+
+    document.getElementById("lang-setting-row").addEventListener("click", function () {
+      goto("profile_language");
+    });
+
+    hideMainButton();
+    setBackButton();
+  }
+
+  function renderProfileLanguage() {
+    var langs = [
+      { code: "uz", label: "🇺🇿 O'zbekcha" },
+      { code: "ru", label: "🇷🇺 Русский" },
+      { code: "en", label: "🇬🇧 English" },
+    ];
+
+    app.innerHTML =
+      '<div class="section-card">' +
+      '<div class="section-title-blue">' + tr("language_label") + "</div>" +
+      langs.map(function (l) {
+        return '<button class="settings-row" data-lang="' + l.code + '">' +
+          '<span class="settings-row-label">' + l.label + "</span>" +
+          (state.lang === l.code ? '<span class="settings-row-check">✓</span>' : "") +
+          "</button>";
+      }).join("") +
+      "</div>";
+
+    app.querySelectorAll("[data-lang]").forEach(function (btn) {
+      btn.addEventListener("click", function () {
+        var lang = btn.getAttribute("data-lang");
+        api("POST", "/api/language", { language: lang })
+          .then(function () {
+            state.me.language = lang;
+            state.lang = lang;
+            goBack();
+          })
+          .catch(function () { showError(); });
+      });
+    });
+
+    hideMainButton();
+    setBackButton();
+  }
+
   var screens = {
     loading: renderLoading,
     language: renderLanguage,
@@ -1025,6 +1116,8 @@
     needy_reserve_form: renderNeedyReserveForm,
     needy_cabinet: renderNeedyCabinet,
     needy_dua_form: renderNeedyDuaForm,
+    profile: renderProfile,
+    profile_language: renderProfileLanguage,
   };
 
   function render() {
