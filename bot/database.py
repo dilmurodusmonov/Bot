@@ -282,11 +282,19 @@ async def get_category_stats() -> dict[str, dict[str, int]]:
     rows = await _get_pool().fetch(
         """SELECT category,
                   COUNT(*) AS total,
-                  COUNT(*) FILTER (WHERE status = 'received') AS delivered
+                  COUNT(*) FILTER (WHERE status = 'received') AS delivered,
+                  COUNT(*) FILTER (WHERE created_at > now() - interval '24 hours') AS new_last_24h
            FROM donations
            GROUP BY category"""
     )
-    return {row["category"]: {"total": row["total"], "delivered": row["delivered"]} for row in rows}
+    return {
+        row["category"]: {
+            "total": row["total"],
+            "delivered": row["delivered"],
+            "new_last_24h": row["new_last_24h"],
+        }
+        for row in rows
+    }
 
 
 async def get_recent_donations(limit: int = 10) -> list[dict[str, Any]]:

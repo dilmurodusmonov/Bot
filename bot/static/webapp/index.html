@@ -213,6 +213,7 @@
     background: rgba(120,140,160,0.15); display: flex; align-items: center; justify-content: center;
     font-size: 22px;
   }
+  .cat-row-icon-new { box-shadow: 0 0 0 2px var(--section-bg), 0 0 0 4px #E5484D; }
   .cat-row-name { flex: 1; font-weight: 700; }
   .cat-row-stats { display: flex; align-items: baseline; gap: 1px; font-weight: 700; font-size: 14.5px; }
   .cat-row-total { color: var(--text); }
@@ -708,12 +709,13 @@
           "</div>";
 
         var catsHtml = '<div class="cat-list">' + categories.map(function (c) {
-          var cs = (stats.by_category && stats.by_category[c.key]) || { total: 0, delivered: 0 };
+          var cs = (stats.by_category && stats.by_category[c.key]) || { total: 0, delivered: 0, new_last_24h: 0 };
           var labelParts = c.label.split(" ");
           var emoji = labelParts[0];
           var name = labelParts.slice(1).join(" ");
+          var iconClass = "cat-row-icon" + (cs.new_last_24h > 0 ? " cat-row-icon-new" : "");
           return '<button class="cat-row" data-cat="' + c.key + '">' +
-            '<span class="cat-row-icon">' + escapeHtml(emoji) + "</span>" +
+            '<span class="' + iconClass + '">' + escapeHtml(emoji) + "</span>" +
             '<span class="cat-row-name">' + escapeHtml(name) + "</span>" +
             '<span class="cat-row-stats">' +
             '<span class="cat-row-total">' + formatCount(cs.total) + "</span>" +
