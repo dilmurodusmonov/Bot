@@ -178,6 +178,7 @@
   .ad-slide.ad-1 { background: linear-gradient(135deg, #B79CFF, #8B6EF5); }
   .ad-slide.ad-2 { background: linear-gradient(135deg, #4EA4F5, #7C6CF5); }
   .ad-slide.ad-3 { background: linear-gradient(135deg, #3FCF7F, #2AA968); }
+  .ad-slide.ad-4 { background: linear-gradient(135deg, #AEE0FF, #6EC3F5); }
   .hadith-slide {
     flex-direction: column; align-items: flex-start; justify-content: center;
     gap: 3px; padding: 12px 16px;
@@ -425,7 +426,7 @@
   var state = { screen: "loading", params: {}, me: { language: null, role: null }, lang: "uz" };
   var navStack = [];
   var adTimer = null;
-  var AD_COUNT = 3;
+  var AD_COUNT = 4;
   var AD_INTERVAL_MS = 7000;
 
   function tr(key) { return (UI[state.lang] && UI[state.lang][key]) || UI.uz[key] || key; }
@@ -694,10 +695,12 @@
           '<div class="hadith-quote">«Yaxshilikning mukofoti faqat yaxshilikdir.»</div>' +
           '<div class="hadith-source">📖 Ar-Rahmon, 55:60</div>' +
           "</div>" +
+          '<div class="ad-slide ad-4">' + escapeHtml(tr("ad_placeholder")) + "</div>" +
           '<div class="ad-dots" id="ad-dots">' +
           '<span class="ad-dot active" data-i="0"></span>' +
           '<span class="ad-dot" data-i="1"></span>' +
           '<span class="ad-dot" data-i="2"></span>' +
+          '<span class="ad-dot" data-i="3"></span>' +
           "</div>" +
           '<div class="ad-views" id="ad-views">' + ICONS.eye + '<span id="ad-views-count">0</span></div>' +
           "</div>";
