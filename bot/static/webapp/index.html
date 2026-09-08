@@ -1159,8 +1159,24 @@
   }
 
   var currentAdIndex = 0;
-  var adViewedInSession = {};
   var adViewCache = {};
+  var adViewPending = {};
+
+  function getAdViewState() {
+    try {
+      return JSON.parse(sessionStorage.getItem("adViewState") || "{}");
+    } catch (e) {
+      return {};
+    }
+  }
+
+  function setAdViewCount(slide, views) {
+    try {
+      var viewState = getAdViewState();
+      viewState[slide] = views;
+      sessionStorage.setItem("adViewState", JSON.stringify(viewState));
+    } catch (e) {}
+  }
 
   function displayAdCount(slide) {
     var countEl = document.getElementById("ad-views-count");
@@ -1170,10 +1186,14 @@
   }
 
   function recordAdView(slide) {
+    if (adViewPending[slide]) return;
+    adViewPending[slide] = true;
     api("POST", "/api/ad-view", { slide: slide }).then(function (res) {
+      adViewPending[slide] = false;
       adViewCache[slide] = res.views;
+      setAdViewCount(slide, res.views);
       displayAdCount(slide);
-    }).catch(function () {});
+    }).catch(function () { adViewPending[slide] = false; });
   }
 
   function showAdSlide(index) {
@@ -1188,11 +1208,12 @@
       el.classList.toggle("active", i === currentAdIndex);
     });
     var slideNum = currentAdIndex + 1;
-    if (!adViewedInSession[slideNum]) {
-      adViewedInSession[slideNum] = true;
-      recordAdView(slideNum);
-    } else {
+    var viewState = getAdViewState();
+    if (viewState[slideNum] !== undefined) {
+      adViewCache[slideNum] = viewState[slideNum];
       displayAdCount(slideNum);
+    } else {
+      recordAdView(slideNum);
     }
   }
 
@@ -1202,7 +1223,6 @@
   }
 
   function startAdCarousel() {
-    adViewedInSession = {};
     showAdSlide(0);
     restartAdTimer();
 
