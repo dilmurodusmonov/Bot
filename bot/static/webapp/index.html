@@ -354,6 +354,14 @@
       add_to_home_title: "Ehsonni bir urinishda oching",
       add_to_home_desc: "Ilovani bir zumda ochish uchun Ehsonni bosh ekranga qo'shing.",
       add_to_home_action: "Qo'shish",
+      ad1_quote: "«Har bir nafaqa qilgan narsangizning o'rnini U to'ldirur. U Zot rizq beruvchilarning yaxshisidir».",
+      ad1_source: "📖 Saba, 34:39",
+      ad2_quote: "«Kim bir yaxshilik qilsa, unga o'n barobar qaytarilur.»",
+      ad2_source: "📖 An'om, 6:160",
+      ad3_quote: "«Yaxshilikning mukofoti faqat yaxshilikdir.»",
+      ad3_source: "📖 Ar-Rohman, 55:60",
+      ad4_quote: "«Alloh yaxshilik qiluvchilarni sevadi.»",
+      ad4_source: "📖 Oli Imron, 3:134",
     },
     ru: {
       choose_role: "Здравствуйте! Пожалуйста, выберите свой статус:",
@@ -392,6 +400,14 @@
       add_to_home_title: "Открывайте Ehson в один клик",
       add_to_home_desc: "Чтобы открывать приложение мгновенно, добавьте Ehson на главный экран.",
       add_to_home_action: "Добавить",
+      ad1_quote: "«Он возместит вам все то, что вы израсходовали. Он — Наилучший из дарующих удел».",
+      ad1_source: "📖 Саба, 34:39",
+      ad2_quote: "«Кто явится с добрым деянием, тому воздастся десятикратно».",
+      ad2_source: "📖 Аль-Анам, 6:160",
+      ad3_quote: "«Воздают ли за добро иначе, чем добром?»",
+      ad3_source: "📖 Ар-Рахман, 55:60",
+      ad4_quote: "«Аллах любит творящих добро».",
+      ad4_source: "📖 Али Имран, 3:134",
     },
     en: {
       choose_role: "Hello! Please choose your status:",
@@ -430,6 +446,14 @@
       add_to_home_title: "Open Ehson in one tap",
       add_to_home_desc: "Add Ehson to your home screen to open the app instantly.",
       add_to_home_action: "Add",
+      ad1_quote: "“And whatever thing you spend [in His cause] - He will compensate it; and He is the best of providers.”",
+      ad1_source: "📖 Saba, 34:39",
+      ad2_quote: "“Whoever comes with a good deed will have ten times the like thereof.”",
+      ad2_source: "📖 Al-An'am, 6:160",
+      ad3_quote: "“Is the reward for good [anything] but good?”",
+      ad3_source: "📖 Ar-Rahman, 55:60",
+      ad4_quote: "“And Allah loves the doers of good.”",
+      ad4_source: "📖 Ali 'Imran, 3:134",
     }
   };
 
@@ -693,20 +717,20 @@
         var adsHtml =
           '<div class="ad-banner" id="ad-banner">' +
           '<div class="ad-slide ad-1 active hadith-slide">' +
-          '<div class="hadith-quote">«Har bir nafaqa qilgan narsangizning o\'rnini U to\'ldirur. U Zot rizq beruvchilarning yaxshisidir».</div>' +
-          '<div class="hadith-source">📖 Saba, 34:39</div>' +
+          '<div class="hadith-quote">' + tr("ad1_quote") + "</div>" +
+          '<div class="hadith-source">' + tr("ad1_source") + "</div>" +
           "</div>" +
           '<div class="ad-slide ad-2 hadith-slide">' +
-          '<div class="hadith-quote">«Kim bir yaxshilik qilsa, unga o\'n barobar qaytarilur.»</div>' +
-          '<div class="hadith-source">📖 An\'om, 6:160</div>' +
+          '<div class="hadith-quote">' + tr("ad2_quote") + "</div>" +
+          '<div class="hadith-source">' + tr("ad2_source") + "</div>" +
           "</div>" +
           '<div class="ad-slide ad-3 hadith-slide">' +
-          '<div class="hadith-quote">«Yaxshilikning mukofoti faqat yaxshilikdir.»</div>' +
-          '<div class="hadith-source">📖 Ar-Rohman, 55:60</div>' +
+          '<div class="hadith-quote">' + tr("ad3_quote") + "</div>" +
+          '<div class="hadith-source">' + tr("ad3_source") + "</div>" +
           "</div>" +
           '<div class="ad-slide ad-4 hadith-slide">' +
-          '<div class="hadith-quote">«Alloh yaxshilik qiluvchilarni sevadi.»</div>' +
-          '<div class="hadith-source">📖 Oli Imron, 3:134</div>' +
+          '<div class="hadith-quote">' + tr("ad4_quote") + "</div>" +
+          '<div class="hadith-source">' + tr("ad4_source") + "</div>" +
           "</div>" +
           '<div class="ad-dots" id="ad-dots">' +
           '<span class="ad-dot active" data-i="0"></span>' +
