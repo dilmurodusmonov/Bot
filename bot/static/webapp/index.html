@@ -213,7 +213,15 @@
     background: rgba(120,140,160,0.15); display: flex; align-items: center; justify-content: center;
     font-size: 22px;
   }
-  .cat-row-icon-new { box-shadow: 0 0 0 2px var(--section-bg), 0 0 0 4px #E5484D; }
+  .cat-row-icon-new { position: relative; z-index: 0; }
+  .cat-row-icon-new::before {
+    content: ""; position: absolute; inset: -5.5px; border-radius: 50%; z-index: -2;
+    background: conic-gradient(from 0deg, #FF3B30, #FF6B4A, #C0392B, #FF8A65, #E5484D, #FF3B30);
+  }
+  .cat-row-icon-new::after {
+    content: ""; position: absolute; inset: -2px; border-radius: 50%; z-index: -1;
+    background: var(--section-bg);
+  }
   .cat-row-name { flex: 1; font-weight: 700; }
   .cat-row-stats { display: flex; align-items: baseline; gap: 1px; font-weight: 700; font-size: 14.5px; }
   .cat-row-total { color: var(--text); }
