@@ -260,6 +260,14 @@
     background: none; border: none; color: #1C93F3; font-weight: 700; font-size: 15px;
     padding: 0; font-family: inherit;
   }
+  .fab {
+    position: fixed; right: 20px; bottom: max(20px, env(safe-area-inset-bottom));
+    width: 56px; height: 56px; border-radius: 50%; background: var(--blue);
+    border: none; box-shadow: 0 4px 14px rgba(28,147,243,0.45);
+    display: flex; align-items: center; justify-content: center; color: #fff;
+    z-index: 10;
+  }
+  .fab svg { width: 26px; height: 26px; }
   .bottom-nav {
     position: fixed; left: 50%; bottom: max(12px, env(safe-area-inset-bottom));
     transform: translateX(-50%);
@@ -845,9 +853,11 @@
 
   function renderDonorAdd() {
     var capturedPhotoFile = state.params && state.params.capturedPhoto ? state.params.capturedPhoto : null;
+    var preselectedCategory = state.params && state.params.category ? state.params.category : null;
     api("GET", "/api/categories").then(function (categories) {
       var options = categories.map(function (c) {
-        return '<option value="' + c.key + '">' + escapeHtml(c.label) + "</option>";
+        var selected = c.key === preselectedCategory ? " selected" : "";
+        return '<option value="' + c.key + '"' + selected + ">" + escapeHtml(c.label) + "</option>";
       }).join("");
       app.innerHTML =
         "<label>" + tr("category_label") + "</label>" +
@@ -999,26 +1009,31 @@
 
   function renderNeedyList() {
     var category = state.params.category;
+    var canAdd = state.me.role === "donor";
+    var fabHtml = canAdd ? '<button class="fab" id="add-donation-fab">' + ICONS.plus + "</button>" : "";
     api("GET", "/api/donations?category=" + encodeURIComponent(category)).then(function (donations) {
       if (!donations.length) {
-        app.innerHTML = '<div class="empty-state">' + tr("empty_donations") + "</div>";
-        hideMainButton();
-        setBackButton();
-        return;
-      }
-      var canReserve = state.me.role === "needy";
-      app.innerHTML = donations.map(function (d) {
-        var body = donationCardHtml(d);
+        app.innerHTML = '<div class="empty-state">' + tr("empty_donations") + "</div>" + fabHtml;
+      } else {
+        var canReserve = state.me.role === "needy";
+        app.innerHTML = donations.map(function (d) {
+          var body = donationCardHtml(d);
+          if (canReserve) {
+            body += '<button class="card-btn" data-take="' + d.id + '">' + tr("take_it") + "</button>";
+          }
+          return body + "</div></div>";
+        }).join("") + fabHtml;
         if (canReserve) {
-          body += '<button class="card-btn" data-take="' + d.id + '">' + tr("take_it") + "</button>";
-        }
-        return body + "</div></div>";
-      }).join("");
-      if (canReserve) {
-        app.querySelectorAll("[data-take]").forEach(function (btn) {
-          btn.addEventListener("click", function () {
-            goto("needy_reserve_form", { donationId: parseInt(btn.getAttribute("data-take"), 10) });
+          app.querySelectorAll("[data-take]").forEach(function (btn) {
+            btn.addEventListener("click", function () {
+              goto("needy_reserve_form", { donationId: parseInt(btn.getAttribute("data-take"), 10) });
+            });
           });
+        }
+      }
+      if (canAdd) {
+        document.getElementById("add-donation-fab").addEventListener("click", function () {
+          goto("donor_add", { category: category });
         });
       }
       hideMainButton();
