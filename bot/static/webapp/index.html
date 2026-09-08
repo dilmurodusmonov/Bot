@@ -282,16 +282,27 @@
     font-weight: 600; font-family: inherit; padding: 6px 4px; transition: background .2s ease, color .2s ease;
   }
   .nav-tab.active { color: #1C93F3; background: rgba(28,147,243,0.12); }
-  .nav-badge {
-    display: none; position: absolute; top: 2px; right: 20px;
-    width: 9px; height: 9px; border-radius: 50%; background: #E5484D; border: 1.5px solid #fff;
+  .nav-icon {
+    position: relative; z-index: 0;
+    width: 30px; height: 30px; border-radius: 50%; font-size: 18px;
+    display: flex; align-items: center; justify-content: center;
   }
-  .nav-badge.show { display: block; animation: navBadgeBlink 1.2s ease-in-out infinite; }
-  @keyframes navBadgeBlink {
+  .nav-icon::before {
+    content: ""; position: absolute; inset: -4px; border-radius: 50%; z-index: -2;
+    background: conic-gradient(from 0deg, #FFD23F, #FF6B4A, #E5484D, #8B0000, #FF3B30, #FFD23F);
+    opacity: 0; transition: opacity .2s ease;
+  }
+  .nav-icon::after {
+    content: ""; position: absolute; inset: -2px; border-radius: 50%; z-index: -1;
+    background: #FFFFFF; box-shadow: inset 0 0 0 1px rgba(0,0,0,0.08);
+    opacity: 0; transition: opacity .2s ease;
+  }
+  .nav-icon.story-ring::before { opacity: 1; animation: navRingPulse 1.6s ease-in-out infinite; }
+  .nav-icon.story-ring::after { opacity: 1; }
+  @keyframes navRingPulse {
     0%, 100% { opacity: 1; }
-    50% { opacity: 0.25; }
+    50% { opacity: 0.3; }
   }
-  .nav-icon { font-size: 18px; display: inline-block; }
   @keyframes navIconPop {
     0% { transform: scale(1) rotate(0deg); }
     25% { transform: scale(1.28) rotate(-12deg); }
@@ -305,8 +316,8 @@
 <body>
 <div id="app"><div class="center-loader">Yuklanmoqda...</div></div>
 <div id="bottom-nav" class="bottom-nav" hidden>
-  <button class="nav-tab" data-role="donor"><span class="nav-badge" id="badge-donor"></span><span class="nav-icon">🫴</span><span data-tab-label="donor">Saxiy</span></button>
-  <button class="nav-tab" data-role="needy"><span class="nav-badge" id="badge-needy"></span><span class="nav-icon">🤲</span><span data-tab-label="needy">Muhtoj</span></button>
+  <button class="nav-tab" data-role="donor"><span class="nav-icon" id="navicon-donor">🫴</span><span data-tab-label="donor">Saxiy</span></button>
+  <button class="nav-tab" data-role="needy"><span class="nav-icon" id="navicon-needy">🤲</span><span data-tab-label="needy">Muhtoj</span></button>
 </div>
 <input id="global-camera-input" type="file" accept="image/*" capture="environment" class="visually-hidden">
 <script>
@@ -589,10 +600,10 @@
 
   function refreshBadges() {
     api("GET", "/api/badges").then(function (badges) {
-      var donorBadge = document.getElementById("badge-donor");
-      var needyBadge = document.getElementById("badge-needy");
-      if (donorBadge) donorBadge.classList.toggle("show", badges.donor_pending > 0);
-      if (needyBadge) needyBadge.classList.toggle("show", badges.needy_pending > 0);
+      var donorIcon = document.getElementById("navicon-donor");
+      var needyIcon = document.getElementById("navicon-needy");
+      if (donorIcon) donorIcon.classList.toggle("story-ring", badges.donor_pending > 0);
+      if (needyIcon) needyIcon.classList.toggle("story-ring", badges.needy_pending > 0);
     }).catch(function () {});
   }
 
