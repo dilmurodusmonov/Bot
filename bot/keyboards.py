@@ -2,7 +2,10 @@ from aiogram.types import InlineKeyboardButton, InlineKeyboardMarkup
 
 from bot.texts import LANGUAGES, t
 
-LANGUAGE_FLAGS = {"uz": "🇺🇿 O'zbekcha", "ru": "🇷🇺 Русский", "en": "🇬🇧 English"}
+LANGUAGE_FLAGS = {
+    "uz": "🇺🇿 O'zbekcha", "ru": "🇷🇺 Русский", "en": "🇬🇧 English",
+    "kk": "🇰🇿 Қазақша", "tg": "🇹🇯 Тоҷикӣ", "ky": "🇰🇬 Кыргызча", "tk": "🇹🇲 Türkmençe",
+}
 
 
 def language_keyboard() -> InlineKeyboardMarkup:
