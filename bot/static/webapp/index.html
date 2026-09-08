@@ -184,7 +184,7 @@
     flex-direction: column; align-items: flex-start; justify-content: center;
     gap: 3px; padding: 12px 16px;
   }
-  .ad-slide-placeholder { justify-content: center; font-size: 20px; font-weight: 800; letter-spacing: 2px; text-transform: uppercase; opacity: 0.85; }
+  .ad-slide-placeholder { justify-content: flex-end; font-size: 12px; font-weight: 700; letter-spacing: 1px; text-transform: uppercase; }
   .hadith-intro { font-size: 11.5px; font-weight: 600; letter-spacing: normal; opacity: 0.9; }
   .hadith-quote { font-size: 14px; font-weight: 600; letter-spacing: normal; line-height: 1.32; }
   .hadith-source { font-size: 10.5px; font-weight: 500; letter-spacing: normal; opacity: 0.85; margin-top: 10px; }
@@ -974,6 +974,7 @@
           '<span class="ad-dot" data-i="2"></span>' +
           '<span class="ad-dot" data-i="3"></span>' +
           "</div>" +
+          '<div class="ad-views" id="ad-views-2">' + ICONS.eye + '<span id="ad-views-count-2">0</span></div>' +
           "</div>";
 
         var fireworkColors = ["#FF9A5C", "#1C93F3", "#E5484D", "#FFD23F", "#7C5CFF", "#2ECC71"];
@@ -1045,7 +1046,7 @@
         refreshAvatarRing();
 
         startAdCarousel();
-        ad2Timer = startSimpleCarousel("ad-banner-2", "ad-dots-2");
+        ad2Timer = startSimpleCarousel("ad-banner-2", "ad-dots-2", 5, "ad-views-count-2");
         hideMainButton();
         setBackButton();
       })
@@ -1486,21 +1487,21 @@
     } catch (e) {}
   }
 
-  function displayAdCount(slide) {
-    var countEl = document.getElementById("ad-views-count");
+  function displayAdCount(slide, countElId) {
+    var countEl = document.getElementById(countElId || "ad-views-count");
     if (countEl && adViewCache[slide] !== undefined) {
       countEl.textContent = formatCount(adViewCache[slide]);
     }
   }
 
-  function recordAdView(slide) {
+  function recordAdView(slide, countElId) {
     if (adViewPending[slide]) return;
     adViewPending[slide] = true;
     api("POST", "/api/ad-view", { slide: slide }).then(function (res) {
       adViewPending[slide] = false;
       adViewCache[slide] = res.views;
       setAdViewCount(slide, res.views);
-      displayAdCount(slide);
+      displayAdCount(slide, countElId);
     }).catch(function () { adViewPending[slide] = false; });
   }
 
@@ -1561,7 +1562,7 @@
     }
   }
 
-  function startSimpleCarousel(bannerId, dotsId) {
+  function startSimpleCarousel(bannerId, dotsId, slideOffset, viewsCountElId) {
     var banner = document.getElementById(bannerId);
     var dots = document.getElementById(dotsId);
     if (!banner) return null;
@@ -1573,8 +1574,19 @@
       index = ((i % slides.length) + slides.length) % slides.length;
       slides.forEach(function (el, idx) { el.classList.toggle("active", idx === index); });
       dotEls.forEach(function (el, idx) { el.classList.toggle("active", idx === index); });
+      if (slideOffset) {
+        var slideNum = slideOffset + index;
+        var viewState = getAdViewState();
+        if (viewState[slideNum] !== undefined) {
+          adViewCache[slideNum] = viewState[slideNum];
+          displayAdCount(slideNum, viewsCountElId);
+        } else {
+          recordAdView(slideNum, viewsCountElId);
+        }
+      }
     }
 
+    show(0);
     var timer = setInterval(function () { show(index + 1); }, AD_INTERVAL_MS);
     function restart() { clearInterval(timer); timer = setInterval(function () { show(index + 1); }, AD_INTERVAL_MS); }
 
