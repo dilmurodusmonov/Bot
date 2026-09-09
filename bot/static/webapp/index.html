@@ -72,9 +72,10 @@
   .card-gallery::-webkit-scrollbar { display: none; }
   .card-gallery img { flex: 0 0 100%; scroll-snap-align: start; }
   .card-gallery-dots {
-    position: absolute; left: 0; right: 0; bottom: 10px; z-index: 2;
-    display: flex; gap: 6px; justify-content: center;
+    display: flex; gap: 6px; justify-content: center; padding: 10px 0 0;
   }
+  .card-gallery-dot { width: 6px; height: 6px; border-radius: 3px; background: rgba(28,147,243,0.25); transition: all .3s ease; }
+  .card-gallery-dot.active { width: 18px; background: #1C93F3; }
   .card-gallery-counter {
     position: absolute; top: 10px; right: 10px; z-index: 2;
     background: rgba(0,0,0,0.55); color: #fff; font-size: 12px; font-weight: 600;
@@ -1168,7 +1169,7 @@
     var mediaHtml;
     if (photos.length > 1) {
       var dotsHtml = '<div class="card-gallery-dots">' + photos.map(function (_, i) {
-        return '<span class="ad-dot' + (i === 0 ? " active" : "") + '"></span>';
+        return '<span class="card-gallery-dot' + (i === 0 ? " active" : "") + '"></span>';
       }).join("") + "</div>";
       var counterHtml = '<div class="card-gallery-counter">1/' + photos.length + "</div>";
       mediaHtml =
@@ -1176,9 +1177,9 @@
         '<div class="card-gallery">' + photos.map(function (url) {
           return '<img src="' + url + '" alt="">';
         }).join("") + "</div>" +
-        dotsHtml +
         counterHtml +
-        "</div>";
+        "</div>" +
+        dotsHtml;
     } else {
       mediaHtml = '<img src="' + photos[0] + '" alt="">';
     }
@@ -1194,7 +1195,8 @@
 
   function wireCardGalleries() {
     app.querySelectorAll(".card-gallery").forEach(function (gallery) {
-      var dots = gallery.parentNode.querySelectorAll(".card-gallery-dots .ad-dot");
+      var card = gallery.closest(".card");
+      var dots = card ? card.querySelectorAll(".card-gallery-dots .card-gallery-dot") : [];
       var counter = gallery.parentNode.querySelector(".card-gallery-counter");
       if (!dots.length) return;
       gallery.addEventListener("scroll", function () {
