@@ -44,6 +44,13 @@ CREATE TABLE IF NOT EXISTS ad_stats (
     slide INTEGER PRIMARY KEY,
     views BIGINT NOT NULL DEFAULT 0
 );
+
+CREATE TABLE IF NOT EXISTS donation_likes (
+    donation_id INTEGER NOT NULL REFERENCES donations(id),
+    telegram_id BIGINT NOT NULL REFERENCES users(telegram_id),
+    created_at TIMESTAMPTZ NOT NULL DEFAULT now(),
+    PRIMARY KEY (donation_id, telegram_id)
+);
 """
 
 _pool: Optional[asyncpg.Pool] = None
@@ -332,3 +339,44 @@ async def count_new_donations_last_24h() -> int:
     return await _get_pool().fetchval(
         "SELECT COUNT(*) FROM donations WHERE created_at > now() - interval '24 hours'"
     )
+
+
+# --- ehsonlarni yoqtirish (like) ----------------------------------------------
+
+async def toggle_donation_like(donation_id: int, telegram_id: int) -> tuple[bool, int]:
+    pool = _get_pool()
+    async with pool.acquire() as conn:
+        async with conn.transaction():
+            deleted = await conn.execute(
+                "DELETE FROM donation_likes WHERE donation_id = $1 AND telegram_id = $2",
+                donation_id,
+                telegram_id,
+            )
+            if deleted == "DELETE 0":
+                await conn.execute(
+                    """INSERT INTO donation_likes (donation_id, telegram_id)
+                       VALUES ($1, $2) ON CONFLICT DO NOTHING""",
+                    donation_id,
+                    telegram_id,
+                )
+                liked = True
+            else:
+                liked = False
+            count = await conn.fetchval(
+                "SELECT COUNT(*) FROM donation_likes WHERE donation_id = $1", donation_id
+            )
+            return liked, count
+
+
+async def get_like_info(donation_ids: list[int], telegram_id: int) -> dict[int, dict[str, Any]]:
+    if not donation_ids:
+        return {}
+    rows = await _get_pool().fetch(
+        """SELECT donation_id, COUNT(*) AS count,
+                  COUNT(*) FILTER (WHERE telegram_id = $2) > 0 AS liked
+           FROM donation_likes WHERE donation_id = ANY($1::int[])
+           GROUP BY donation_id""",
+        donation_ids,
+        telegram_id,
+    )
+    return {row["donation_id"]: {"count": row["count"], "liked": row["liked"]} for row in rows}

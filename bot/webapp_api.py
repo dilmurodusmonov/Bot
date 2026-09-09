@@ -18,6 +18,7 @@ from bot.database import (
     get_available_donations,
     get_donation,
     get_donations_by_donor,
+    get_like_info,
     get_reservation,
     get_category_stats,
     get_reservations_by_needy,
@@ -28,6 +29,7 @@ from bot.database import (
     set_reservation_shipped,
     set_user_language,
     set_user_role,
+    toggle_donation_like,
 )
 from bot.texts import CATEGORIES, LANGUAGES, category_name, status_label, t
 from bot.webapp_auth import validate_init_data
@@ -100,7 +102,7 @@ async def _read_multipart_photos(request: web.Request) -> tuple[dict, list[tuple
     return fields, photos
 
 
-def _donation_json(d: dict, lang: str) -> dict:
+def _donation_json(d: dict, lang: str, like_count: int = 0, liked_by_me: bool = False) -> dict:
     photo_ids = [d["photo_file_id"]]
     if d.get("photo_file_id_2"):
         photo_ids.append(d["photo_file_id_2"])
@@ -116,6 +118,8 @@ def _donation_json(d: dict, lang: str) -> dict:
         "photo_url": f"/api/photo/{d['photo_file_id']}",
         "photo_urls": [f"/api/photo/{pid}" for pid in photo_ids],
         "created_at": d["created_at"].isoformat(),
+        "like_count": like_count,
+        "liked_by_me": liked_by_me,
     }
 
 
@@ -177,17 +181,29 @@ async def api_donations(request: web.Request) -> web.Response:
         raise web.HTTPBadRequest(text="invalid category")
     lang = await _lang_for(telegram_id)
     donations = await get_available_donations(category)
-    return web.json_response([_donation_json(d, lang) for d in donations])
+    likes = await get_like_info([d["id"] for d in donations], telegram_id)
+    return web.json_response(
+        [
+            _donation_json(
+                d, lang,
+                like_count=likes.get(d["id"], {}).get("count", 0),
+                liked_by_me=likes.get(d["id"], {}).get("liked", False),
+            )
+            for d in donations
+        ]
+    )
 
 
 async def api_my_donations(request: web.Request) -> web.Response:
     telegram_id = await _require_user_id(request)
     lang = await _lang_for(telegram_id)
     donations = await get_donations_by_donor(telegram_id)
+    likes = await get_like_info([d["id"] for d in donations], telegram_id)
 
     result = []
     for d in donations:
-        item = _donation_json(d, lang)
+        like = likes.get(d["id"], {})
+        item = _donation_json(d, lang, like_count=like.get("count", 0), liked_by_me=like.get("liked", False))
         if d["status"] in ("reserved", "shipped", "received"):
             res = await get_active_reservation_for_donation(d["id"])
             if res:
@@ -207,16 +223,25 @@ async def api_my_requests(request: web.Request) -> web.Response:
     telegram_id = await _require_user_id(request)
     lang = await _lang_for(telegram_id)
     reservations = await get_reservations_by_needy(telegram_id)
+    donations = [await get_donation(r["donation_id"]) for r in reservations]
+    likes = await get_like_info([d["id"] for d in donations if d], telegram_id)
 
     result = []
-    for r in reservations:
-        donation = await get_donation(r["donation_id"])
+    for r, donation in zip(reservations, donations):
+        like = likes.get(donation["id"], {}) if donation else {}
         result.append(
             {
                 "reservation_id": r["id"],
                 "status": r["status"],
                 "status_label": status_label(r["status"], lang),
-                "donation": _donation_json(donation, lang) if donation else None,
+                "donation": (
+                    _donation_json(
+                        donation, lang,
+                        like_count=like.get("count", 0),
+                        liked_by_me=like.get("liked", False),
+                    )
+                    if donation else None
+                ),
                 "receipt_photo_url": (
                     f"/api/photo/{r['receipt_photo_file_id']}"
                     if r["receipt_photo_file_id"]
@@ -346,6 +371,18 @@ async def api_delete_donation(request: web.Request) -> web.Response:
     return web.json_response({"ok": True})
 
 
+async def api_toggle_donation_like(request: web.Request) -> web.Response:
+    telegram_id = await _require_user_id(request)
+    donation_id = int(request.match_info["id"])
+
+    donation = await get_donation(donation_id)
+    if not donation:
+        raise web.HTTPNotFound()
+
+    liked, count = await toggle_donation_like(donation_id, telegram_id)
+    return web.json_response({"liked": liked, "like_count": count})
+
+
 async def api_create_donation(request: web.Request) -> web.Response:
     telegram_id = await _require_user_id(request)
     fields, photos = await _read_multipart_photos(request)
@@ -450,4 +487,5 @@ def setup_api_routes(app: web.Application) -> None:
     app.router.add_post("/api/reservations/{id}/cancel", api_cancel_reservation)
     app.router.add_post("/api/donations", api_create_donation)
     app.router.add_post("/api/donations/{id}/delete", api_delete_donation)
+    app.router.add_post("/api/donations/{id}/like", api_toggle_donation_like)
     app.router.add_get("/api/photo/{file_id}", api_photo)
