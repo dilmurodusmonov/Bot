@@ -67,6 +67,8 @@
     overflow: hidden; margin-bottom: 14px;
   }
   .card img { width: 100%; height: 150px; object-fit: cover; display: block; background: #232B36; }
+  .card-gallery { display: flex; overflow-x: auto; scroll-snap-type: x mandatory; }
+  .card-gallery img { flex: 0 0 100%; scroll-snap-align: start; }
   .card-body { padding: 12px 14px; }
   .card-cat { font-size: 12.5px; color: var(--hint); margin-bottom: 4px; }
   .card-desc { font-size: 15px; line-height: 1.4; margin-bottom: 8px; }
@@ -96,6 +98,9 @@
   }
   .error-box { background: rgba(229,72,77,0.12); color: #C0392B; border-radius: 10px; padding: 10px 12px; font-size: 13.5px; margin-top: 12px; }
   .photo-preview { display: none; width: 100%; max-height: 220px; object-fit: cover; border-radius: 12px; margin-top: 10px; border: 1px solid var(--border); }
+  .photo-preview-row { display: none; gap: 8px; margin-top: 10px; }
+  .photo-preview-row.show { display: flex; }
+  .photo-preview-row img { width: 84px; height: 84px; object-fit: cover; border-radius: 12px; border: 1px solid var(--border); flex-shrink: 0; }
   input[type="file"] { padding: 10px 12px; }
   .visually-hidden {
     position: absolute; width: 1px; height: 1px; padding: 0; margin: -1px;
@@ -381,7 +386,7 @@
       fill_all: "Iltimos, barcha maydonlarni to'ldiring.",
       thanks_confirmed: "Rahmat! Tasdiqlandi.",
       photo_label: "Rasm", choose_photo: "Rasm tanlash",
-      photo_note: "Ehson rasmini albatta biriktiring.",
+      photo_note: "Ehson rasmini albatta biriktiring (eng ko'pi 3 ta).",
       photo_required: "Iltimos, rasm tanlang.",
       receipt_note_label: "Izoh (ixtiyoriy)",
       receipt_note_placeholder: "Masalan: qaysi kuryerlik orqali yuborildi",
@@ -427,7 +432,7 @@
       fill_all: "Пожалуйста, заполните все поля.",
       thanks_confirmed: "Спасибо! Подтверждено.",
       photo_label: "Фото", choose_photo: "Выбрать фото",
-      photo_note: "Обязательно прикрепите фото пожертвования.",
+      photo_note: "Обязательно прикрепите фото пожертвования (максимум 3).",
       photo_required: "Пожалуйста, выберите фото.",
       receipt_note_label: "Комментарий (необязательно)",
       receipt_note_placeholder: "Например: через какую службу отправлено",
@@ -473,7 +478,7 @@
       fill_all: "Please fill in all fields.",
       thanks_confirmed: "Thank you! Confirmed.",
       photo_label: "Photo", choose_photo: "Choose photo",
-      photo_note: "Please attach a photo of the donation.",
+      photo_note: "Please attach a photo of the donation (up to 3).",
       photo_required: "Please choose a photo.",
       receipt_note_label: "Note (optional)",
       receipt_note_placeholder: "e.g. which courier service",
@@ -519,7 +524,7 @@
       fill_all: "Барлық өрістерді толтырыңыз.",
       thanks_confirmed: "Рахмет! Расталды.",
       photo_label: "Сурет", choose_photo: "Сурет таңдау",
-      photo_note: "Қайыр суретін міндетті түрде тіркеңіз.",
+      photo_note: "Қайыр суретін міндетті түрде тіркеңіз (ең көбі 3).",
       photo_required: "Сурет таңдаңыз.",
       receipt_note_label: "Түсініктеме (міндетті емес)",
       receipt_note_placeholder: "Мысалы: қай жеткізу қызметі арқылы жіберілді",
@@ -557,7 +562,7 @@
       fill_all: "Лутфан, ҳамаи майдонҳоро пур кунед.",
       thanks_confirmed: "Ташаккур! Тасдиқ шуд.",
       photo_label: "Расм", choose_photo: "Интихоби расм",
-      photo_note: "Ҳатман расми хайрияро замима кунед.",
+      photo_note: "Ҳатман расми хайрияро замима кунед (ҳадди аксар 3 адад).",
       photo_required: "Лутфан, расм интихоб кунед.",
       receipt_note_label: "Шарҳ (ихтиёрӣ)",
       receipt_note_placeholder: "Масалан: тавассути кадом хидмати расонӣ фиристода шуд",
@@ -595,7 +600,7 @@
       fill_all: "Бардык талааларды толтуруңуз.",
       thanks_confirmed: "Рахмат! Тастыкталды.",
       photo_label: "Сүрөт", choose_photo: "Сүрөт тандоо",
-      photo_note: "Садага сүрөтүн милдеттүү түрдө тиркеңиз.",
+      photo_note: "Садага сүрөтүн милдеттүү түрдө тиркеңиз (эң көбү 3).",
       photo_required: "Сүрөт тандаңыз.",
       receipt_note_label: "Түшүндүрмө (милдеттүү эмес)",
       receipt_note_placeholder: "Мисалы: кайсы жеткирүү кызматы аркылуу жөнөтүлдү",
@@ -633,7 +638,7 @@
       fill_all: "Ähli meýdanlary dolduryň.",
       thanks_confirmed: "Sag boluň! Tassyklandy.",
       photo_label: "Surat", choose_photo: "Surat saýlamak",
-      photo_note: "Sadakanyň suratyny hökman goşuň.",
+      photo_note: "Sadakanyň suratyny hökman goşuň (iň köp 3 sanysy).",
       photo_required: "Surat saýlaň.",
       receipt_note_label: "Bellik (hökmany däl)",
       receipt_note_placeholder: "Mysal üçin: haýsy eltip beriş gullugy arkaly iberildi",
@@ -799,9 +804,11 @@
     });
   }
 
-  function photoPickerHtml(inputId) {
+  function photoPickerHtml(inputId, multiple) {
     return '<div class="photo-picker-row">' +
-      '<input id="' + inputId + '" type="file" accept="image/*" capture="environment" class="visually-hidden">' +
+      '<input id="' + inputId + '" type="file" accept="image/*"' +
+      (multiple ? " multiple" : ' capture="environment"') +
+      ' class="visually-hidden">' +
       '<label for="' + inputId + '" class="photo-fab">' + ICONS.camera + "</label>" +
       "</div>";
   }
@@ -1067,29 +1074,39 @@
         "<label>" + tr("description_label") + "</label>" +
         '<textarea id="desc-input" placeholder="' + escapeHtml(tr("description_placeholder")) + '"></textarea>' +
         "<label>" + tr("photo_label") + "</label>" +
-        photoPickerHtml("donation-photo-input") +
-        '<img id="donation-photo-preview" class="photo-preview">' +
+        photoPickerHtml("donation-photo-input", true) +
+        '<div id="donation-photo-preview-row" class="photo-preview-row"></div>' +
         '<p class="note">' + tr("photo_note") + "</p>";
 
-      wirePhotoPreview("donation-photo-input", "donation-photo-preview");
+      var selectedPhotoFiles = capturedPhotoFile ? [capturedPhotoFile] : [];
 
-      if (capturedPhotoFile) {
-        var preview = document.getElementById("donation-photo-preview");
-        preview.src = URL.createObjectURL(capturedPhotoFile);
-        preview.style.display = "block";
+      function renderDonationPhotoPreviews() {
+        var row = document.getElementById("donation-photo-preview-row");
+        row.innerHTML = "";
+        row.classList.toggle("show", selectedPhotoFiles.length > 0);
+        selectedPhotoFiles.forEach(function (file) {
+          var img = document.createElement("img");
+          img.src = URL.createObjectURL(file);
+          row.appendChild(img);
+        });
       }
+      renderDonationPhotoPreviews();
+
+      document.getElementById("donation-photo-input").addEventListener("change", function (e) {
+        selectedPhotoFiles = Array.prototype.slice.call(e.target.files || []).slice(0, 3);
+        renderDonationPhotoPreviews();
+      });
 
       setMainButton(tr("continue"), function () {
         var category = document.getElementById("cat-select").value;
         var description = document.getElementById("desc-input").value.trim();
-        var file = document.getElementById("donation-photo-input").files[0] || capturedPhotoFile;
         if (!description) { showError(tr("fill_all")); return; }
-        if (!file) { showError(tr("photo_required")); return; }
+        if (!selectedPhotoFiles.length) { showError(tr("photo_required")); return; }
 
         var fd = new FormData();
         fd.append("category", category);
         fd.append("description", description);
-        fd.append("photo", file);
+        selectedPhotoFiles.forEach(function (file) { fd.append("photo", file); });
 
         if (tg) tg.MainButton.showProgress();
         api("POST", "/api/donations", fd)
@@ -1105,9 +1122,15 @@
   }
 
   function donationCardHtml(d) {
+    var photos = d.photo_urls && d.photo_urls.length ? d.photo_urls : [d.photo_url];
+    var mediaHtml = photos.length > 1
+      ? '<div class="card-gallery">' + photos.map(function (url) {
+          return '<img src="' + url + '" alt="">';
+        }).join("") + "</div>"
+      : '<img src="' + photos[0] + '" alt="">';
     return (
       '<div class="card">' +
-      '<img src="' + d.photo_url + '" alt="">' +
+      mediaHtml +
       '<div class="card-body">' +
       '<div class="card-cat">' + escapeHtml(d.category_label) + "</div>" +
       '<div class="card-desc">' + escapeHtml(d.description) + "</div>" +

@@ -17,6 +17,8 @@ CREATE TABLE IF NOT EXISTS donations (
     donor_id BIGINT NOT NULL REFERENCES users(telegram_id),
     category TEXT NOT NULL,
     photo_file_id TEXT NOT NULL,
+    photo_file_id_2 TEXT,
+    photo_file_id_3 TEXT,
     description TEXT,
     status TEXT NOT NULL DEFAULT 'available',
     created_at TIMESTAMPTZ NOT NULL DEFAULT now()
@@ -59,6 +61,7 @@ async def init_db() -> None:
     async with _pool.acquire() as conn:
         await conn.execute(SCHEMA)
         await _migrate_ad_stats(conn)
+        await _migrate_donation_photos(conn)
 
 
 async def _migrate_ad_stats(conn: asyncpg.Connection) -> None:
@@ -75,6 +78,12 @@ async def _migrate_ad_stats(conn: asyncpg.Connection) -> None:
         await conn.execute("ALTER TABLE ad_stats RENAME COLUMN id TO slide")
         await conn.execute("ALTER TABLE ad_stats DROP CONSTRAINT IF EXISTS ad_stats_id_check")
         await conn.execute("ALTER TABLE ad_stats ALTER COLUMN slide DROP DEFAULT")
+
+
+async def _migrate_donation_photos(conn: asyncpg.Connection) -> None:
+    """Bitta ehsonga bir nechta (max 3) rasm biriktirish imkoniyati uchun ustunlar."""
+    await conn.execute("ALTER TABLE donations ADD COLUMN IF NOT EXISTS photo_file_id_2 TEXT")
+    await conn.execute("ALTER TABLE donations ADD COLUMN IF NOT EXISTS photo_file_id_3 TEXT")
 
 
 # --- users -----------------------------------------------------------------
@@ -112,14 +121,18 @@ async def set_user_role(telegram_id: int, role: str) -> None:
 # --- donations ---------------------------------------------------------------
 
 async def create_donation(
-    donor_id: int, category: str, photo_file_id: str, description: str
+    donor_id: int, category: str, photo_file_ids: list[str], description: str
 ) -> int:
+    photo_file_ids = photo_file_ids[:3]
     return await _get_pool().fetchval(
-        """INSERT INTO donations (donor_id, category, photo_file_id, description, status)
-           VALUES ($1, $2, $3, $4, 'available') RETURNING id""",
+        """INSERT INTO donations
+           (donor_id, category, photo_file_id, photo_file_id_2, photo_file_id_3, description, status)
+           VALUES ($1, $2, $3, $4, $5, $6, 'available') RETURNING id""",
         donor_id,
         category,
-        photo_file_id,
+        photo_file_ids[0],
+        photo_file_ids[1] if len(photo_file_ids) > 1 else None,
+        photo_file_ids[2] if len(photo_file_ids) > 2 else None,
         description,
     )
 

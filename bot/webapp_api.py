@@ -1,7 +1,7 @@
 from typing import Optional
 
 from aiogram import Bot
-from aiogram.types import BufferedInputFile
+from aiogram.types import BufferedInputFile, InputMediaPhoto
 from aiohttp import web
 
 from bot.database import (
@@ -73,7 +73,39 @@ async def _read_multipart_photo(request: web.Request) -> tuple[dict, bytes, str]
     return fields, photo_bytes, filename
 
 
+MAX_DONATION_PHOTOS = 3
+
+
+async def _read_multipart_photos(request: web.Request) -> tuple[dict, list[tuple[bytes, str]]]:
+    """Mini App'dan multipart/form-data orqali kelgan matn maydonlari va bir nechta
+    (max MAX_DONATION_PHOTOS) rasmni o'qiydi."""
+    fields: dict[str, str] = {}
+    photos: list[tuple[bytes, str]] = []
+
+    reader = await request.multipart()
+    while True:
+        field = await reader.next()
+        if field is None:
+            break
+        if field.name == "photo":
+            filename = field.filename or "photo.jpg"
+            photo_bytes = await field.read(decode=False)
+            if len(photos) < MAX_DONATION_PHOTOS:
+                photos.append((photo_bytes, filename))
+        else:
+            fields[field.name] = await field.text()
+
+    if not photos:
+        raise web.HTTPBadRequest(text="photo required")
+    return fields, photos
+
+
 def _donation_json(d: dict, lang: str) -> dict:
+    photo_ids = [d["photo_file_id"]]
+    if d.get("photo_file_id_2"):
+        photo_ids.append(d["photo_file_id_2"])
+    if d.get("photo_file_id_3"):
+        photo_ids.append(d["photo_file_id_3"])
     return {
         "id": d["id"],
         "category": d["category"],
@@ -82,6 +114,7 @@ def _donation_json(d: dict, lang: str) -> dict:
         "status": d["status"],
         "status_label": status_label(d["status"], lang),
         "photo_url": f"/api/photo/{d['photo_file_id']}",
+        "photo_urls": [f"/api/photo/{pid}" for pid in photo_ids],
         "created_at": d["created_at"].isoformat(),
     }
 
@@ -315,7 +348,7 @@ async def api_delete_donation(request: web.Request) -> web.Response:
 
 async def api_create_donation(request: web.Request) -> web.Response:
     telegram_id = await _require_user_id(request)
-    fields, photo_bytes, filename = await _read_multipart_photo(request)
+    fields, photos = await _read_multipart_photos(request)
     category = fields.get("category")
     description = (fields.get("description") or "").strip()
     if category not in CATEGORIES or not description:
@@ -325,17 +358,29 @@ async def api_create_donation(request: web.Request) -> web.Response:
     lang = await _lang_for(telegram_id)
     bot: Bot = request.app["bot"]
 
-    sent = await bot.send_photo(
-        chat_id=telegram_id,
-        photo=BufferedInputFile(photo_bytes, filename=filename),
-        caption=t(lang, "donation_added"),
-    )
-    photo_file_id = sent.photo[-1].file_id
+    if len(photos) == 1:
+        photo_bytes, filename = photos[0]
+        sent = await bot.send_photo(
+            chat_id=telegram_id,
+            photo=BufferedInputFile(photo_bytes, filename=filename),
+            caption=t(lang, "donation_added"),
+        )
+        photo_file_ids = [sent.photo[-1].file_id]
+    else:
+        media = [
+            InputMediaPhoto(
+                media=BufferedInputFile(photo_bytes, filename=filename),
+                caption=t(lang, "donation_added") if i == 0 else None,
+            )
+            for i, (photo_bytes, filename) in enumerate(photos)
+        ]
+        sent_messages = await bot.send_media_group(chat_id=telegram_id, media=media)
+        photo_file_ids = [msg.photo[-1].file_id for msg in sent_messages]
 
     donation_id = await create_donation(
         donor_id=telegram_id,
         category=category,
-        photo_file_id=photo_file_id,
+        photo_file_ids=photo_file_ids,
         description=description,
     )
     return web.json_response({"ok": True, "donation_id": donation_id})
