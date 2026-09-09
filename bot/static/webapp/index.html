@@ -67,8 +67,14 @@
     overflow: hidden; margin-bottom: 14px;
   }
   .card img { width: 100%; height: 150px; object-fit: cover; display: block; background: #232B36; }
-  .card-gallery { display: flex; overflow-x: auto; scroll-snap-type: x mandatory; }
+  .card-media { position: relative; }
+  .card-gallery { display: flex; overflow-x: auto; scroll-snap-type: x mandatory; scrollbar-width: none; }
+  .card-gallery::-webkit-scrollbar { display: none; }
   .card-gallery img { flex: 0 0 100%; scroll-snap-align: start; }
+  .card-gallery-dots {
+    position: absolute; left: 0; right: 0; bottom: 10px; z-index: 2;
+    display: flex; gap: 6px; justify-content: center;
+  }
   .card-body { padding: 12px 14px; }
   .card-cat { font-size: 12.5px; color: var(--hint); margin-bottom: 4px; }
   .card-desc { font-size: 15px; line-height: 1.4; margin-bottom: 8px; }
@@ -1141,11 +1147,21 @@
 
   function donationCardHtml(d) {
     var photos = d.photo_urls && d.photo_urls.length ? d.photo_urls : [d.photo_url];
-    var mediaHtml = photos.length > 1
-      ? '<div class="card-gallery">' + photos.map(function (url) {
+    var mediaHtml;
+    if (photos.length > 1) {
+      var dotsHtml = '<div class="card-gallery-dots">' + photos.map(function (_, i) {
+        return '<span class="ad-dot' + (i === 0 ? " active" : "") + '"></span>';
+      }).join("") + "</div>";
+      mediaHtml =
+        '<div class="card-media">' +
+        '<div class="card-gallery">' + photos.map(function (url) {
           return '<img src="' + url + '" alt="">';
-        }).join("") + "</div>"
-      : '<img src="' + photos[0] + '" alt="">';
+        }).join("") + "</div>" +
+        dotsHtml +
+        "</div>";
+    } else {
+      mediaHtml = '<img src="' + photos[0] + '" alt="">';
+    }
     return (
       '<div class="card">' +
       mediaHtml +
@@ -1154,6 +1170,17 @@
       '<div class="card-desc">' + escapeHtml(d.description) + "</div>" +
       '<span class="pill pill-' + d.status + '">' + escapeHtml(d.status_label) + "</span>"
     );
+  }
+
+  function wireCardGalleries() {
+    app.querySelectorAll(".card-gallery").forEach(function (gallery) {
+      var dots = gallery.parentNode.querySelectorAll(".card-gallery-dots .ad-dot");
+      if (!dots.length) return;
+      gallery.addEventListener("scroll", function () {
+        var index = Math.round(gallery.scrollLeft / gallery.clientWidth);
+        dots.forEach(function (dot, i) { dot.classList.toggle("active", i === index); });
+      }, { passive: true });
+    });
   }
 
   function renderDonorCabinet() {
@@ -1182,6 +1209,7 @@
         return body + "</div></div>";
       }).join("");
       app.innerHTML = html;
+      wireCardGalleries();
       app.querySelectorAll("[data-ship]").forEach(function (btn) {
         btn.addEventListener("click", function () {
           goto("donor_ship_form", { reservationId: parseInt(btn.getAttribute("data-ship"), 10) });
@@ -1266,6 +1294,7 @@
           }
           return body + "</div></div>";
         }).join("") + fabHtml;
+        wireCardGalleries();
         if (canReserve) {
           app.querySelectorAll("[data-take]").forEach(function (btn) {
             btn.addEventListener("click", function () {
@@ -1332,6 +1361,7 @@
         return body + "</div></div>";
       }).join("");
       app.innerHTML = html;
+      wireCardGalleries();
       app.querySelectorAll("[data-confirm]").forEach(function (btn) {
         btn.addEventListener("click", function () {
           goto("needy_dua_form", { reservationId: parseInt(btn.getAttribute("data-confirm"), 10) });
