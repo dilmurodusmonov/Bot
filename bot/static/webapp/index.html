@@ -835,8 +835,8 @@
 
   function formatCount(n) {
     n = n || 0;
-    if (n >= 1000000) return (n / 1000000).toFixed(1).replace(/\.0$/, "") + "M";
-    if (n >= 1000) return (n / 1000).toFixed(1).replace(/\.0$/, "") + "K";
+    if (n >= 1000000) return (n / 1000000).toFixed(1).replace(/\.0$/, "") + "m";
+    if (n >= 1000) return (n / 1000).toFixed(1).replace(/\.0$/, "") + "k";
     return String(n);
   }
 
@@ -1304,15 +1304,17 @@
       ? '<span class="hourglass-swap"><span class="a">⏳</span><span class="b">⌛</span></span>'
       : escapeHtml(statusEmoji);
     var shareText = d.category_label + ": " + d.description;
+    var likeCount = d.like_count || 0;
+    var shareCount = d.share_count || 0;
     var actionsHtml =
       '<div class="card-actions">' +
       '<button class="action-btn like-btn' + (d.liked_by_me ? " liked" : "") + '" data-like="' + d.id + '">' +
       ICONS.heart +
-      '<span class="like-count">' + formatCount(d.like_count || 0) + "</span>" +
+      '<span class="like-count" data-count="' + likeCount + '"' + (likeCount ? "" : " hidden") + '>' + formatCount(likeCount) + "</span>" +
       "</button>" +
       '<button class="action-btn share-btn" data-share="' + d.id + '" data-share-text="' + escapeHtml(shareText) + '">' +
       ICONS.send +
-      '<span class="share-count">' + formatCount(d.share_count || 0) + "</span>" +
+      '<span class="share-count" data-count="' + shareCount + '"' + (shareCount ? "" : " hidden") + '>' + formatCount(shareCount) + "</span>" +
       "</button>" +
       "</div>";
     return (
@@ -1333,16 +1335,21 @@
         var id = btn.getAttribute("data-like");
         var wasLiked = btn.classList.contains("liked");
         var countEl = btn.querySelector(".like-count");
-        var count = parseInt(countEl.textContent, 10) || 0;
+        var count = parseInt(countEl.getAttribute("data-count"), 10) || 0;
+        function applyCount(n) {
+          countEl.setAttribute("data-count", n);
+          countEl.textContent = formatCount(n);
+          countEl.hidden = n <= 0;
+        }
         btn.classList.toggle("liked", !wasLiked);
-        countEl.textContent = formatCount(wasLiked ? Math.max(0, count - 1) : count + 1);
+        applyCount(wasLiked ? Math.max(0, count - 1) : count + 1);
         if (tg && tg.HapticFeedback) tg.HapticFeedback.impactOccurred("light");
         api("POST", "/api/donations/" + id + "/like", {}).then(function (res) {
           btn.classList.toggle("liked", res.liked);
-          countEl.textContent = formatCount(res.like_count);
+          applyCount(res.like_count);
         }).catch(function () {
           btn.classList.toggle("liked", wasLiked);
-          countEl.textContent = formatCount(count);
+          applyCount(count);
         });
       });
     });
@@ -1360,7 +1367,11 @@
         if (id) {
           var countEl = btn.querySelector(".share-count");
           api("POST", "/api/donations/" + id + "/share", {}).then(function (res) {
-            if (countEl) countEl.textContent = formatCount(res.share_count);
+            if (countEl) {
+              countEl.setAttribute("data-count", res.share_count);
+              countEl.textContent = formatCount(res.share_count);
+              countEl.hidden = res.share_count <= 0;
+            }
           }).catch(function () {});
         }
       });
