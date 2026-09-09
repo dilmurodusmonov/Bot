@@ -740,11 +740,30 @@
     });
   }
 
+  function saveNavState() {
+    try {
+      var json = JSON.stringify(
+        { screen: state.screen, params: state.params, navStack: navStack },
+        function (key, value) { return (typeof File !== "undefined" && value instanceof File) ? undefined : value; }
+      );
+      sessionStorage.setItem("navState", json);
+    } catch (e) {}
+  }
+
+  function loadNavState() {
+    try {
+      return JSON.parse(sessionStorage.getItem("navState") || "null");
+    } catch (e) {
+      return null;
+    }
+  }
+
   function goto(screen, params, push) {
     if (push !== false) navStack.push({ screen: state.screen, params: state.params });
     state.screen = screen;
     state.params = params || {};
     render();
+    saveNavState();
   }
 
   function goBack() {
@@ -753,6 +772,7 @@
     state.screen = prev.screen;
     state.params = prev.params;
     render();
+    saveNavState();
   }
 
   function setMainButton(text, onClick) {
@@ -1790,9 +1810,19 @@
     .then(function (me) {
       state.me = me;
       state.lang = me.language || "uz";
-      if (!me.language) { goto("language", {}, false); }
-      else if (!me.role) { goto("role", {}, false); }
-      else { goto("home", {}, false); }
+      if (!me.language) { goto("language", {}, false); return; }
+      if (!me.role) { goto("role", {}, false); return; }
+      var saved = loadNavState();
+      var restorable = saved && saved.screen && screens[saved.screen] &&
+        saved.screen !== "loading" && saved.screen !== "language" && saved.screen !== "role";
+      if (restorable) {
+        state.screen = saved.screen;
+        state.params = saved.params || {};
+        navStack = Array.isArray(saved.navStack) ? saved.navStack : [];
+        render();
+      } else {
+        goto("home", {}, false);
+      }
     })
     .catch(function () {
       var debug = {
