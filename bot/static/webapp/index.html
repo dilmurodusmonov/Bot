@@ -100,7 +100,13 @@
   .photo-preview { display: none; width: 100%; max-height: 220px; object-fit: cover; border-radius: 12px; margin-top: 10px; border: 1px solid var(--border); }
   .photo-preview-row { display: none; gap: 8px; margin-top: 10px; }
   .photo-preview-row.show { display: flex; }
-  .photo-preview-row img { width: 84px; height: 84px; object-fit: cover; border-radius: 12px; border: 1px solid var(--border); flex-shrink: 0; }
+  .photo-preview-item { position: relative; flex-shrink: 0; }
+  .photo-preview-row img { width: 84px; height: 84px; object-fit: cover; border-radius: 12px; border: 1px solid var(--border); display: block; }
+  .photo-preview-remove {
+    position: absolute; top: -6px; right: -6px; width: 20px; height: 20px; border-radius: 50%;
+    background: rgba(0,0,0,0.65); color: #fff; border: none; font-size: 13px; line-height: 1;
+    display: flex; align-items: center; justify-content: center;
+  }
   input[type="file"] { padding: 10px 12px; }
   .visually-hidden {
     position: absolute; width: 1px; height: 1px; padding: 0; margin: -1px;
@@ -1084,10 +1090,22 @@
         var row = document.getElementById("donation-photo-preview-row");
         row.innerHTML = "";
         row.classList.toggle("show", selectedPhotoFiles.length > 0);
-        selectedPhotoFiles.forEach(function (file) {
+        selectedPhotoFiles.forEach(function (file, idx) {
+          var item = document.createElement("div");
+          item.className = "photo-preview-item";
           var img = document.createElement("img");
           img.src = URL.createObjectURL(file);
-          row.appendChild(img);
+          var removeBtn = document.createElement("button");
+          removeBtn.type = "button";
+          removeBtn.className = "photo-preview-remove";
+          removeBtn.textContent = "×";
+          removeBtn.addEventListener("click", function () {
+            selectedPhotoFiles.splice(idx, 1);
+            renderDonationPhotoPreviews();
+          });
+          item.appendChild(img);
+          item.appendChild(removeBtn);
+          row.appendChild(item);
         });
       }
       renderDonationPhotoPreviews();
