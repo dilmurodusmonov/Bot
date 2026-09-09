@@ -75,6 +75,11 @@
     position: absolute; left: 0; right: 0; bottom: 10px; z-index: 2;
     display: flex; gap: 6px; justify-content: center;
   }
+  .card-gallery-counter {
+    position: absolute; top: 10px; right: 10px; z-index: 2;
+    background: rgba(0,0,0,0.55); color: #fff; font-size: 12px; font-weight: 600;
+    padding: 2px 9px; border-radius: 10px;
+  }
   .card-body { padding: 12px 14px; }
   .card-cat { font-size: 12.5px; color: var(--hint); margin-bottom: 4px; }
   .card-desc { font-size: 15px; line-height: 1.4; margin-bottom: 8px; }
@@ -1152,12 +1157,14 @@
       var dotsHtml = '<div class="card-gallery-dots">' + photos.map(function (_, i) {
         return '<span class="ad-dot' + (i === 0 ? " active" : "") + '"></span>';
       }).join("") + "</div>";
+      var counterHtml = '<div class="card-gallery-counter">1/' + photos.length + "</div>";
       mediaHtml =
         '<div class="card-media">' +
         '<div class="card-gallery">' + photos.map(function (url) {
           return '<img src="' + url + '" alt="">';
         }).join("") + "</div>" +
         dotsHtml +
+        counterHtml +
         "</div>";
     } else {
       mediaHtml = '<img src="' + photos[0] + '" alt="">';
@@ -1175,10 +1182,12 @@
   function wireCardGalleries() {
     app.querySelectorAll(".card-gallery").forEach(function (gallery) {
       var dots = gallery.parentNode.querySelectorAll(".card-gallery-dots .ad-dot");
+      var counter = gallery.parentNode.querySelector(".card-gallery-counter");
       if (!dots.length) return;
       gallery.addEventListener("scroll", function () {
         var index = Math.round(gallery.scrollLeft / gallery.clientWidth);
         dots.forEach(function (dot, i) { dot.classList.toggle("active", i === index); });
+        if (counter) counter.textContent = (index + 1) + "/" + dots.length;
       }, { passive: true });
     });
   }
