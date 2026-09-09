@@ -14,6 +14,7 @@ from bot.database import (
     count_new_donations_last_24h,
     delete_donation,
     increment_ad_views,
+    increment_donation_share,
     get_active_reservation_for_donation,
     get_available_donations,
     get_donation,
@@ -120,6 +121,7 @@ def _donation_json(d: dict, lang: str, like_count: int = 0, liked_by_me: bool = 
         "created_at": d["created_at"].isoformat(),
         "like_count": like_count,
         "liked_by_me": liked_by_me,
+        "share_count": d.get("share_count", 0),
     }
 
 
@@ -383,6 +385,18 @@ async def api_toggle_donation_like(request: web.Request) -> web.Response:
     return web.json_response({"liked": liked, "like_count": count})
 
 
+async def api_share_donation(request: web.Request) -> web.Response:
+    await _require_user_id(request)
+    donation_id = int(request.match_info["id"])
+
+    donation = await get_donation(donation_id)
+    if not donation:
+        raise web.HTTPNotFound()
+
+    count = await increment_donation_share(donation_id)
+    return web.json_response({"share_count": count})
+
+
 async def api_create_donation(request: web.Request) -> web.Response:
     telegram_id = await _require_user_id(request)
     fields, photos = await _read_multipart_photos(request)
@@ -488,4 +502,5 @@ def setup_api_routes(app: web.Application) -> None:
     app.router.add_post("/api/donations", api_create_donation)
     app.router.add_post("/api/donations/{id}/delete", api_delete_donation)
     app.router.add_post("/api/donations/{id}/like", api_toggle_donation_like)
+    app.router.add_post("/api/donations/{id}/share", api_share_donation)
     app.router.add_get("/api/photo/{file_id}", api_photo)
