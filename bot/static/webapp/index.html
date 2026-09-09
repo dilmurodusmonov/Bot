@@ -88,11 +88,17 @@
   }
   .card-header-name { font-weight: 700; font-size: 13.5px; color: var(--text); }
   .card-body { padding: 12px 14px; }
-  .card-desc { font-size: 15px; line-height: 1.4; margin-bottom: 8px; }
+  .card-desc { font-size: 15px; font-weight: 700; line-height: 1.4; margin-bottom: 8px; }
   .pill {
     display: inline-block; padding: 3px 10px; border-radius: 20px; font-size: 12px;
     background: rgba(0,0,0,0.06); margin-bottom: 8px;
   }
+  .hourglass-swap { position: relative; display: inline-block; width: 1em; height: 1em; vertical-align: -0.15em; }
+  .hourglass-swap span { position: absolute; left: 0; top: 0; }
+  .hourglass-swap .a { animation: hourglassA 1.6s infinite; }
+  .hourglass-swap .b { animation: hourglassB 1.6s infinite; }
+  @keyframes hourglassA { 0%, 45% { opacity: 1; } 50%, 95% { opacity: 0; } 100% { opacity: 1; } }
+  @keyframes hourglassB { 0%, 45% { opacity: 0; } 50%, 95% { opacity: 1; } 100% { opacity: 0; } }
   .pill-available { color: #9AA7B3; }
   .pill-reserved { color: #FFB454; }
   .pill-shipped { color: #4EA4F5; }
@@ -1183,13 +1189,19 @@
     } else {
       mediaHtml = '<img src="' + photos[0] + '" alt="">';
     }
+    var statusParts = d.status_label.split(" ");
+    var statusEmoji = statusParts[0];
+    var statusText = statusParts.slice(1).join(" ");
+    var statusEmojiHtml = d.status === "available"
+      ? '<span class="hourglass-swap"><span class="a">⏳</span><span class="b">⌛</span></span>'
+      : escapeHtml(statusEmoji);
     return (
       '<div class="card">' +
       headerHtml +
       mediaHtml +
       '<div class="card-body">' +
       '<div class="card-desc">' + escapeHtml(d.description) + "</div>" +
-      '<span class="pill pill-' + d.status + '">' + escapeHtml(d.status_label) + "</span>"
+      '<span class="pill pill-' + d.status + '">' + statusEmojiHtml + " " + escapeHtml(statusText) + "</span>"
     );
   }
 
