@@ -87,6 +87,15 @@
     display: flex; align-items: center; justify-content: center; font-size: 16px; flex-shrink: 0;
   }
   .card-header-name { font-weight: 700; font-size: 13.5px; color: var(--text); }
+  .card-actions { display: flex; align-items: center; gap: 16px; padding: 10px 12px 0; }
+  .action-btn {
+    display: flex; align-items: center; gap: 5px; background: none; border: none;
+    color: var(--text); font-size: 13px; font-weight: 600; padding: 0; font-family: inherit;
+  }
+  .action-btn svg { width: 24px; height: 24px; transition: transform .15s ease; }
+  .like-btn.liked svg { fill: #E5484D; stroke: #E5484D; }
+  .like-btn.liked svg { animation: likePop .3s ease; }
+  @keyframes likePop { 0% { transform: scale(1); } 40% { transform: scale(1.3); } 100% { transform: scale(1); } }
   .card-body { padding: 12px 14px; }
   .card-desc { font-size: 15px; font-weight: 700; line-height: 1.4; margin-bottom: 8px; }
   .pill {
@@ -379,6 +388,7 @@
   var SVG_ATTRS = 'viewBox="0 0 24 24" width="20" height="20" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"';
   var ICONS = {
     plus: '<svg ' + SVG_ATTRS + '><line x1="12" y1="5" x2="12" y2="19"></line><line x1="5" y1="12" x2="19" y2="12"></line></svg>',
+    heart: '<svg ' + SVG_ATTRS + '><path d="M20.8 4.6a5.5 5.5 0 0 0-7.8 0L12 5.6l-1-1a5.5 5.5 0 0 0-7.8 7.8l1 1L12 21l7.8-7.6 1-1a5.5 5.5 0 0 0 0-7.8z"></path></svg>',
     send: '<svg ' + SVG_ATTRS + '><line x1="22" y1="2" x2="11" y2="13"></line><polygon points="22 2 15 22 11 13 2 9 22 2"></polygon></svg>',
     search: '<svg ' + SVG_ATTRS + '><circle cx="11" cy="11" r="8"></circle><line x1="21" y1="21" x2="16.65" y2="16.65"></line></svg>',
     list: '<svg ' + SVG_ATTRS + '><line x1="8" y1="6" x2="21" y2="6"></line><line x1="8" y1="12" x2="21" y2="12"></line><line x1="8" y1="18" x2="21" y2="18"></line><line x1="3" y1="6" x2="3.01" y2="6"></line><line x1="3" y1="12" x2="3.01" y2="12"></line><line x1="3" y1="18" x2="3.01" y2="18"></line></svg>',
@@ -1209,15 +1219,58 @@
     var statusEmojiHtml = d.status === "available"
       ? '<span class="hourglass-swap"><span class="a">⏳</span><span class="b">⌛</span></span>'
       : escapeHtml(statusEmoji);
+    var shareText = d.category_label + ": " + d.description;
+    var actionsHtml =
+      '<div class="card-actions">' +
+      '<button class="action-btn like-btn' + (d.liked_by_me ? " liked" : "") + '" data-like="' + d.id + '">' +
+      ICONS.heart +
+      '<span class="like-count">' + formatCount(d.like_count || 0) + "</span>" +
+      "</button>" +
+      '<button class="action-btn share-btn" data-share-text="' + escapeHtml(shareText) + '">' + ICONS.send + "</button>" +
+      "</div>";
     return (
       '<div class="card">' +
       headerHtml +
       mediaHtml +
+      actionsHtml +
       '<div class="card-body">' +
       '<div class="card-desc">' + escapeHtml(d.description) + "</div>" +
       '<span class="pill pill-' + d.status + '">' + statusEmojiHtml + " " + escapeHtml(statusText) + "</span>" +
       (d.created_at ? '<div class="card-date">' + formatRelativeDate(d.created_at) + "</div>" : "")
     );
+  }
+
+  function wireCardActions() {
+    app.querySelectorAll("[data-like]").forEach(function (btn) {
+      btn.addEventListener("click", function () {
+        var id = btn.getAttribute("data-like");
+        var wasLiked = btn.classList.contains("liked");
+        var countEl = btn.querySelector(".like-count");
+        var count = parseInt(countEl.textContent, 10) || 0;
+        btn.classList.toggle("liked", !wasLiked);
+        countEl.textContent = formatCount(wasLiked ? Math.max(0, count - 1) : count + 1);
+        if (tg && tg.HapticFeedback) tg.HapticFeedback.impactOccurred("light");
+        api("POST", "/api/donations/" + id + "/like", {}).then(function (res) {
+          btn.classList.toggle("liked", res.liked);
+          countEl.textContent = formatCount(res.like_count);
+        }).catch(function () {
+          btn.classList.toggle("liked", wasLiked);
+          countEl.textContent = formatCount(count);
+        });
+      });
+    });
+    app.querySelectorAll("[data-share-text]").forEach(function (btn) {
+      btn.addEventListener("click", function () {
+        var text = btn.getAttribute("data-share-text");
+        var url = location.href.split("?")[0].split("#")[0];
+        var shareUrl = "https://t.me/share/url?url=" + encodeURIComponent(url) + "&text=" + encodeURIComponent(text);
+        if (tg && tg.openTelegramLink) {
+          tg.openTelegramLink(shareUrl);
+        } else {
+          window.open(shareUrl, "_blank");
+        }
+      });
+    });
   }
 
   function wireCardGalleries() {
@@ -1261,6 +1314,7 @@
       }).join("");
       app.innerHTML = html;
       wireCardGalleries();
+      wireCardActions();
       app.querySelectorAll("[data-ship]").forEach(function (btn) {
         btn.addEventListener("click", function () {
           goto("donor_ship_form", { reservationId: parseInt(btn.getAttribute("data-ship"), 10) });
@@ -1346,6 +1400,7 @@
           return body + "</div></div>";
         }).join("") + fabHtml;
         wireCardGalleries();
+        wireCardActions();
         if (canReserve) {
           app.querySelectorAll("[data-take]").forEach(function (btn) {
             btn.addEventListener("click", function () {
@@ -1413,6 +1468,7 @@
       }).join("");
       app.innerHTML = html;
       wireCardGalleries();
+      wireCardActions();
       app.querySelectorAll("[data-confirm]").forEach(function (btn) {
         btn.addEventListener("click", function () {
           goto("needy_dua_form", { reservationId: parseInt(btn.getAttribute("data-confirm"), 10) });
