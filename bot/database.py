@@ -21,6 +21,7 @@ CREATE TABLE IF NOT EXISTS donations (
     photo_file_id_3 TEXT,
     description TEXT,
     status TEXT NOT NULL DEFAULT 'available',
+    share_count INTEGER NOT NULL DEFAULT 0,
     created_at TIMESTAMPTZ NOT NULL DEFAULT now()
 );
 
@@ -69,6 +70,7 @@ async def init_db() -> None:
         await conn.execute(SCHEMA)
         await _migrate_ad_stats(conn)
         await _migrate_donation_photos(conn)
+        await _migrate_donation_share_count(conn)
 
 
 async def _migrate_ad_stats(conn: asyncpg.Connection) -> None:
@@ -91,6 +93,12 @@ async def _migrate_donation_photos(conn: asyncpg.Connection) -> None:
     """Bitta ehsonga bir nechta (max 3) rasm biriktirish imkoniyati uchun ustunlar."""
     await conn.execute("ALTER TABLE donations ADD COLUMN IF NOT EXISTS photo_file_id_2 TEXT")
     await conn.execute("ALTER TABLE donations ADD COLUMN IF NOT EXISTS photo_file_id_3 TEXT")
+
+
+async def _migrate_donation_share_count(conn: asyncpg.Connection) -> None:
+    await conn.execute(
+        "ALTER TABLE donations ADD COLUMN IF NOT EXISTS share_count INTEGER NOT NULL DEFAULT 0"
+    )
 
 
 # --- users -----------------------------------------------------------------
@@ -380,3 +388,12 @@ async def get_like_info(donation_ids: list[int], telegram_id: int) -> dict[int, 
         telegram_id,
     )
     return {row["donation_id"]: {"count": row["count"], "liked": row["liked"]} for row in rows}
+
+
+# --- ehsonlarni ulashish (share) ---------------------------------------------
+
+async def increment_donation_share(donation_id: int) -> int:
+    return await _get_pool().fetchval(
+        "UPDATE donations SET share_count = share_count + 1 WHERE id = $1 RETURNING share_count",
+        donation_id,
+    )

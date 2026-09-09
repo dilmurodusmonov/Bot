@@ -1310,7 +1310,10 @@
       ICONS.heart +
       '<span class="like-count">' + formatCount(d.like_count || 0) + "</span>" +
       "</button>" +
-      '<button class="action-btn share-btn" data-share-text="' + escapeHtml(shareText) + '">' + ICONS.send + "</button>" +
+      '<button class="action-btn share-btn" data-share="' + d.id + '" data-share-text="' + escapeHtml(shareText) + '">' +
+      ICONS.send +
+      '<span class="share-count">' + formatCount(d.share_count || 0) + "</span>" +
+      "</button>" +
       "</div>";
     return (
       '<div class="card">' +
@@ -1345,6 +1348,7 @@
     });
     app.querySelectorAll("[data-share-text]").forEach(function (btn) {
       btn.addEventListener("click", function () {
+        var id = btn.getAttribute("data-share");
         var text = btn.getAttribute("data-share-text");
         var url = location.href.split("?")[0].split("#")[0];
         var shareUrl = "https://t.me/share/url?url=" + encodeURIComponent(url) + "&text=" + encodeURIComponent(text);
@@ -1352,6 +1356,12 @@
           tg.openTelegramLink(shareUrl);
         } else {
           window.open(shareUrl, "_blank");
+        }
+        if (id) {
+          var countEl = btn.querySelector(".share-count");
+          api("POST", "/api/donations/" + id + "/share", {}).then(function (res) {
+            if (countEl) countEl.textContent = formatCount(res.share_count);
+          }).catch(function () {});
         }
       });
     });
