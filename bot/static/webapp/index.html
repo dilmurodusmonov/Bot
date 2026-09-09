@@ -56,12 +56,36 @@
   }
   .menu-card .icon svg { width: 14px; height: 14px; }
   label { display: block; font-size: 13.5px; color: var(--hint); margin: 16px 0 6px; }
-  select, textarea, input {
+  select, textarea, input, .picker-trigger {
     width: 100%; background: var(--section-bg); border: 1px solid var(--border); color: var(--text);
     border-radius: 12px; padding: 12px 14px; font-size: 15px; font-family: inherit;
   }
   textarea { min-height: 96px; resize: vertical; }
   .note { color: var(--hint); font-size: 12.5px; margin-top: 14px; line-height: 1.4; }
+  .picker-trigger { display: flex; align-items: center; justify-content: space-between; text-align: left; }
+  .picker-trigger-chevron { color: var(--hint); font-size: 12px; margin-left: 8px; flex-shrink: 0; }
+  .picker-overlay {
+    position: fixed; inset: 0; background: rgba(0,0,0,0.5); z-index: 50;
+    display: flex; align-items: center; justify-content: center; padding: 24px;
+  }
+  .picker-sheet {
+    background: var(--section-bg); border-radius: 16px; width: 100%; max-width: 380px;
+    max-height: 80vh; overflow-y: auto;
+  }
+  .picker-row {
+    display: flex; align-items: center; gap: 12px; width: 100%; text-align: left;
+    background: none; border: none; border-bottom: 1px solid var(--border);
+    padding: 14px 16px; font-size: 16px; font-family: inherit; color: var(--text);
+  }
+  .picker-row:last-child { border-bottom: none; }
+  .picker-radio {
+    width: 22px; height: 22px; border-radius: 50%; border: 2px solid #C7CDD4;
+    margin-left: auto; flex-shrink: 0; position: relative;
+  }
+  .picker-row.selected .picker-radio { border-color: var(--blue); }
+  .picker-row.selected .picker-radio::after {
+    content: ""; position: absolute; inset: 4px; border-radius: 50%; background: var(--blue);
+  }
   .card {
     background: var(--section-bg); border: 1px solid var(--border); border-radius: 16px;
     overflow: hidden; margin-bottom: 14px;
@@ -1137,13 +1161,26 @@
     var capturedPhotoFile = state.params && state.params.capturedPhoto ? state.params.capturedPhoto : null;
     var preselectedCategory = state.params && state.params.category ? state.params.category : null;
     api("GET", "/api/categories").then(function (categories) {
-      var options = categories.map(function (c) {
-        var selected = c.key === preselectedCategory ? " selected" : "";
-        return '<option value="' + c.key + '"' + selected + ">" + escapeHtml(c.label) + "</option>";
+      var selectedCategory = preselectedCategory && categories.some(function (c) { return c.key === preselectedCategory; })
+        ? preselectedCategory
+        : (categories[0] ? categories[0].key : null);
+      var rowsHtml = categories.map(function (c) {
+        return (
+          '<button type="button" class="picker-row' + (c.key === selectedCategory ? " selected" : "") + '" data-cat-option="' + c.key + '">' +
+          "<span>" + escapeHtml(c.label) + "</span>" +
+          '<span class="picker-radio"></span>' +
+          "</button>"
+        );
       }).join("");
       app.innerHTML =
         "<label>" + tr("category_label") + "</label>" +
-        '<select id="cat-select">' + options + "</select>" +
+        '<button type="button" id="cat-picker-trigger" class="picker-trigger">' +
+        '<span id="cat-picker-trigger-label"></span>' +
+        '<span class="picker-trigger-chevron">▾</span>' +
+        "</button>" +
+        '<div id="cat-picker-overlay" class="picker-overlay" hidden>' +
+        '<div class="picker-sheet">' + rowsHtml + "</div>" +
+        "</div>" +
         "<label>" + tr("description_label") + "</label>" +
         '<textarea id="desc-input" placeholder="' + escapeHtml(tr("description_placeholder")) + '"></textarea>' +
         "<label>" + tr("photo_label") + "</label>" +
@@ -1152,6 +1189,31 @@
         '<p class="note">' + tr("photo_note") + "</p>";
 
       var selectedPhotoFiles = capturedPhotoFile ? [capturedPhotoFile] : [];
+
+      var catTrigger = document.getElementById("cat-picker-trigger");
+      var catTriggerLabel = document.getElementById("cat-picker-trigger-label");
+      var catOverlay = document.getElementById("cat-picker-overlay");
+
+      function updateCatTriggerLabel() {
+        var selected = categories.filter(function (c) { return c.key === selectedCategory; })[0];
+        catTriggerLabel.textContent = selected ? selected.label : "";
+      }
+      updateCatTriggerLabel();
+
+      catTrigger.addEventListener("click", function () { catOverlay.hidden = false; });
+      catOverlay.addEventListener("click", function (e) {
+        if (e.target === catOverlay) catOverlay.hidden = true;
+      });
+      catOverlay.querySelectorAll("[data-cat-option]").forEach(function (row) {
+        row.addEventListener("click", function () {
+          selectedCategory = row.getAttribute("data-cat-option");
+          catOverlay.querySelectorAll(".picker-row").forEach(function (r) {
+            r.classList.toggle("selected", r === row);
+          });
+          updateCatTriggerLabel();
+          catOverlay.hidden = true;
+        });
+      });
 
       function renderDonationPhotoPreviews() {
         var row = document.getElementById("donation-photo-preview-row");
@@ -1183,7 +1245,7 @@
       });
 
       setMainButton(tr("continue"), function () {
-        var category = document.getElementById("cat-select").value;
+        var category = selectedCategory;
         var description = document.getElementById("desc-input").value.trim();
         if (!description) { showError(tr("fill_all")); return; }
         if (!selectedPhotoFiles.length) { showError(tr("photo_required")); return; }
