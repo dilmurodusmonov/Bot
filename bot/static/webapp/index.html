@@ -93,16 +93,12 @@
     display: inline-block; padding: 3px 10px; border-radius: 20px; font-size: 12px;
     background: rgba(0,0,0,0.06); margin-bottom: 8px;
   }
-  .hourglass-swap {
-    position: relative; display: inline-block; width: 1em; height: 1em; vertical-align: -0.15em;
-    animation: hourglassFlip 1.6s infinite;
-  }
+  .hourglass-swap { position: relative; display: inline-block; width: 1em; height: 1em; vertical-align: -0.15em; }
   .hourglass-swap span { position: absolute; left: 0; top: 0; }
   .hourglass-swap .a { animation: hourglassA 1.6s infinite; }
   .hourglass-swap .b { animation: hourglassB 1.6s infinite; }
   @keyframes hourglassA { 0%, 45% { opacity: 1; } 50%, 95% { opacity: 0; } 100% { opacity: 1; } }
   @keyframes hourglassB { 0%, 45% { opacity: 0; } 50%, 95% { opacity: 1; } 100% { opacity: 0; } }
-  @keyframes hourglassFlip { 0%, 42% { transform: rotate(0deg); } 50%, 92% { transform: rotate(180deg); } 100% { transform: rotate(360deg); } }
   .pill-available { color: #9AA7B3; }
   .pill-reserved { color: #FFB454; }
   .pill-shipped { color: #4EA4F5; }
