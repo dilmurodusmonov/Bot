@@ -1357,9 +1357,8 @@
     app.querySelectorAll("[data-share-text]").forEach(function (btn) {
       btn.addEventListener("click", function () {
         var id = btn.getAttribute("data-share");
-        var text = btn.getAttribute("data-share-text");
         var url = location.origin + "/d/" + id;
-        var shareUrl = "https://t.me/share/url?url=" + encodeURIComponent(url) + "&text=" + encodeURIComponent(text);
+        var shareUrl = "https://t.me/share/url?url=" + encodeURIComponent(url);
         if (tg && tg.openTelegramLink) {
           tg.openTelegramLink(shareUrl);
         } else {
