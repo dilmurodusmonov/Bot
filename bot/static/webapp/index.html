@@ -460,6 +460,7 @@
       donation_saved: "Ehsoningiz joylandi!",
       shipment_saved: "Chek yuklandi, Muhtojga xabar berildi!",
       stats_label: "Ehsonlar", delivered_suffix: "dona ehsonlar o'z egalariga yetkazildi",
+      share_sent_hint: "Post sizga yuborildi — uni istalgan chatga forward qilishingiz mumkin.",
       month_names: ["Yanvar", "Fevral", "Mart", "Aprel", "May", "Iyun", "Iyul", "Avgust", "Sentyabr", "Oktyabr", "Noyabr", "Dekabr"],
       ad_placeholder: "REKLAMA",
       settings_title: "Umumiy sozlamalar", language_label: "Til", notifications_label: "Bildirishnomalar",
@@ -507,6 +508,7 @@
       donation_saved: "Ваше пожертвование добавлено!",
       shipment_saved: "Чек загружен, нуждающийся уведомлён!",
       stats_label: "Всего пожертвований", delivered_suffix: "доставлено",
+      share_sent_hint: "Пост отправлен вам — вы можете переслать его в любой чат.",
       month_names: ["Января", "Февраля", "Марта", "Апреля", "Мая", "Июня", "Июля", "Августа", "Сентября", "Октября", "Ноября", "Декабря"],
       ad_placeholder: "РЕКЛАМА",
       settings_title: "Общие настройки", language_label: "Язык", notifications_label: "Уведомления",
@@ -554,6 +556,7 @@
       donation_saved: "Your donation has been posted!",
       shipment_saved: "Receipt uploaded, the recipient was notified!",
       stats_label: "Total donations", delivered_suffix: "delivered",
+      share_sent_hint: "The post has been sent to you — you can forward it to any chat.",
       month_names: ["January", "February", "March", "April", "May", "June", "July", "August", "September", "October", "November", "December"],
       ad_placeholder: "AD",
       settings_title: "General settings", language_label: "Language", notifications_label: "Notifications",
@@ -601,6 +604,7 @@
       donation_saved: "Қайырыңыз жарияланды!",
       shipment_saved: "Чек жүктелді, мұқтажға хабарланды!",
       stats_label: "Қайырлар", delivered_suffix: "қайыр жеткізілді",
+      share_sent_hint: "Пост сізге жіберілді — оны кез келген чатқа жібере аласыз.",
       month_names: ["Қаңтар", "Ақпан", "Наурыз", "Сәуір", "Мамыр", "Маусым", "Шілде", "Тамыз", "Қыркүйек", "Қазан", "Қараша", "Желтоқсан"],
       ad_placeholder: "ЖАРНАМА",
       settings_title: "Жалпы баптаулар", language_label: "Тіл", notifications_label: "Хабарландырулар",
@@ -640,6 +644,7 @@
       donation_saved: "Хайрияи шумо ҷойгир карда шуд!",
       shipment_saved: "Чек боркунӣ шуд, ба ниёзманд хабар дода шуд!",
       stats_label: "Хайрияҳо", delivered_suffix: "адад хайрия расонида шуд",
+      share_sent_hint: "Пост ба шумо фиристода шуд — метавонед онро ба ҳар чат интиқол диҳед.",
       month_names: ["Январ", "Феврал", "Март", "Апрел", "Май", "Июн", "Июл", "Август", "Сентябр", "Октябр", "Ноябр", "Декабр"],
       ad_placeholder: "РЕКЛАМА",
       settings_title: "Танзимоти умумӣ", language_label: "Забон", notifications_label: "Огоҳиномаҳо",
@@ -679,6 +684,7 @@
       donation_saved: "Садагаңыз жайгаштырылды!",
       shipment_saved: "Чек жүктөлдү, мукташка билдирилди!",
       stats_label: "Садагалар", delivered_suffix: "садага жеткирилди",
+      share_sent_hint: "Пост сизге жөнөтүлдү — аны каалаган чатка форвард кыла аласыз.",
       month_names: ["Январь", "Февраль", "Март", "Апрель", "Май", "Июнь", "Июль", "Август", "Сентябрь", "Октябрь", "Ноябрь", "Декабрь"],
       ad_placeholder: "ЖАРНАМА",
       settings_title: "Жалпы жөндөөлөр", language_label: "Тил", notifications_label: "Билдирүүлөр",
@@ -718,6 +724,7 @@
       donation_saved: "Sadakaňyz ýerleşdirildi!",
       shipment_saved: "Çek ýüklendi, mätäje habar berildi!",
       stats_label: "Sadakalar", delivered_suffix: "sadaka gowşuryldy",
+      share_sent_hint: "Post size iberildi — ony islendik çata ugradyp bilersiňiz.",
       month_names: ["Ýanwar", "Fewral", "Mart", "Aprel", "Maý", "Iýun", "Iýul", "Awgust", "Sentýabr", "Oktýabr", "Noýabr", "Dekabr"],
       ad_placeholder: "REKLAMA",
       settings_title: "Umumy sazlamalar", language_label: "Dil", notifications_label: "Bildirişler",
@@ -1304,7 +1311,6 @@
     var statusEmojiHtml = d.status === "available"
       ? '<span class="hourglass-swap"><span class="a">⏳</span><span class="b">⌛</span></span>'
       : escapeHtml(statusEmoji);
-    var shareText = d.category_label + ": " + d.description;
     var likeCount = d.like_count || 0;
     var shareCount = d.share_count || 0;
     var actionsHtml =
@@ -1313,7 +1319,7 @@
       ICONS.heart +
       '<span class="like-count" data-count="' + likeCount + '"' + (likeCount ? "" : " hidden") + '>' + formatCount(likeCount) + "</span>" +
       "</button>" +
-      '<button class="action-btn share-btn" data-share="' + d.id + '" data-share-text="' + escapeHtml(shareText) + '">' +
+      '<button class="action-btn share-btn" data-share="' + d.id + '">' +
       ICONS.share +
       '<span class="share-count" data-count="' + shareCount + '"' + (shareCount ? "" : " hidden") + '>' + formatCount(shareCount) + "</span>" +
       "</button>" +
@@ -1354,26 +1360,23 @@
         });
       });
     });
-    app.querySelectorAll("[data-share-text]").forEach(function (btn) {
+    app.querySelectorAll("[data-share]").forEach(function (btn) {
       btn.addEventListener("click", function () {
         var id = btn.getAttribute("data-share");
-        var url = location.origin + "/d/" + id;
-        var shareUrl = "https://t.me/share/url?url=" + encodeURIComponent(url);
-        if (tg && tg.openTelegramLink) {
-          tg.openTelegramLink(shareUrl);
-        } else {
-          window.open(shareUrl, "_blank");
-        }
-        if (id) {
-          var countEl = btn.querySelector(".share-count");
-          api("POST", "/api/donations/" + id + "/share", {}).then(function (res) {
-            if (countEl) {
-              countEl.setAttribute("data-count", res.share_count);
-              countEl.textContent = formatCount(res.share_count);
-              countEl.hidden = res.share_count <= 0;
-            }
-          }).catch(function () {});
-        }
+        if (!id) return;
+        var countEl = btn.querySelector(".share-count");
+        api("POST", "/api/donations/" + id + "/share", {}).then(function (res) {
+          if (countEl) {
+            countEl.setAttribute("data-count", res.share_count);
+            countEl.textContent = formatCount(res.share_count);
+            countEl.hidden = res.share_count <= 0;
+          }
+          if (tg && tg.showAlert) {
+            tg.showAlert(tr("share_sent_hint"));
+          } else {
+            alert(tr("share_sent_hint"));
+          }
+        }).catch(function () { showError(); });
       });
     });
   }

@@ -388,7 +388,7 @@ async def api_toggle_donation_like(request: web.Request) -> web.Response:
 
 
 async def api_share_donation(request: web.Request) -> web.Response:
-    await _require_user_id(request)
+    telegram_id = await _require_user_id(request)
     donation_id = int(request.match_info["id"])
 
     donation = await get_donation(donation_id)
@@ -396,6 +396,35 @@ async def api_share_donation(request: web.Request) -> web.Response:
         raise web.HTTPNotFound()
 
     count = await increment_donation_share(donation_id)
+
+    lang = await _lang_for(telegram_id)
+    bot: Bot = request.app["bot"]
+    category_label = category_name(donation["category"], lang)
+    description = donation["description"] or ""
+    page_url = f"{BASE_URL}/d/{donation_id}"
+    caption = (
+        f"<b>{escape(category_label)}</b>\n{escape(description)}"
+        f'\n\n<a href="{escape(page_url)}">{escape(t(lang, "open_app_button"))}</a>'
+    )
+
+    photo_ids = [donation["photo_file_id"]]
+    if donation.get("photo_file_id_2"):
+        photo_ids.append(donation["photo_file_id_2"])
+    if donation.get("photo_file_id_3"):
+        photo_ids.append(donation["photo_file_id_3"])
+
+    try:
+        if len(photo_ids) > 1:
+            media = [
+                InputMediaPhoto(media=pid, caption=caption if i == 0 else None)
+                for i, pid in enumerate(photo_ids)
+            ]
+            await bot.send_media_group(chat_id=telegram_id, media=media)
+        else:
+            await bot.send_photo(chat_id=telegram_id, photo=photo_ids[0], caption=caption)
+    except Exception:
+        pass
+
     return web.json_response({"share_count": count})
 
 
