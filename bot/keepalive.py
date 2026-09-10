@@ -37,6 +37,8 @@ async def start_webserver(bot: Bot) -> None:
     """
     app = web.Application(client_max_size=10 * 1024 * 1024)
     app["bot"] = bot
+    me = await bot.get_me()
+    app["bot_username"] = me.username
     app.router.add_get("/", _health)
     app.router.add_get("/admin", dashboard_handler)
     app.router.add_get("/webapp", _webapp_index)
