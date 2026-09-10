@@ -23,19 +23,22 @@ async def _show_open_app_hint(message: Message, lang: str) -> None:
     await message.answer(t(lang, "open_app_hint"), reply_markup=ReplyKeyboardRemove())
 
 
-async def _show_open_app_button(message: Message, lang: str) -> None:
+async def _show_open_app_button(message: Message, lang: str, donation_id: str | None = None) -> None:
     """Mini App'ga to'g'ridan-to'g'ri o'tish uchun inline tugma —
     oddiy t.me havolasidan farqli o'laroq, bu tugma Mini App'ni
     ishonchli ochadi (masalan /d/{id} ulashish sahifasidagi
-    "Botni ochish" havolasi orqali kelgan foydalanuvchilar uchun)."""
+    "Botni ochish" havolasi orqali kelgan foydalanuvchilar uchun).
+    donation_id berilsa, Mini App to'g'ridan-to'g'ri o'sha ehsonni
+    ko'rsatadigan holatda ochiladi."""
     if not WEBAPP_URL:
         await _show_open_app_hint(message, lang)
         return
+    url = f"{WEBAPP_URL}&d={donation_id}" if donation_id else WEBAPP_URL
     await message.answer(
         t(lang, "open_app_hint"),
         reply_markup=InlineKeyboardMarkup(
             inline_keyboard=[[
-                InlineKeyboardButton(text=t(lang, "open_app_button"), web_app=WebAppInfo(url=WEBAPP_URL))
+                InlineKeyboardButton(text=t(lang, "open_app_button"), web_app=WebAppInfo(url=url))
             ]]
         ),
     )
@@ -46,7 +49,8 @@ async def cmd_start(message: Message, state: FSMContext) -> None:
     await state.clear()
     user = await create_user_if_missing(message.from_user.id)
     args = (message.text or "").split(maxsplit=1)
-    has_deep_link = len(args) > 1 and args[1].startswith("d_")
+    payload = args[1] if len(args) > 1 else None
+    donation_id = payload[2:] if payload and payload.startswith("d_") else None
 
     if not user["language"]:
         await message.answer(t("uz", "choose_language"), reply_markup=language_keyboard())
@@ -58,8 +62,8 @@ async def cmd_start(message: Message, state: FSMContext) -> None:
         return
 
     await message.answer(t(lang, "welcome_back"))
-    if has_deep_link:
-        await _show_open_app_button(message, lang)
+    if donation_id:
+        await _show_open_app_button(message, lang, donation_id)
     else:
         await _show_open_app_hint(message, lang)
 

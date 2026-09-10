@@ -1527,6 +1527,17 @@
     }).catch(function () { showError(); });
   }
 
+  function renderDonationView() {
+    var id = state.params.id;
+    api("GET", "/api/donation/" + id).then(function (d) {
+      app.innerHTML = donationCardHtml(d) + "</div></div>";
+      wireCardGalleries();
+      wireCardActions();
+      hideMainButton();
+      setBackButton();
+    }).catch(function () { showError(); });
+  }
+
   function renderNeedyReserveForm() {
     app.innerHTML =
       "<label>" + tr("full_name_label") + "</label>" +
@@ -1743,6 +1754,7 @@
     needy_dua_form: renderNeedyDuaForm,
     profile: renderProfile,
     profile_language: renderProfileLanguage,
+    donation_view: renderDonationView,
   };
 
   function render() {
@@ -1900,6 +1912,11 @@
       state.lang = me.language || "uz";
       if (!me.language) { goto("language", {}, false); return; }
       if (!me.role) { goto("role", {}, false); return; }
+      var sharedDonationId = new URLSearchParams(location.search).get("d");
+      if (sharedDonationId) {
+        goto("donation_view", { id: sharedDonationId }, false);
+        return;
+      }
       var saved = loadNavState();
       var restorable = saved && saved.screen && screens[saved.screen] &&
         saved.screen !== "loading" && saved.screen !== "language" && saved.screen !== "role";
