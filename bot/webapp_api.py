@@ -1,9 +1,11 @@
+from html import escape
 from typing import Optional
 
 from aiogram import Bot
 from aiogram.types import BufferedInputFile, InputMediaPhoto
 from aiohttp import web
 
+from bot.config import BASE_URL
 from bot.database import (
     cancel_reservation,
     count_pending_receive,
@@ -484,6 +486,52 @@ async def api_photo(request: web.Request) -> web.Response:
     return web.Response(body=buf.read(), content_type="image/jpeg")
 
 
+async def donation_share_page(request: web.Request) -> web.Response:
+    """Ehsonni Telegram'da 'post' ko'rinishida (rasm + sarlavha bilan)
+    ulashish uchun statik sahifa — Telegram link preview shu OG teglarni
+    o'qib, rasmli karta ko'rsatadi."""
+    donation_id = int(request.match_info["id"])
+    donation = await get_donation(donation_id)
+    if not donation:
+        raise web.HTTPNotFound()
+
+    title = category_name(donation["category"], "uz")
+    description = donation["description"] or ""
+    image_url = f"{BASE_URL}/api/photo/{donation['photo_file_id']}"
+    page_url = f"{BASE_URL}/d/{donation_id}"
+    bot_username = request.app.get("bot_username")
+    bot_url = f"https://t.me/{bot_username}" if bot_username else BASE_URL
+
+    html = f"""<!doctype html>
+<html lang="uz">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<meta property="og:type" content="article">
+<meta property="og:title" content="{escape(title)}">
+<meta property="og:description" content="{escape(description)}">
+<meta property="og:image" content="{escape(image_url)}">
+<meta property="og:url" content="{escape(page_url)}">
+<meta name="twitter:card" content="summary_large_image">
+<title>{escape(title)}</title>
+<style>
+  body {{ font-family: -apple-system, BlinkMacSystemFont, sans-serif; background:#F2F3F5; margin:0; padding:24px; text-align:center; color:#111; }}
+  img {{ max-width: 320px; width: 100%; border-radius: 16px; margin-top: 16px; }}
+  h1 {{ font-size: 18px; margin: 0; }}
+  p {{ color:#555; font-size: 15px; }}
+  a.btn {{ display:inline-block; margin-top: 20px; background:#2AABEE; color:#fff; text-decoration:none; padding: 12px 28px; border-radius: 24px; font-weight:600; }}
+</style>
+</head>
+<body>
+  <h1>{escape(title)}</h1>
+  <p>{escape(description)}</p>
+  <img src="{escape(image_url)}" alt="">
+  <div><a class="btn" href="{escape(bot_url)}">Botni ochish</a></div>
+</body>
+</html>"""
+    return web.Response(text=html, content_type="text/html")
+
+
 def setup_api_routes(app: web.Application) -> None:
     app.router.add_get("/api/me", api_me)
     app.router.add_post("/api/language", api_set_language)
@@ -504,3 +552,4 @@ def setup_api_routes(app: web.Application) -> None:
     app.router.add_post("/api/donations/{id}/like", api_toggle_donation_like)
     app.router.add_post("/api/donations/{id}/share", api_share_donation)
     app.router.add_get("/api/photo/{file_id}", api_photo)
+    app.router.add_get("/d/{id}", donation_share_page)
