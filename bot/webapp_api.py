@@ -198,6 +198,20 @@ async def api_donations(request: web.Request) -> web.Response:
     )
 
 
+async def api_donation(request: web.Request) -> web.Response:
+    telegram_id = await _require_user_id(request)
+    donation_id = int(request.match_info["id"])
+    donation = await get_donation(donation_id)
+    if not donation:
+        raise web.HTTPNotFound()
+    lang = await _lang_for(telegram_id)
+    likes = await get_like_info([donation_id], telegram_id)
+    like = likes.get(donation_id, {})
+    return web.json_response(
+        _donation_json(donation, lang, like_count=like.get("count", 0), liked_by_me=like.get("liked", False))
+    )
+
+
 async def api_my_donations(request: web.Request) -> web.Response:
     telegram_id = await _require_user_id(request)
     lang = await _lang_for(telegram_id)
@@ -684,6 +698,7 @@ def setup_api_routes(app: web.Application) -> None:
     app.router.add_post("/api/ad-view", api_ad_view)
     app.router.add_get("/api/categories", api_categories)
     app.router.add_get("/api/donations", api_donations)
+    app.router.add_get("/api/donation/{id}", api_donation)
     app.router.add_get("/api/my-donations", api_my_donations)
     app.router.add_get("/api/my-requests", api_my_requests)
     app.router.add_post("/api/reservations", api_create_reservation)
