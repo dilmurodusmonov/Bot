@@ -538,7 +538,7 @@ async def donation_share_page(request: web.Request) -> web.Response:
     image_url = photo_urls[0]
     page_url = f"{BASE_URL}/d/{donation_id}"
     bot_username = request.app.get("bot_username")
-    bot_url = f"https://t.me/{bot_username}" if bot_username else BASE_URL
+    bot_url = f"https://t.me/{bot_username}?start=d_{donation_id}" if bot_username else BASE_URL
 
     if len(photo_urls) > 1:
         dots_html = '<div class="card-gallery-dots">' + "".join(
