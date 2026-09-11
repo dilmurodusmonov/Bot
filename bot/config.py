@@ -15,6 +15,11 @@ _deploy_version = os.getenv("RENDER_GIT_COMMIT", "")[:8] or str(int(time.time())
 BASE_URL = _base_url
 WEBAPP_URL = f"{_base_url}/webapp?v={_deploy_version}" if _base_url else None
 
+# @BotFather'da /newapp orqali ro'yxatdan o'tkazilgan Mini App'ning qisqa nomi
+# (https://t.me/<bot>/<MINI_APP_SHORT_NAME>?startapp=... havolasi shu orqali
+# botning chatiga kirmasdan, to'g'ridan-to'g'ri ilovaning o'ziga olib boradi).
+MINI_APP_SHORT_NAME = os.getenv("MINI_APP_SHORT_NAME", "app")
+
 if not BOT_TOKEN:
     raise RuntimeError(
         "BOT_TOKEN topilmadi. .env faylini yarating (.env.example asosida) "
