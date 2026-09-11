@@ -1913,6 +1913,10 @@
       if (!me.language) { goto("language", {}, false); return; }
       if (!me.role) { goto("role", {}, false); return; }
       var sharedDonationId = new URLSearchParams(location.search).get("d");
+      if (!sharedDonationId && tg && tg.initDataUnsafe && tg.initDataUnsafe.start_param) {
+        var startParam = tg.initDataUnsafe.start_param;
+        if (startParam.indexOf("d_") === 0) sharedDonationId = startParam.slice(2);
+      }
       if (sharedDonationId) {
         goto("donation_view", { id: sharedDonationId }, false);
         return;

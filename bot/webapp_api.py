@@ -5,7 +5,7 @@ from aiogram import Bot
 from aiogram.types import BufferedInputFile, InputMediaPhoto
 from aiohttp import web
 
-from bot.config import BASE_URL
+from bot.config import BASE_URL, MINI_APP_SHORT_NAME
 from bot.database import (
     cancel_reservation,
     count_pending_receive,
@@ -415,10 +415,14 @@ async def api_share_donation(request: web.Request) -> web.Response:
     bot: Bot = request.app["bot"]
     category_label = category_name(donation["category"], lang)
     description = donation["description"] or ""
-    page_url = f"{BASE_URL}/d/{donation_id}"
+    bot_username = request.app.get("bot_username")
+    open_url = (
+        f"https://t.me/{bot_username}/{MINI_APP_SHORT_NAME}?startapp=d_{donation_id}"
+        if bot_username else f"{BASE_URL}/d/{donation_id}"
+    )
     caption = (
         f"<b>{escape(category_label)}</b>\n{escape(description)}"
-        f'\n\n<a href="{escape(page_url)}">{escape(t(lang, "open_app_button"))}</a>'
+        f'\n\n<a href="{escape(open_url)}">{escape(t(lang, "open_app_button"))}</a>'
     )
 
     photo_ids = [donation["photo_file_id"]]
@@ -581,7 +585,10 @@ async def donation_share_page(request: web.Request) -> web.Response:
     image_url = photo_urls[0]
     page_url = f"{BASE_URL}/d/{donation_id}"
     bot_username = request.app.get("bot_username")
-    bot_url = f"https://t.me/{bot_username}?start=d_{donation_id}" if bot_username else BASE_URL
+    bot_url = (
+        f"https://t.me/{bot_username}/{MINI_APP_SHORT_NAME}?startapp=d_{donation_id}"
+        if bot_username else BASE_URL
+    )
 
     if len(photo_urls) > 1:
         dots_html = '<div class="card-gallery-dots">' + "".join(
