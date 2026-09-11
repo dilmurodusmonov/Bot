@@ -170,7 +170,9 @@ async def get_available_donations(category: str) -> list[dict[str, Any]]:
 
 async def get_donations_by_donor(donor_id: int) -> list[dict[str, Any]]:
     rows = await _get_pool().fetch(
-        "SELECT * FROM donations WHERE donor_id = $1 ORDER BY created_at DESC", donor_id
+        """SELECT * FROM donations WHERE donor_id = $1
+           ORDER BY (status = 'reserved') DESC, created_at DESC""",
+        donor_id,
     )
     return [dict(row) for row in rows]
 
