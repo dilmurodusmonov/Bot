@@ -373,6 +373,18 @@
   }
   .nav-tab.active { color: #1C93F3; background: rgba(28,147,243,0.12); }
   .nav-icon { font-size: 18px; display: inline-block; }
+  .status-tabs {
+    display: flex; gap: 6px; background: var(--section-bg); border: 1px solid var(--border);
+    border-radius: 999px; padding: 5px; margin-bottom: 14px;
+  }
+  .status-tab {
+    flex: 1; display: flex; align-items: center; justify-content: center; gap: 3px;
+    background: none; border: none; border-radius: 999px; color: var(--text); font-size: 11px;
+    font-weight: 600; font-family: inherit; padding: 8px 2px; white-space: nowrap;
+    transition: background .2s ease, color .2s ease;
+  }
+  .status-tab.active { color: #1C93F3; background: rgba(28,147,243,0.12); }
+  .status-tab-count { font-size: 11px; opacity: .65; }
   .avatar-ring {
     position: relative; z-index: 0; flex-shrink: 0;
     display: inline-flex; border-radius: 50%;
@@ -1403,7 +1415,16 @@
         setBackButton();
         return;
       }
-      var html = donations.map(function (d) {
+      var groups = {
+        reserved: donations.filter(function (d) { return d.status === "reserved"; }),
+        available: donations.filter(function (d) { return d.status === "available"; }),
+        done: donations.filter(function (d) { return d.status === "shipped" || d.status === "received"; }),
+      };
+      var tabOrder = ["reserved", "available", "done"];
+      var tabLabels = { reserved: tr("reserved"), available: tr("waiting"), done: tr("received") };
+      var activeTab = groups.reserved.length ? "reserved" : (groups.available.length ? "available" : "done");
+
+      function cardHtmlFor(d) {
         var body = donationCardHtml(d);
         if (d.reservation && d.status === "reserved") {
           var r = d.reservation;
@@ -1419,32 +1440,54 @@
           body += '<button class="card-btn-outline" data-delete-donation="' + d.id + '">' + tr("delete_donation") + "</button>";
         }
         return body + "</div></div>";
-      }).join("");
-      app.innerHTML = html;
-      wireCardGalleries();
-      wireCardActions();
-      donations.forEach(function (d) {
-        if (d.status !== "reserved") return;
-        var el = app.querySelector('[data-donation-id="' + d.id + '"]');
-        if (el) el.classList.add("card-reserved-glow");
-      });
-      app.querySelectorAll("[data-ship]").forEach(function (btn) {
-        btn.addEventListener("click", function () {
-          goto("donor_ship_form", { reservationId: parseInt(btn.getAttribute("data-ship"), 10) });
+      }
+
+      function renderTab() {
+        var tabsHtml = '<div class="status-tabs">' + tabOrder.map(function (key) {
+          return '<button class="status-tab' + (key === activeTab ? " active" : "") + '" data-tab="' + key + '">' +
+            escapeHtml(tabLabels[key]) + ' <span class="status-tab-count">' + groups[key].length + "</span>" +
+            "</button>";
+        }).join("") + "</div>";
+
+        var list = groups[activeTab];
+        var listHtml = list.length
+          ? list.map(cardHtmlFor).join("")
+          : '<div class="empty-state">' + tr("empty_donations") + "</div>";
+
+        app.innerHTML = tabsHtml + listHtml;
+        wireCardGalleries();
+        wireCardActions();
+        list.forEach(function (d) {
+          if (d.status !== "reserved") return;
+          var el = app.querySelector('[data-donation-id="' + d.id + '"]');
+          if (el) el.classList.add("card-reserved-glow");
         });
-      });
-      app.querySelectorAll("[data-delete-donation]").forEach(function (btn) {
-        btn.addEventListener("click", function () {
-          if (!window.confirm(tr("confirm_delete_donation"))) return;
-          var donationId = btn.getAttribute("data-delete-donation");
-          api("POST", "/api/donations/" + donationId + "/delete", {})
-            .then(function () {
-              if (tg && tg.HapticFeedback) tg.HapticFeedback.notificationOccurred("success");
-              renderDonorCabinet();
-            })
-            .catch(function () { showError(); });
+        app.querySelectorAll(".status-tab").forEach(function (btn) {
+          btn.addEventListener("click", function () {
+            activeTab = btn.getAttribute("data-tab");
+            renderTab();
+          });
         });
-      });
+        app.querySelectorAll("[data-ship]").forEach(function (btn) {
+          btn.addEventListener("click", function () {
+            goto("donor_ship_form", { reservationId: parseInt(btn.getAttribute("data-ship"), 10) });
+          });
+        });
+        app.querySelectorAll("[data-delete-donation]").forEach(function (btn) {
+          btn.addEventListener("click", function () {
+            if (!window.confirm(tr("confirm_delete_donation"))) return;
+            var donationId = btn.getAttribute("data-delete-donation");
+            api("POST", "/api/donations/" + donationId + "/delete", {})
+              .then(function () {
+                if (tg && tg.HapticFeedback) tg.HapticFeedback.notificationOccurred("success");
+                renderDonorCabinet();
+              })
+              .catch(function () { showError(); });
+          });
+        });
+      }
+
+      renderTab();
       hideMainButton();
       setBackButton();
     }).catch(function () { showError(); });
