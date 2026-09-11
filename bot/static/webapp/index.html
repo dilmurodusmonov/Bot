@@ -149,6 +149,8 @@
     background-size: 12px 2px; animation: roadScroll 0.6s linear infinite; opacity: 0.55;
   }
   @keyframes roadScroll { from { background-position: -12px 0; } to { background-position: 0 0; } }
+  .dua-icon { display: inline-block; animation: duaPulse 1.6s ease-in-out infinite; }
+  @keyframes duaPulse { 0%, 100% { transform: scale(1); } 50% { transform: scale(1.18); } }
   .pill-available { color: #9AA7B3; }
   .pill-reserved { color: #FFB454; }
   .pill-shipped { color: #4EA4F5; }
@@ -1473,7 +1475,7 @@
             "</div>" +
             '<button class="card-btn" data-ship="' + r.id + '">' + tr("ship_receipt") + "</button>";
         } else if (d.reservation && d.status === "received" && d.reservation.dua_text) {
-          body += '<div class="info-box">💬 ' + escapeHtml(d.reservation.dua_text) + "</div>";
+          body += '<div class="info-box"><span class="dua-icon">🤲</span> ' + escapeHtml(d.reservation.dua_text) + "</div>";
         } else if (d.status === "available") {
           body += '<button class="card-btn-outline" data-delete-donation="' + d.id + '">' + tr("delete_donation") + "</button>";
         }
@@ -1675,7 +1677,7 @@
         } else if (r.status === "shipped") {
           body += '<button class="card-btn" data-confirm="' + r.reservation_id + '">' + tr("confirm_received") + "</button>";
         } else if (r.status === "received" && r.dua_text) {
-          body += '<div class="info-box">💬 ' + escapeHtml(r.dua_text) + "</div>";
+          body += '<div class="info-box"><span class="dua-icon">🤲</span> ' + escapeHtml(r.dua_text) + "</div>";
         }
         return body + "</div></div>";
       }
