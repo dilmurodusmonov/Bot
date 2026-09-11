@@ -140,6 +140,13 @@
   .hourglass-swap .b { animation: hourglassB 3.2s infinite; }
   @keyframes hourglassA { 0%, 45% { opacity: 1; } 50%, 95% { opacity: 0; } 100% { opacity: 1; } }
   @keyframes hourglassB { 0%, 45% { opacity: 0; } 50%, 95% { opacity: 1; } 100% { opacity: 0; } }
+  .truck-drive { display: inline-block; animation: truckDrive 1.1s ease-in-out infinite; }
+  @keyframes truckDrive {
+    0%, 100% { transform: translateX(0); }
+    25% { transform: translateX(3px); }
+    50% { transform: translateX(0); }
+    75% { transform: translateX(-2px); }
+  }
   .pill-available { color: #9AA7B3; }
   .pill-reserved { color: #FFB454; }
   .pill-shipped { color: #4EA4F5; }
@@ -1348,6 +1355,8 @@
     var statusText = statusParts.slice(1).join(" ");
     var statusEmojiHtml = d.status === "available"
       ? '<span class="hourglass-swap"><span class="a">⏳</span><span class="b">⌛</span></span>'
+      : d.status === "shipped"
+      ? '<span class="truck-drive">' + escapeHtml(statusEmoji) + "</span>"
       : escapeHtml(statusEmoji);
     var likeCount = d.like_count || 0;
     var shareCount = d.share_count || 0;
