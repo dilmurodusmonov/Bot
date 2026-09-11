@@ -466,7 +466,7 @@
       take_it: "Qabul qilish",
       full_name_label: "Ism va familiya", address_label: "Manzil", phone_label: "Telefon raqami",
       send: "Yuborish", reservation_sent: "So'rovingiz yuborildi! Saxiyga ma'lumotlaringiz yuborildi.",
-      waiting: "Kutilmoqda", reserved: "Band qilingan", shipped: "Yo'lda", received: "Yetib bordi",
+      waiting: "Kutilmoqda", reserved: "Band qilingan", shipped: "Yo'lda", received: "Yetib bordi", accepted: "Qabul qilingan",
       ship_receipt: "Chek yuklash", confirm_received: "Qabul qildim",
       delete_donation: "O'chirish", cancel_reservation: "Bekor qilish",
       confirm_delete_donation: "Ehsonni o'chirishga ishonchingiz komilmi?",
@@ -513,7 +513,7 @@
       take_it: "Забрать",
       full_name_label: "Полное имя", address_label: "Адрес", phone_label: "Номер телефона",
       send: "Отправить", reservation_sent: "Ваша заявка отправлена! Данные переданы благотворителю.",
-      waiting: "Ожидает", reserved: "Забронировано", shipped: "В пути", received: "Доставлено",
+      waiting: "Ожидает", reserved: "Забронировано", shipped: "В пути", received: "Доставлено", accepted: "Принято",
       ship_receipt: "Загрузить чек", confirm_received: "Я получил(а)",
       delete_donation: "Удалить", cancel_reservation: "Отменить",
       confirm_delete_donation: "Вы уверены, что хотите удалить пожертвование?",
@@ -560,7 +560,7 @@
       take_it: "Take it",
       full_name_label: "Full name", address_label: "Address", phone_label: "Phone number",
       send: "Send", reservation_sent: "Your request was sent! Details were shared with the donor.",
-      waiting: "Waiting", reserved: "Reserved", shipped: "On the way", received: "Delivered",
+      waiting: "Waiting", reserved: "Reserved", shipped: "On the way", received: "Delivered", accepted: "Accepted",
       ship_receipt: "Upload receipt", confirm_received: "I received it",
       delete_donation: "Delete", cancel_reservation: "Cancel",
       confirm_delete_donation: "Are you sure you want to delete this donation?",
@@ -607,7 +607,7 @@
       take_it: "Қабылдау",
       full_name_label: "Аты-жөні", address_label: "Мекенжай", phone_label: "Телефон нөмірі",
       send: "Жіберу", reservation_sent: "Сұрауыңыз жіберілді! Мәліметтеріңіз қайырымдыға жіберілді.",
-      waiting: "Күтілуде", reserved: "Брондалған", shipped: "Жолда", received: "Жетті",
+      waiting: "Күтілуде", reserved: "Брондалған", shipped: "Жолда", received: "Жетті", accepted: "Қабылданды",
       ship_receipt: "Чек жүктеу", confirm_received: "Қабылдадым",
       delete_donation: "Өшіру", cancel_reservation: "Бас тарту",
       confirm_delete_donation: "Қайырды өшіруге сенімдісіз бе?",
@@ -646,7 +646,7 @@
       take_it: "Қабул кардан",
       full_name_label: "Ном ва насаб", address_label: "Суроға", phone_label: "Рақами телефон",
       send: "Фиристодан", reservation_sent: "Дархости шумо фиристода шуд! Маълумоти шумо ба саховатманд фиристода шуд.",
-      waiting: "Дар интизорӣ", reserved: "Банд карда шуд", shipped: "Дар роҳ", received: "Расид",
+      waiting: "Дар интизорӣ", reserved: "Банд карда шуд", shipped: "Дар роҳ", received: "Расид", accepted: "Қабул карда шуд",
       ship_receipt: "Боркунии чек", confirm_received: "Қабул кардам",
       delete_donation: "Нест кардан", cancel_reservation: "Бекор кардан",
       confirm_delete_donation: "Оё шумо мутмаин ҳастед, ки хайрияро нест кунед?",
@@ -685,7 +685,7 @@
       take_it: "Кабыл алуу",
       full_name_label: "Аты-жөнү", address_label: "Дареги", phone_label: "Телефон номери",
       send: "Жиберүү", reservation_sent: "Суранычыңыз жөнөтүлдү! Маалыматыңыз кайрымдууга жиберилди.",
-      waiting: "Күтүлүүдө", reserved: "Брондолгон", shipped: "Жолдо", received: "Жетти",
+      waiting: "Күтүлүүдө", reserved: "Брондолгон", shipped: "Жолдо", received: "Жетти", accepted: "Кабыл алынды",
       ship_receipt: "Чек жүктөө", confirm_received: "Кабыл алдым",
       delete_donation: "Өчүрүү", cancel_reservation: "Жокко чыгаруу",
       confirm_delete_donation: "Садаганы өчүрүүгө ишенесизби?",
@@ -724,7 +724,7 @@
       take_it: "Kabul etmek",
       full_name_label: "Ady we familiýasy", address_label: "Salgysy", phone_label: "Telefon belgisi",
       send: "Ibermek", reservation_sent: "Soragyňyz iberildi! Maglumatlaryňyz sahawatla iberildi.",
-      waiting: "Garaşylýar", reserved: "Bronlandy", shipped: "Ýolda", received: "Gowuşdy",
+      waiting: "Garaşylýar", reserved: "Bronlandy", shipped: "Ýolda", received: "Gowuşdy", accepted: "Kabul edildi",
       ship_receipt: "Çek ýüklemek", confirm_received: "Kabul etdim",
       delete_donation: "Öçürmek", cancel_reservation: "Ýatyrmak",
       confirm_delete_donation: "Sadakany öçürmäge ynanýarsyňyzmy?",
@@ -1662,7 +1662,7 @@
         received: reservations.filter(function (r) { return r.status === "received"; }),
       };
       var tabOrder = ["shipped", "reserved", "received"];
-      var tabLabels = { shipped: tr("shipped"), reserved: tr("reserved"), received: tr("received") };
+      var tabLabels = { shipped: tr("shipped"), reserved: tr("reserved"), received: tr("accepted") };
       var activeTab = groups.shipped.length ? "shipped" : (groups.reserved.length ? "reserved" : "received");
 
       function cardHtmlFor(r) {
