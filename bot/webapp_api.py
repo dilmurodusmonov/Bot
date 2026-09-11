@@ -1,3 +1,4 @@
+import json
 from html import escape
 from typing import Optional
 
@@ -646,6 +647,12 @@ async def donation_share_page(request: web.Request) -> web.Response:
     <a class="btn" href="{escape(bot_url)}">Botni ochish</a>
   </div>
   <script>
+    // Telegram'ning link-preview "crawler"i JS ishlatmaydi, shuning uchun
+    // karta (rasm/sarlavha/tavsif) chatda odatdagidek to'g'ri ko'rsatiladi.
+    // Haqiqiy foydalanuvchi shu havolani bossa esa, sahifa darhol Mini
+    // App'ning o'ziga (aynan shu ehsonga) qayta yo'naltiradi.
+    try {{ window.location.replace({json.dumps(bot_url)}); }} catch (e) {{}}
+
     document.querySelectorAll(".card-gallery").forEach(function (gallery) {{
       var card = gallery.closest(".card");
       var dots = card ? card.querySelectorAll(".card-gallery-dots .card-gallery-dot") : [];
