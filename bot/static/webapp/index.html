@@ -950,7 +950,7 @@
   function photoPickerHtml(inputId, multiple) {
     return '<div class="photo-picker-row">' +
       '<input id="' + inputId + '" type="file" accept="image/*"' +
-      (multiple ? " multiple" : ' capture="environment"') +
+      (multiple ? " multiple" : "") +
       ' class="visually-hidden">' +
       '<label for="' + inputId + '" class="photo-fab">' + ICONS.camera + "</label>" +
       "</div>";
