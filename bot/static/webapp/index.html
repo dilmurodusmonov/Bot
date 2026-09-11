@@ -92,6 +92,11 @@
     overflow: hidden; margin-bottom: 14px; transition: box-shadow .6s ease;
   }
   .card-highlight { box-shadow: 0 0 0 3px var(--blue); }
+  .card-reserved-glow { animation: reservedGlow 1.8s ease-in-out infinite; }
+  @keyframes reservedGlow {
+    0%, 100% { box-shadow: 0 0 0 2px #4EA4F5, 0 0 8px 2px rgba(78,164,245,0.3); }
+    50% { box-shadow: 0 0 0 3px #4EA4F5, 0 0 18px 6px rgba(78,164,245,0.6); }
+  }
   .card img { width: 100%; aspect-ratio: 1 / 1; object-fit: cover; display: block; background: #232B36; }
   .card-media { position: relative; }
   .card-gallery { display: flex; overflow-x: auto; scroll-snap-type: x mandatory; scrollbar-width: none; }
@@ -1418,6 +1423,11 @@
       app.innerHTML = html;
       wireCardGalleries();
       wireCardActions();
+      donations.forEach(function (d) {
+        if (d.status !== "reserved") return;
+        var el = app.querySelector('[data-donation-id="' + d.id + '"]');
+        if (el) el.classList.add("card-reserved-glow");
+      });
       app.querySelectorAll("[data-ship]").forEach(function (btn) {
         btn.addEventListener("click", function () {
           goto("donor_ship_form", { reservationId: parseInt(btn.getAttribute("data-ship"), 10) });
