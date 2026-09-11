@@ -1914,6 +1914,12 @@
       state.lang = me.language || "uz";
       if (!me.language) { goto("language", {}, false); return; }
       if (!me.role) { goto("role", {}, false); return; }
+      var targetScreen = new URLSearchParams(location.search).get("screen");
+      if (targetScreen && screens[targetScreen]) {
+        navStack = [{ screen: "home", params: {} }];
+        goto(targetScreen, {}, false);
+        return;
+      }
       var sharedDonationId = new URLSearchParams(location.search).get("d");
       if (!sharedDonationId && tg && tg.initDataUnsafe && tg.initDataUnsafe.start_param) {
         var startParam = tg.initDataUnsafe.start_param;

@@ -3,10 +3,16 @@ from html import escape
 from typing import Optional
 
 from aiogram import Bot
-from aiogram.types import BufferedInputFile, InputMediaPhoto
+from aiogram.types import (
+    BufferedInputFile,
+    InlineKeyboardButton,
+    InlineKeyboardMarkup,
+    InputMediaPhoto,
+    WebAppInfo,
+)
 from aiohttp import web
 
-from bot.config import BASE_URL, MINI_APP_SHORT_NAME
+from bot.config import BASE_URL, MINI_APP_SHORT_NAME, WEBAPP_URL
 from bot.database import (
     cancel_reservation,
     count_pending_receive,
@@ -303,6 +309,15 @@ async def api_create_reservation(request: web.Request) -> web.Response:
             full_name=full_name,
             address=address,
             phone=phone,
+        ),
+        reply_markup=(
+            InlineKeyboardMarkup(inline_keyboard=[[
+                InlineKeyboardButton(
+                    text=t(donor_lang, "open_app_button"),
+                    web_app=WebAppInfo(url=f"{WEBAPP_URL}&screen=donor_cabinet"),
+                )
+            ]])
+            if WEBAPP_URL else None
         ),
     )
     return web.json_response({"ok": True, "reservation_id": reservation_id})
