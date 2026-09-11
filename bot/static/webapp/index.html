@@ -89,8 +89,9 @@
   }
   .card {
     background: var(--section-bg); border: 1px solid var(--border); border-radius: 16px;
-    overflow: hidden; margin-bottom: 14px;
+    overflow: hidden; margin-bottom: 14px; transition: box-shadow .6s ease;
   }
+  .card-highlight { box-shadow: 0 0 0 3px var(--blue); }
   .card img { width: 100%; aspect-ratio: 1 / 1; object-fit: cover; display: block; background: #232B36; }
   .card-media { position: relative; }
   .card-gallery { display: flex; overflow-x: auto; scroll-snap-type: x mandatory; scrollbar-width: none; }
@@ -1318,7 +1319,7 @@
       "</button>" +
       "</div>";
     return (
-      '<div class="card">' +
+      '<div class="card" data-donation-id="' + d.id + '">' +
       headerHtml +
       mediaHtml +
       actionsHtml +
@@ -1516,17 +1517,15 @@
           goto("donor_add", { category: category });
         });
       }
-      hideMainButton();
-      setBackButton();
-    }).catch(function () { showError(); });
-  }
-
-  function renderDonationView() {
-    var id = state.params.id;
-    api("GET", "/api/donation/" + id).then(function (d) {
-      app.innerHTML = donationCardHtml(d) + "</div></div>";
-      wireCardGalleries();
-      wireCardActions();
+      var highlightId = state.params.highlightId;
+      if (highlightId) {
+        var targetCard = app.querySelector('[data-donation-id="' + highlightId + '"]');
+        if (targetCard) {
+          targetCard.scrollIntoView({ behavior: "smooth", block: "center" });
+          targetCard.classList.add("card-highlight");
+          setTimeout(function () { targetCard.classList.remove("card-highlight"); }, 2000);
+        }
+      }
       hideMainButton();
       setBackButton();
     }).catch(function () { showError(); });
@@ -1748,7 +1747,6 @@
     needy_dua_form: renderNeedyDuaForm,
     profile: renderProfile,
     profile_language: renderProfileLanguage,
-    donation_view: renderDonationView,
   };
 
   function render() {
@@ -1912,7 +1910,10 @@
         if (startParam.indexOf("d_") === 0) sharedDonationId = startParam.slice(2);
       }
       if (sharedDonationId) {
-        goto("donation_view", { id: sharedDonationId }, false);
+        api("GET", "/api/donation/" + sharedDonationId).then(function (d) {
+          navStack = [{ screen: "home", params: {} }];
+          goto("needy_list", { category: d.category, highlightId: sharedDonationId }, false);
+        }).catch(function () { goto("home", {}, false); });
         return;
       }
       var saved = loadNavState();
