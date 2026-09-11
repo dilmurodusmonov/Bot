@@ -226,7 +226,8 @@ async def get_active_reservation_for_donation(
 
 async def get_reservations_by_needy(needy_id: int) -> list[dict[str, Any]]:
     rows = await _get_pool().fetch(
-        "SELECT * FROM reservations WHERE needy_id = $1 ORDER BY created_at DESC",
+        """SELECT * FROM reservations WHERE needy_id = $1
+           ORDER BY (status = 'shipped') DESC, created_at DESC""",
         needy_id,
     )
     return [dict(row) for row in rows]
