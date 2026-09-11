@@ -1647,7 +1647,16 @@
         setBackButton();
         return;
       }
-      var html = reservations.map(function (r) {
+      var groups = {
+        shipped: reservations.filter(function (r) { return r.status === "shipped"; }),
+        reserved: reservations.filter(function (r) { return r.status === "reserved"; }),
+        received: reservations.filter(function (r) { return r.status === "received"; }),
+      };
+      var tabOrder = ["shipped", "reserved", "received"];
+      var tabLabels = { shipped: tr("shipped"), reserved: tr("reserved"), received: tr("received") };
+      var activeTab = groups.shipped.length ? "shipped" : (groups.reserved.length ? "reserved" : "received");
+
+      function cardHtmlFor(r) {
         if (!r.donation) return "";
         var body = donationCardHtml(r.donation);
         if (r.status === "reserved") {
@@ -1658,32 +1667,54 @@
           body += '<div class="info-box">💬 ' + escapeHtml(r.dua_text) + "</div>";
         }
         return body + "</div></div>";
-      }).join("");
-      app.innerHTML = html;
-      wireCardGalleries();
-      wireCardActions();
-      reservations.forEach(function (r) {
-        if (r.status !== "shipped" || !r.donation) return;
-        var el = app.querySelector('[data-donation-id="' + r.donation.id + '"]');
-        if (el) el.classList.add("card-reserved-glow");
-      });
-      app.querySelectorAll("[data-confirm]").forEach(function (btn) {
-        btn.addEventListener("click", function () {
-          goto("needy_dua_form", { reservationId: parseInt(btn.getAttribute("data-confirm"), 10) });
+      }
+
+      function renderTab() {
+        var tabsHtml = '<div class="status-tabs">' + tabOrder.map(function (key) {
+          return '<button class="status-tab' + (key === activeTab ? " active" : "") + '" data-tab="' + key + '">' +
+            escapeHtml(tabLabels[key]) + ' <span class="status-tab-count">' + groups[key].length + "</span>" +
+            "</button>";
+        }).join("") + "</div>";
+
+        var list = groups[activeTab];
+        var listHtml = list.length
+          ? list.map(cardHtmlFor).join("")
+          : '<div class="empty-state">' + tr("empty_requests") + "</div>";
+
+        app.innerHTML = tabsHtml + listHtml;
+        wireCardGalleries();
+        wireCardActions();
+        list.forEach(function (r) {
+          if (r.status !== "shipped" || !r.donation) return;
+          var el = app.querySelector('[data-donation-id="' + r.donation.id + '"]');
+          if (el) el.classList.add("card-reserved-glow");
         });
-      });
-      app.querySelectorAll("[data-cancel]").forEach(function (btn) {
-        btn.addEventListener("click", function () {
-          if (!window.confirm(tr("confirm_cancel_reservation"))) return;
-          var reservationId = btn.getAttribute("data-cancel");
-          api("POST", "/api/reservations/" + reservationId + "/cancel", {})
-            .then(function () {
-              if (tg && tg.HapticFeedback) tg.HapticFeedback.notificationOccurred("success");
-              renderNeedyCabinet();
-            })
-            .catch(function () { showError(); });
+        app.querySelectorAll(".status-tab").forEach(function (btn) {
+          btn.addEventListener("click", function () {
+            activeTab = btn.getAttribute("data-tab");
+            renderTab();
+          });
         });
-      });
+        app.querySelectorAll("[data-confirm]").forEach(function (btn) {
+          btn.addEventListener("click", function () {
+            goto("needy_dua_form", { reservationId: parseInt(btn.getAttribute("data-confirm"), 10) });
+          });
+        });
+        app.querySelectorAll("[data-cancel]").forEach(function (btn) {
+          btn.addEventListener("click", function () {
+            if (!window.confirm(tr("confirm_cancel_reservation"))) return;
+            var reservationId = btn.getAttribute("data-cancel");
+            api("POST", "/api/reservations/" + reservationId + "/cancel", {})
+              .then(function () {
+                if (tg && tg.HapticFeedback) tg.HapticFeedback.notificationOccurred("success");
+                renderNeedyCabinet();
+              })
+              .catch(function () { showError(); });
+          });
+        });
+      }
+
+      renderTab();
       hideMainButton();
       setBackButton();
     }).catch(function () { showError(); });
