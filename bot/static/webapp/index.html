@@ -1680,7 +1680,7 @@
         if (!r.donation) return "";
         var body = donationCardHtml(r.donation, r.status === "received" ? tr("accepted") : null);
         if (r.status === "reserved") {
-          body += '<button class="card-btn-outline" data-cancel="' + r.reservation_id + '">' + tr("cancel_reservation") + "</button>";
+          body += '<button class="card-btn" data-cancel="' + r.reservation_id + '">' + tr("cancel_reservation") + "</button>";
         } else if (r.status === "shipped") {
           body += '<button class="card-btn card-btn-blue" data-confirm="' + r.reservation_id + '">' + tr("confirm_received") + "</button>";
         } else if (r.status === "received" && r.dua_text) {
