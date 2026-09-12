@@ -1820,17 +1820,21 @@
         }
         var html = list.map(function (r) {
           if (!r.donation) return "";
-          var body = donationCardHtml(r.donation);
-          body += '<div class="info-box">' +
-            (r.receipt_photo_url ? '<img class="receipt-photo" src="' + r.receipt_photo_url + '" alt="">' : "") +
-            (r.receipt_note ? '<div class="row">✉️ ' + escapeHtml(r.receipt_note) + "</div>" : "") +
+          var labelParts = r.donation.category_label.split(" ");
+          var courier = r.receipt_note ? r.receipt_note : tr("shipped");
+          return '<div class="card" data-donation-id="' + r.donation.id + '">' +
+            '<div class="card-header">' +
+            '<span class="card-header-avatar">' + escapeHtml(labelParts[0]) + "</span>" +
+            '<span class="card-header-name">' + escapeHtml(labelParts.slice(1).join(" ")) + "</span>" +
             "</div>" +
-            '<button class="card-btn card-btn-blue" data-confirm="' + r.reservation_id + '">' + tr("confirm_received") + "</button>";
-          return body + "</div></div>";
+            '<div class="card-body">' +
+            (r.receipt_photo_url ? '<img class="receipt-photo" src="' + r.receipt_photo_url + '" alt="">' : "") +
+            '<span class="pill pill-shipped"><span class="truck-road">🚚<span class="road-track"></span></span> ' +
+            escapeHtml(courier) + "</span>" +
+            '<button class="card-btn card-btn-blue" data-confirm="' + r.reservation_id + '">' + tr("confirm_received") + "</button>" +
+            "</div></div>";
         }).join("");
         app.innerHTML = html;
-        wireCardGalleries();
-        wireCardActions();
         list.forEach(function (r) {
           if (!r.donation) return;
           var el = app.querySelector('[data-donation-id="' + r.donation.id + '"]');
