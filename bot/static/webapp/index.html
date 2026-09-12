@@ -186,7 +186,6 @@
     border-radius: 14px; padding: 18px 10px; font-size: 14px; font-weight: 500; text-align: center;
   }
   .error-box { background: rgba(229,72,77,0.12); color: #C0392B; border-radius: 10px; padding: 10px 12px; font-size: 13.5px; margin-top: 12px; }
-  .photo-preview { display: none; width: 100%; max-height: 220px; object-fit: cover; border-radius: 12px; margin-top: 10px; border: 1px solid var(--border); }
   .photo-preview-row { display: none; gap: 8px; align-items: center; margin-right: auto; }
   .photo-preview-row.show { display: flex; }
   .photo-preview-item { position: relative; flex-shrink: 0; }
@@ -987,21 +986,6 @@
       "</div>";
   }
 
-  function wirePhotoPreview(inputId, previewId) {
-    var input = document.getElementById(inputId);
-    var preview = document.getElementById(previewId);
-    input.addEventListener("change", function () {
-      var file = input.files[0];
-      if (!file) { preview.style.display = "none"; return; }
-      var reader = new FileReader();
-      reader.onload = function (e) {
-        preview.src = e.target.result;
-        preview.style.display = "block";
-      };
-      reader.readAsDataURL(file);
-    });
-  }
-
   // --- screens -----------------------------------------------------------
 
   function renderLoading() {
@@ -1576,20 +1560,47 @@
   function renderDonorShipForm() {
     app.innerHTML =
       "<label>" + tr("photo_label") + "</label>" +
-      photoPickerHtml("ship-photo-input") +
-      '<img id="ship-photo-preview" class="photo-preview">' +
+      photoPickerHtml("ship-photo-input", false, "ship-photo-preview-row") +
       "<label>" + tr("receipt_note_label") + "</label>" +
       '<textarea id="receipt-note-input" placeholder="' + escapeHtml(tr("receipt_note_placeholder")) + '"></textarea>';
 
-    wirePhotoPreview("ship-photo-input", "ship-photo-preview");
+    var selectedPhotoFile = null;
+
+    function renderShipPhotoPreview() {
+      var row = document.getElementById("ship-photo-preview-row");
+      row.innerHTML = "";
+      row.classList.toggle("show", !!selectedPhotoFile);
+      if (!selectedPhotoFile) return;
+      var item = document.createElement("div");
+      item.className = "photo-preview-item";
+      var img = document.createElement("img");
+      img.src = URL.createObjectURL(selectedPhotoFile);
+      var removeBtn = document.createElement("button");
+      removeBtn.type = "button";
+      removeBtn.className = "photo-preview-remove";
+      removeBtn.textContent = "×";
+      removeBtn.addEventListener("click", function () {
+        selectedPhotoFile = null;
+        renderShipPhotoPreview();
+      });
+      item.appendChild(img);
+      item.appendChild(removeBtn);
+      row.appendChild(item);
+    }
+
+    document.getElementById("ship-photo-input").addEventListener("change", function (e) {
+      var picked = (e.target.files || [])[0];
+      if (picked) selectedPhotoFile = picked;
+      e.target.value = "";
+      renderShipPhotoPreview();
+    });
 
     setMainButton(tr("send"), function () {
-      var file = document.getElementById("ship-photo-input").files[0];
-      if (!file) { showError(tr("photo_required")); return; }
+      if (!selectedPhotoFile) { showError(tr("photo_required")); return; }
       var receiptNote = document.getElementById("receipt-note-input").value.trim();
 
       if (tg) tg.MainButton.showProgress();
-      compressImage(file).then(function (compressed) {
+      compressImage(selectedPhotoFile).then(function (compressed) {
         var fd = new FormData();
         fd.append("photo", compressed);
         if (receiptNote) fd.append("receipt_note", receiptNote);
