@@ -47,8 +47,8 @@
   .menu-card {
     background: var(--section-bg); border: 1px solid var(--border); color: #000000;
     border-radius: 18px; padding: 8px 4px; font-size: 11px; font-weight: 600; text-align: center;
-    display: flex; flex: 0 0 auto; flex-direction: column; align-items: center; gap: 4px;
-    width: 118px; min-height: 54px; justify-content: center;
+    display: flex; flex: 1 1 0; flex-direction: column; align-items: center; gap: 4px;
+    max-width: 118px; min-width: 0; min-height: 54px; justify-content: center;
   }
   .menu-card .icon {
     width: 28px; height: 28px; border-radius: 50%; border: 1.5px solid #1C1C1E;
@@ -170,6 +170,7 @@
   .card-date { font-size: 11px; color: var(--hint); letter-spacing: 0.3px; margin-top: 2px; }
   .info-box { background: rgba(0,0,0,0.04); border-radius: 10px; padding: 10px 12px; font-size: 13.5px; line-height: 1.6; margin-top: 8px; }
   .info-box .row { display: flex; gap: 6px; }
+  .receipt-photo { width: 100%; border-radius: 8px; margin-top: 8px; display: block; }
   .card-btn {
     margin-top: 10px; width: 100%; background: linear-gradient(135deg, var(--accent1), var(--accent2));
     color: #fff; border: none; border-radius: 10px; padding: 12px; font-size: 14.5px; font-weight: 600;
@@ -477,6 +478,7 @@
       role_donor: "Saxiy", role_needy: "Muhtoj",
       add_donation: "Ehson ulashish", my_donations: "Ehsonlar tarixi",
       browse_donations: "Ehsonlarni izlash", my_requests: "Mening so'rovlarim",
+      notifications: "Bildirishnomalar", no_notifications: "Hozircha bildirishnomalar yo'q.",
       donations_section_title: "Ehsonlar",
       category_label: "Bo'lim", description_label: "Tavsif",
       description_placeholder: "Ehson haqida qisqacha yozing (holati, o'lchami va h.k.)",
@@ -524,6 +526,7 @@
       role_donor: "Благотворитель", role_needy: "Нуждающийся",
       add_donation: "Поделиться", my_donations: "Пожертвования",
       browse_donations: "Посмотреть пожертвования", my_requests: "Мои заявки",
+      notifications: "Уведомления", no_notifications: "Пока нет уведомлений.",
       donations_section_title: "Пожертвования",
       category_label: "Раздел", description_label: "Описание",
       description_placeholder: "Опишите пожертвование (состояние, размер и т.д.)",
@@ -571,6 +574,7 @@
       role_donor: "Donor", role_needy: "In need",
       add_donation: "Share donation", my_donations: "Donations",
       browse_donations: "Browse donations", my_requests: "My requests",
+      notifications: "Notifications", no_notifications: "No notifications yet.",
       donations_section_title: "Donations",
       category_label: "Category", description_label: "Description",
       description_placeholder: "Describe the donation (condition, size, etc.)",
@@ -618,6 +622,7 @@
       role_donor: "Қайырымды", role_needy: "Мұқтаж",
       add_donation: "Қайыр үлестіру", my_donations: "Қайыр тарихы",
       browse_donations: "Қайырларды іздеу", my_requests: "Менің сұрауларым",
+      notifications: "Хабарландырулар", no_notifications: "Әзірге хабарландырулар жоқ.",
       donations_section_title: "Қайырлар",
       category_label: "Бөлім", description_label: "Сипаттама",
       description_placeholder: "Қайыр туралы қысқаша жазыңыз (жағдайы, өлшемі және т.б.)",
@@ -657,6 +662,7 @@
       role_donor: "Саховатманд", role_needy: "Ниёзманд",
       add_donation: "Тақсими хайрия", my_donations: "Таърихи хайрияҳо",
       browse_donations: "Ҷустуҷӯи хайрияҳо", my_requests: "Дархостҳои ман",
+      notifications: "Огоҳномаҳо", no_notifications: "Ҳоло огоҳнома нест.",
       donations_section_title: "Хайрияҳо",
       category_label: "Бахш", description_label: "Тавсиф",
       description_placeholder: "Дар бораи хайрия мухтасар нависед (ҳолат, андоза ва ғ.)",
@@ -696,6 +702,7 @@
       role_donor: "Кайрымдуу", role_needy: "Мукташ",
       add_donation: "Садага үлүштүрүү", my_donations: "Садагалар тарыхы",
       browse_donations: "Садагаларды издөө", my_requests: "Менин суранычтарым",
+      notifications: "Билдирүүлөр", no_notifications: "Азырынча билдирүү жок.",
       donations_section_title: "Садагалар",
       category_label: "Бөлүм", description_label: "Сүрөттөмө",
       description_placeholder: "Садага жөнүндө кыскача жазыңыз (абалы, өлчөмү ж.б.)",
@@ -735,6 +742,7 @@
       role_donor: "Sahawatly", role_needy: "Mätäç",
       add_donation: "Sadaka paýlaşmak", my_donations: "Sadakalar taryhy",
       browse_donations: "Sadakalary gözlemek", my_requests: "Meniň soraglarym",
+      notifications: "Bildirişler", no_notifications: "Häzirlikçe bildiriş ýok.",
       donations_section_title: "Sadakalar",
       category_label: "Bölüm", description_label: "Beýany",
       description_placeholder: "Sadaka barada gysgaça ýazyň (ýagdaýy, ölçegi we ş.m.)",
@@ -1079,11 +1087,13 @@
         if (state.me.role === "donor") {
           cards =
             '<button class="menu-card" data-go="donor_add"><span class="icon">' + ICONS.send + "</span>" + tr("add_donation") + "</button>" +
-            '<button class="menu-card" data-go="donor_cabinet"><span class="icon">' + ICONS.gift + "</span>" + tr("my_donations") + "</button>";
+            '<button class="menu-card" data-go="donor_cabinet"><span class="icon">' + ICONS.gift + "</span>" + tr("my_donations") + "</button>" +
+            '<button class="menu-card" data-go="notifications"><span class="icon">' + ICONS.bell + "</span>" + tr("notifications") + "</button>";
         } else {
           cards =
             '<button class="menu-card" data-go="needy_categories"><span class="icon">' + ICONS.search + "</span>" + tr("browse_donations") + "</button>" +
-            '<button class="menu-card" data-go="needy_cabinet"><span class="icon">' + ICONS.list + "</span>" + tr("my_requests") + "</button>";
+            '<button class="menu-card" data-go="needy_cabinet"><span class="icon">' + ICONS.list + "</span>" + tr("my_requests") + "</button>" +
+            '<button class="menu-card" data-go="notifications"><span class="icon">' + ICONS.bell + "</span>" + tr("notifications") + "</button>";
         }
 
         var adsHtml =
@@ -1763,6 +1773,80 @@
     }).catch(function () { showError(); });
   }
 
+  function renderNotifications() {
+    if (state.me.role === "donor") {
+      api("GET", "/api/my-donations").then(function (donations) {
+        var list = donations.filter(function (d) { return d.status === "reserved"; });
+        if (!list.length) {
+          app.innerHTML = '<div class="empty-state">' + tr("no_notifications") + "</div>";
+          hideMainButton();
+          setBackButton();
+          return;
+        }
+        var html = list.map(function (d) {
+          var body = donationCardHtml(d);
+          var r = d.reservation;
+          body += '<div class="info-box">' +
+            '<div class="row">👤 ' + escapeHtml(r.full_name) + "</div>" +
+            '<div class="row">📍 ' + escapeHtml(r.address) + "</div>" +
+            '<div class="row">📞 ' + escapeHtml(r.phone) + "</div>" +
+            "</div>" +
+            '<button class="card-btn card-btn-blue" data-ship="' + r.id + '">' + tr("ship_receipt") + "</button>";
+          return body + "</div></div>";
+        }).join("");
+        app.innerHTML = html;
+        wireCardGalleries();
+        wireCardActions();
+        list.forEach(function (d) {
+          var el = app.querySelector('[data-donation-id="' + d.id + '"]');
+          if (el) el.classList.add("card-reserved-glow");
+        });
+        app.querySelectorAll("[data-ship]").forEach(function (btn) {
+          btn.addEventListener("click", function () {
+            goto("donor_ship_form", { reservationId: parseInt(btn.getAttribute("data-ship"), 10) });
+          });
+        });
+        hideMainButton();
+        setBackButton();
+      }).catch(function () { showError(); });
+    } else {
+      api("GET", "/api/my-requests").then(function (reservations) {
+        var list = reservations.filter(function (r) { return r.status === "shipped"; });
+        if (!list.length) {
+          app.innerHTML = '<div class="empty-state">' + tr("no_notifications") + "</div>";
+          hideMainButton();
+          setBackButton();
+          return;
+        }
+        var html = list.map(function (r) {
+          if (!r.donation) return "";
+          var body = donationCardHtml(r.donation);
+          body += '<div class="info-box">' +
+            (r.receipt_photo_url ? '<img class="receipt-photo" src="' + r.receipt_photo_url + '" alt="">' : "") +
+            (r.receipt_note ? '<div class="row">✉️ ' + escapeHtml(r.receipt_note) + "</div>" : "") +
+            "</div>" +
+            '<button class="card-btn card-btn-blue" data-confirm="' + r.reservation_id + '">' + tr("confirm_received") + "</button>";
+          return body + "</div></div>";
+        }).join("");
+        app.innerHTML = html;
+        wireCardGalleries();
+        wireCardActions();
+        list.forEach(function (r) {
+          if (!r.donation) return;
+          var el = app.querySelector('[data-donation-id="' + r.donation.id + '"]');
+          if (el) el.classList.add("card-reserved-glow");
+        });
+        app.querySelectorAll("[data-confirm]").forEach(function (btn) {
+          btn.addEventListener("click", function () {
+            goto("needy_dua_form", { reservationId: parseInt(btn.getAttribute("data-confirm"), 10) });
+          });
+        });
+        hideMainButton();
+        setBackButton();
+      }).catch(function () { showError(); });
+    }
+  }
+
   function renderNeedyDuaForm() {
     app.innerHTML =
       "<label>" + tr("dua_label") + "</label>" +
@@ -1904,6 +1988,7 @@
     needy_list: renderNeedyList,
     needy_reserve_form: renderNeedyReserveForm,
     needy_cabinet: renderNeedyCabinet,
+    notifications: renderNotifications,
     needy_dua_form: renderNeedyDuaForm,
     profile: renderProfile,
     profile_language: renderProfileLanguage,
