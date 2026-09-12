@@ -1474,16 +1474,17 @@
         return;
       }
       var groups = {
-        reserved: donations.filter(function (d) { return d.status === "reserved"; }),
         available: donations.filter(function (d) { return d.status === "available"; }),
-        done: donations.filter(function (d) { return d.status === "shipped" || d.status === "received"; }),
+        reserved: donations.filter(function (d) { return d.status === "reserved"; }),
+        shipped: donations.filter(function (d) { return d.status === "shipped"; }),
+        received: donations.filter(function (d) { return d.status === "received"; }),
       };
-      var tabOrder = ["reserved", "available", "done"];
-      var tabLabels = { reserved: tr("reserved"), available: tr("waiting"), done: tr("received") };
+      var tabOrder = ["available", "reserved", "shipped", "received"];
+      var tabLabels = { available: tr("waiting"), reserved: tr("reserved"), shipped: tr("shipped"), received: tr("received") };
       var savedTab = state.params && state.params.activeTab;
       var activeTab = (savedTab && groups.hasOwnProperty(savedTab))
         ? savedTab
-        : (groups.reserved.length ? "reserved" : (groups.available.length ? "available" : "done"));
+        : (groups.reserved.length ? "reserved" : (groups.available.length ? "available" : (groups.shipped.length ? "shipped" : "received")));
 
       function cardHtmlFor(d) {
         var body = donationCardHtml(d);
