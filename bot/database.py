@@ -184,9 +184,27 @@ async def set_donation_status(donation_id: int, status: str) -> None:
 
 
 async def delete_donation(donation_id: int) -> None:
-    await _get_pool().execute(
-        "DELETE FROM donations WHERE id = $1 AND status = 'available'", donation_id
-    )
+    """Ehsonni o'chirish.
+
+    donation_likes va reservations jadvallari donations(id) ga ON DELETE
+    CASCADE'siz bog'langan, shuning uchun ularni oldin o'chirmasak, like
+    bosilgan ehsonni o'chirishda tashqi kalit xatosi chiqadi.
+    """
+    pool = _get_pool()
+    async with pool.acquire() as conn:
+        async with conn.transaction():
+            status = await conn.fetchval(
+                "SELECT status FROM donations WHERE id = $1 FOR UPDATE", donation_id
+            )
+            if status != "available":
+                return
+            await conn.execute(
+                "DELETE FROM donation_likes WHERE donation_id = $1", donation_id
+            )
+            await conn.execute(
+                "DELETE FROM reservations WHERE donation_id = $1", donation_id
+            )
+            await conn.execute("DELETE FROM donations WHERE id = $1", donation_id)
 
 
 # --- reservations -------------------------------------------------------------
