@@ -2052,6 +2052,16 @@
       state.lang = me.language || "uz";
       if (!me.language) { goto("language", {}, false); return; }
       if (!me.role) { goto("role", {}, false); return; }
+      var saved = loadNavState();
+      var restorable = saved && saved.screen && screens[saved.screen] &&
+        saved.screen !== "loading" && saved.screen !== "language" && saved.screen !== "role";
+      if (restorable) {
+        state.screen = saved.screen;
+        state.params = saved.params || {};
+        navStack = Array.isArray(saved.navStack) ? saved.navStack : [];
+        render();
+        return;
+      }
       var targetScreen = new URLSearchParams(location.search).get("screen");
       if (targetScreen && screens[targetScreen]) {
         navStack = [{ screen: "home", params: {} }];
@@ -2070,17 +2080,7 @@
         }).catch(function () { goto("home", {}, false); });
         return;
       }
-      var saved = loadNavState();
-      var restorable = saved && saved.screen && screens[saved.screen] &&
-        saved.screen !== "loading" && saved.screen !== "language" && saved.screen !== "role";
-      if (restorable) {
-        state.screen = saved.screen;
-        state.params = saved.params || {};
-        navStack = Array.isArray(saved.navStack) ? saved.navStack : [];
-        render();
-      } else {
-        goto("home", {}, false);
-      }
+      goto("home", {}, false);
     })
     .catch(function () {
       var debug = {
