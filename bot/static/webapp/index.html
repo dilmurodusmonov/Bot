@@ -446,7 +446,7 @@
   <button class="nav-tab" data-role="donor"><span class="nav-icon">🫴</span><span data-tab-label="donor">Saxiy</span></button>
   <button class="nav-tab" data-role="needy"><span class="nav-icon">🤲</span><span data-tab-label="needy">Muhtoj</span></button>
 </div>
-<input id="global-camera-input" type="file" accept="image/*" capture="environment" class="visually-hidden">
+<input id="global-camera-input" type="file" accept="image/*" multiple class="visually-hidden">
 <script>
 (function () {
   "use strict";
@@ -949,10 +949,10 @@
   var globalCameraInputEl = document.getElementById("global-camera-input");
   if (globalCameraInputEl) {
     globalCameraInputEl.addEventListener("change", function () {
-      var file = globalCameraInputEl.files[0];
+      var files = Array.prototype.slice.call(globalCameraInputEl.files || []).slice(0, 3);
       globalCameraInputEl.value = "";
-      if (!file) return;
-      goto("donor_add", { capturedPhoto: file });
+      if (!files.length) return;
+      goto("donor_add", { capturedPhotos: files });
     });
   }
 
@@ -1240,7 +1240,7 @@
   }
 
   function renderDonorAdd() {
-    var capturedPhotoFile = state.params && state.params.capturedPhoto ? state.params.capturedPhoto : null;
+    var capturedPhotos = state.params && Array.isArray(state.params.capturedPhotos) ? state.params.capturedPhotos : [];
     var preselectedCategory = state.params && state.params.category ? state.params.category : null;
     api("GET", "/api/categories").then(function (categories) {
       var selectedCategory = preselectedCategory && categories.some(function (c) { return c.key === preselectedCategory; })
@@ -1270,7 +1270,7 @@
         '<div id="donation-photo-preview-row" class="photo-preview-row"></div>' +
         '<p class="note">' + tr("photo_note") + "</p>";
 
-      var selectedPhotoFiles = capturedPhotoFile ? [capturedPhotoFile] : [];
+      var selectedPhotoFiles = capturedPhotos.slice(0, 3);
 
       var catTrigger = document.getElementById("cat-picker-trigger");
       var catTriggerLabel = document.getElementById("cat-picker-trigger-label");
