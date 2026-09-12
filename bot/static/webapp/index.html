@@ -155,6 +155,14 @@
   @keyframes duaPulse { 0%, 100% { transform: scale(1); } 50% { transform: scale(1.18); } }
   .check-pop { display: inline-block; vertical-align: -0.28em; animation: checkOpen 4s ease-in-out infinite; }
   @keyframes checkOpen { 0% { transform: scale(0); opacity: 0; } 25% { transform: scale(1); opacity: 1; } 100% { transform: scale(1); opacity: 1; } }
+  .handshake-shake { display: inline-block; transform-origin: 70% 70%; animation: handshakeShake 3s ease-in-out infinite; }
+  @keyframes handshakeShake {
+    0%, 60%, 100% { transform: rotate(0deg); }
+    65% { transform: rotate(-12deg); }
+    75% { transform: rotate(10deg); }
+    85% { transform: rotate(-6deg); }
+    92% { transform: rotate(0deg); }
+  }
   .pill-available { color: #9AA7B3; }
   .pill-reserved { color: #FFB454; }
   .pill-shipped { color: #4EA4F5; }
@@ -1369,6 +1377,8 @@
       ? '<span class="truck-road">' + escapeHtml(statusEmoji) + '<span class="road-track"></span></span>'
       : d.status === "received"
       ? '<span class="check-pop">' + ICONS.verifiedBadge + "</span>"
+      : d.status === "reserved"
+      ? '<span class="handshake-shake">' + escapeHtml(statusEmoji) + "</span>"
       : escapeHtml(statusEmoji);
     var likeCount = d.like_count || 0;
     var shareCount = d.share_count || 0;
