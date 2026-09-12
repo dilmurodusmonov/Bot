@@ -272,6 +272,7 @@ async def api_my_requests(request: web.Request) -> web.Response:
                     if r["receipt_photo_file_id"]
                     else None
                 ),
+                "receipt_note": r["receipt_note"],
                 "dua_text": r["dua_text"],
             }
         )
