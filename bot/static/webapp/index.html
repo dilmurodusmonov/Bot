@@ -152,8 +152,8 @@
   @keyframes roadScroll { from { background-position: -12px 0; } to { background-position: 0 0; } }
   .dua-icon { display: inline-block; animation: duaPulse 1.6s ease-in-out infinite; }
   @keyframes duaPulse { 0%, 100% { transform: scale(1); } 50% { transform: scale(1.18); } }
-  .check-pop { display: inline-block; vertical-align: -0.28em; animation: checkSpin 2.6s ease-in-out infinite; }
-  @keyframes checkSpin { 0% { transform: rotate(0deg); } 23% { transform: rotate(360deg); } 100% { transform: rotate(360deg); } }
+  .check-pop { display: inline-block; vertical-align: -0.28em; animation: checkOpen 4s ease-in-out infinite; }
+  @keyframes checkOpen { 0% { transform: scale(0); opacity: 0; } 25% { transform: scale(1); opacity: 1; } 100% { transform: scale(1); opacity: 1; } }
   .pill-available { color: #9AA7B3; }
   .pill-reserved { color: #FFB454; }
   .pill-shipped { color: #4EA4F5; }
