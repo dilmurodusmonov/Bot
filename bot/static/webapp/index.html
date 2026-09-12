@@ -496,7 +496,8 @@
       photo_label: "Rasm", choose_photo: "Rasm tanlash",
       photo_note: "Ehson rasmini albatta biriktiring (eng ko'pi 3 ta).",
       photo_required: "Iltimos, rasm tanlang.",
-      receipt_note_label: "Izoh (ixtiyoriy)",
+      receipt_photo_label: "Chekni yuklang",
+      receipt_note_label: "Pochta nomini kiriting",
       receipt_note_placeholder: "Masalan: qaysi kuryerlik orqali yuborildi",
       donation_saved: "Ehsoningiz joylandi!",
       shipment_saved: "Chek yuklandi, Muhtojga xabar berildi!",
@@ -544,7 +545,8 @@
       photo_label: "Фото", choose_photo: "Выбрать фото",
       photo_note: "Обязательно прикрепите фото пожертвования (максимум 3).",
       photo_required: "Пожалуйста, выберите фото.",
-      receipt_note_label: "Комментарий (необязательно)",
+      receipt_photo_label: "Загрузите чек",
+      receipt_note_label: "Введите название почты",
       receipt_note_placeholder: "Например: через какую службу отправлено",
       donation_saved: "Ваше пожертвование добавлено!",
       shipment_saved: "Чек загружен, нуждающийся уведомлён!",
@@ -592,7 +594,8 @@
       photo_label: "Photo", choose_photo: "Choose photo",
       photo_note: "Please attach a photo of the donation (up to 3).",
       photo_required: "Please choose a photo.",
-      receipt_note_label: "Note (optional)",
+      receipt_photo_label: "Upload the receipt",
+      receipt_note_label: "Enter the courier name",
       receipt_note_placeholder: "e.g. which courier service",
       donation_saved: "Your donation has been posted!",
       shipment_saved: "Receipt uploaded, the recipient was notified!",
@@ -640,7 +643,8 @@
       photo_label: "Сурет", choose_photo: "Сурет таңдау",
       photo_note: "Қайыр суретін міндетті түрде тіркеңіз (ең көбі 3).",
       photo_required: "Сурет таңдаңыз.",
-      receipt_note_label: "Түсініктеме (міндетті емес)",
+      receipt_photo_label: "Чекті жүктеңіз",
+      receipt_note_label: "Пошта атауын енгізіңіз",
       receipt_note_placeholder: "Мысалы: қай жеткізу қызметі арқылы жіберілді",
       donation_saved: "Қайырыңыз жарияланды!",
       shipment_saved: "Чек жүктелді, мұқтажға хабарланды!",
@@ -680,7 +684,8 @@
       photo_label: "Расм", choose_photo: "Интихоби расм",
       photo_note: "Ҳатман расми хайрияро замима кунед (ҳадди аксар 3 адад).",
       photo_required: "Лутфан, расм интихоб кунед.",
-      receipt_note_label: "Шарҳ (ихтиёрӣ)",
+      receipt_photo_label: "Чекро бор кунед",
+      receipt_note_label: "Номи почтаро ворид кунед",
       receipt_note_placeholder: "Масалан: тавассути кадом хидмати расонӣ фиристода шуд",
       donation_saved: "Хайрияи шумо ҷойгир карда шуд!",
       shipment_saved: "Чек боркунӣ шуд, ба ниёзманд хабар дода шуд!",
@@ -720,7 +725,8 @@
       photo_label: "Сүрөт", choose_photo: "Сүрөт тандоо",
       photo_note: "Садага сүрөтүн милдеттүү түрдө тиркеңиз (эң көбү 3).",
       photo_required: "Сүрөт тандаңыз.",
-      receipt_note_label: "Түшүндүрмө (милдеттүү эмес)",
+      receipt_photo_label: "Чекти жүктөңүз",
+      receipt_note_label: "Почтанын атын киргизиңиз",
       receipt_note_placeholder: "Мисалы: кайсы жеткирүү кызматы аркылуу жөнөтүлдү",
       donation_saved: "Садагаңыз жайгаштырылды!",
       shipment_saved: "Чек жүктөлдү, мукташка билдирилди!",
@@ -760,7 +766,8 @@
       photo_label: "Surat", choose_photo: "Surat saýlamak",
       photo_note: "Sadakanyň suratyny hökman goşuň (iň köp 3 sanysy).",
       photo_required: "Surat saýlaň.",
-      receipt_note_label: "Bellik (hökmany däl)",
+      receipt_photo_label: "Çeki ýükläň",
+      receipt_note_label: "Poçtanyň adyny giriziň",
       receipt_note_placeholder: "Mysal üçin: haýsy eltip beriş gullugy arkaly iberildi",
       donation_saved: "Sadakaňyz ýerleşdirildi!",
       shipment_saved: "Çek ýüklendi, mätäje habar berildi!",
@@ -1559,7 +1566,7 @@
 
   function renderDonorShipForm() {
     app.innerHTML =
-      "<label>" + tr("photo_label") + "</label>" +
+      "<label>" + tr("receipt_photo_label") + "</label>" +
       photoPickerHtml("ship-photo-input", false, "ship-photo-preview-row") +
       "<label>" + tr("receipt_note_label") + "</label>" +
       '<textarea id="receipt-note-input" placeholder="' + escapeHtml(tr("receipt_note_placeholder")) + '"></textarea>';
