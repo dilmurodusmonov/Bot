@@ -187,7 +187,18 @@
     border-radius: 14px; padding: 18px 10px; font-size: 14px; font-weight: 500; text-align: center;
   }
   .error-box { background: rgba(229,72,77,0.12); color: #C0392B; border-radius: 10px; padding: 10px 12px; font-size: 13.5px; margin-top: 12px; }
-  .success-box { background: rgba(46,160,67,0.12); color: #1E7B34; border-radius: 10px; padding: 10px 12px; font-size: 13.5px; font-weight: 600; margin-top: 12px; }
+  .toast-overlay {
+    position: fixed; inset: 0; background: rgba(0,0,0,0.45); z-index: 60;
+    display: flex; align-items: center; justify-content: center; padding: 24px;
+  }
+  .toast-card {
+    background: #fff; border-radius: 20px; padding: 26px 22px; text-align: center;
+    width: 100%; max-width: 300px; box-shadow: 0 10px 40px rgba(0,0,0,0.25);
+    animation: toastPop .28s cubic-bezier(.34,1.56,.64,1);
+  }
+  .toast-emoji { display: block; font-size: 44px; line-height: 1; margin-bottom: 14px; }
+  .toast-text { font-size: 16px; font-weight: 700; color: #000; line-height: 1.4; }
+  @keyframes toastPop { from { transform: scale(0.7); opacity: 0; } to { transform: scale(1); opacity: 1; } }
   .photo-preview-row { display: none; gap: 8px; align-items: center; margin-right: auto; }
   .photo-preview-row.show { display: flex; }
   .photo-preview-item { position: relative; flex-shrink: 0; }
@@ -891,11 +902,17 @@
     app.appendChild(box);
   }
 
+  // Ekran markazida alohida oyna. app emas, body ichiga qo'yiladi —
+  // shunda sahifa qayerga siljigan bo'lsa ham markazda turadi.
   function showSuccess(msg) {
-    var box = document.createElement("div");
-    box.className = "success-box";
-    box.textContent = msg;
-    app.appendChild(box);
+    var overlay = document.createElement("div");
+    overlay.className = "toast-overlay";
+    overlay.innerHTML =
+      '<div class="toast-card"><span class="toast-emoji">\uD83C\uDF89</span>' +
+      '<div class="toast-text"></div></div>';
+    overlay.querySelector(".toast-text").textContent = msg;
+    document.body.appendChild(overlay);
+    return overlay;
   }
 
   function formatCount(n) {
@@ -1354,8 +1371,9 @@
             }
             // Tugmani o'chiramiz, aks holda 2 soniya ichida qayta bosilishi mumkin.
             hideMainButton();
-            showSuccess(tr("donation_saved"));
+            var successOverlay = showSuccess(tr("donation_saved"));
             setTimeout(function () {
+              if (successOverlay.parentNode) successOverlay.parentNode.removeChild(successOverlay);
               navStack = [{ screen: "home", params: {} }];
               goto("donor_cabinet", {}, false);
             }, 2000);
