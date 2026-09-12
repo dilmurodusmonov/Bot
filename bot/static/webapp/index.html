@@ -514,6 +514,7 @@
       receipt_note_label: "Pochta nomini kiriting",
       receipt_note_placeholder: "Qaysi kuryerlik orqali yuborildi",
       donation_saved: "Ehsoningiz muvaffaqiyatli joylandi!",
+      donation_deleted: "Joylangan ehsoningiz o'chirildi",
       shipment_saved: "Chek yuklandi, Muhtojga xabar berildi!",
       stats_label: "Ehsonlar", delivered_suffix: "dona ehsonlar o'z egalariga yetkazildi",
       month_names: ["Yanvar", "Fevral", "Mart", "Aprel", "May", "Iyun", "Iyul", "Avgust", "Sentyabr", "Oktyabr", "Noyabr", "Dekabr"],
@@ -563,6 +564,7 @@
       receipt_note_label: "Введите название почты",
       receipt_note_placeholder: "Через какую службу отправлено",
       donation_saved: "Ваше пожертвование добавлено!",
+      donation_deleted: "Ваше пожертвование удалено",
       shipment_saved: "Чек загружен, нуждающийся уведомлён!",
       stats_label: "Всего пожертвований", delivered_suffix: "доставлено",
       month_names: ["Января", "Февраля", "Марта", "Апреля", "Мая", "Июня", "Июля", "Августа", "Сентября", "Октября", "Ноября", "Декабря"],
@@ -612,6 +614,7 @@
       receipt_note_label: "Enter the courier name",
       receipt_note_placeholder: "Which courier service",
       donation_saved: "Your donation has been posted!",
+      donation_deleted: "Your donation has been deleted",
       shipment_saved: "Receipt uploaded, the recipient was notified!",
       stats_label: "Total donations", delivered_suffix: "delivered",
       month_names: ["January", "February", "March", "April", "May", "June", "July", "August", "September", "October", "November", "December"],
@@ -661,6 +664,7 @@
       receipt_note_label: "Пошта атауын енгізіңіз",
       receipt_note_placeholder: "Қай жеткізу қызметі арқылы жіберілді",
       donation_saved: "Қайырыңыз жарияланды!",
+      donation_deleted: "Қайырыңыз жойылды",
       shipment_saved: "Чек жүктелді, мұқтажға хабарланды!",
       stats_label: "Қайырлар", delivered_suffix: "қайыр жеткізілді",
       month_names: ["Қаңтар", "Ақпан", "Наурыз", "Сәуір", "Мамыр", "Маусым", "Шілде", "Тамыз", "Қыркүйек", "Қазан", "Қараша", "Желтоқсан"],
@@ -702,6 +706,7 @@
       receipt_note_label: "Номи почтаро ворид кунед",
       receipt_note_placeholder: "Тавассути кадом хидмати расонӣ фиристода шуд",
       donation_saved: "Хайрияи шумо ҷойгир карда шуд!",
+      donation_deleted: "Хайрияи шумо нест карда шуд",
       shipment_saved: "Чек боркунӣ шуд, ба ниёзманд хабар дода шуд!",
       stats_label: "Хайрияҳо", delivered_suffix: "адад хайрия расонида шуд",
       month_names: ["Январ", "Феврал", "Март", "Апрел", "Май", "Июн", "Июл", "Август", "Сентябр", "Октябр", "Ноябр", "Декабр"],
@@ -743,6 +748,7 @@
       receipt_note_label: "Почтанын атын киргизиңиз",
       receipt_note_placeholder: "Кайсы жеткирүү кызматы аркылуу жөнөтүлдү",
       donation_saved: "Садагаңыз жайгаштырылды!",
+      donation_deleted: "Садагаңыз өчүрүлдү",
       shipment_saved: "Чек жүктөлдү, мукташка билдирилди!",
       stats_label: "Садагалар", delivered_suffix: "садага жеткирилди",
       month_names: ["Январь", "Февраль", "Март", "Апрель", "Май", "Июнь", "Июль", "Август", "Сентябрь", "Октябрь", "Ноябрь", "Декабрь"],
@@ -784,6 +790,7 @@
       receipt_note_label: "Poçtanyň adyny giriziň",
       receipt_note_placeholder: "Haýsy eltip beriş gullugy arkaly iberildi",
       donation_saved: "Sadakaňyz ýerleşdirildi!",
+      donation_deleted: "Sadakaňyz pozuldy",
       shipment_saved: "Çek ýüklendi, mätäje habar berildi!",
       stats_label: "Sadakalar", delivered_suffix: "sadaka gowşuryldy",
       month_names: ["Ýanwar", "Fewral", "Mart", "Aprel", "Maý", "Iýun", "Iýul", "Awgust", "Sentýabr", "Oktýabr", "Noýabr", "Dekabr"],
@@ -904,12 +911,13 @@
 
   // Ekran markazida alohida oyna. app emas, body ichiga qo'yiladi —
   // shunda sahifa qayerga siljigan bo'lsa ham markazda turadi.
-  function showSuccess(msg) {
+  function showSuccess(msg, emoji) {
     var overlay = document.createElement("div");
     overlay.className = "toast-overlay";
     overlay.innerHTML =
-      '<div class="toast-card"><span class="toast-emoji">\uD83C\uDF89</span>' +
+      '<div class="toast-card"><span class="toast-emoji"></span>' +
       '<div class="toast-text"></div></div>';
+    overlay.querySelector(".toast-emoji").textContent = emoji || "\uD83C\uDF89";
     overlay.querySelector(".toast-text").textContent = msg;
     document.body.appendChild(overlay);
     return overlay;
@@ -1589,7 +1597,11 @@
             api("POST", "/api/donations/" + donationId + "/delete", {})
               .then(function () {
                 if (tg && tg.HapticFeedback) tg.HapticFeedback.notificationOccurred("success");
-                renderDonorCabinet();
+                var deletedOverlay = showSuccess(tr("donation_deleted"), "\uD83D\uDE29");
+                setTimeout(function () {
+                  if (deletedOverlay.parentNode) deletedOverlay.parentNode.removeChild(deletedOverlay);
+                  renderDonorCabinet();
+                }, 4000);
               })
               .catch(function () { showError(); });
           });
