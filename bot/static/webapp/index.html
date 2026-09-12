@@ -352,17 +352,14 @@
     display: flex; align-items: center; justify-content: center; flex-shrink: 0;
   }
   .settings-row-icon-red { background: #E5484D; }
-  .bell-shake svg { animation: bellShake 1.8s ease-in-out infinite; transform-origin: 50% 10%; }
+  .bell-shake svg { animation: bellShake 3s ease-in-out infinite; transform-origin: 50% 10%; }
   @keyframes bellShake {
-    0%, 96%, 100% { transform: rotate(0deg); }
-    2% { transform: rotate(14deg); }
-    4% { transform: rotate(-12deg); }
-    6% { transform: rotate(10deg); }
-    8% { transform: rotate(-8deg); }
-    10% { transform: rotate(6deg); }
-    12% { transform: rotate(-4deg); }
-    14% { transform: rotate(2deg); }
-    16% { transform: rotate(0deg); }
+    0%, 70%, 100% { transform: rotate(0deg); }
+    10% { transform: rotate(12deg); }
+    22% { transform: rotate(-10deg); }
+    34% { transform: rotate(8deg); }
+    46% { transform: rotate(-5deg); }
+    58% { transform: rotate(3deg); }
   }
   .settings-row-icon svg { width: 18px; height: 18px; }
   .settings-row-label { flex: 1; font-weight: 700; }
