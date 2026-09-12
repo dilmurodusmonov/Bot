@@ -1375,8 +1375,10 @@
             setTimeout(function () {
               if (successOverlay.parentNode) successOverlay.parentNode.removeChild(successOverlay);
               navStack = [{ screen: "home", params: {} }];
-              goto("donor_cabinet", {}, false);
-            }, 2000);
+              // Yangi ehson "Kutilmoqda" holatida bo'ladi, shuning uchun
+              // kabinetning standart tanlovini emas, aynan shu lentani ochamiz.
+              goto("donor_cabinet", { activeTab: "available" }, false);
+            }, 4000);
           })
           .catch(function () { if (tg) tg.MainButton.hideProgress(); showError(); });
       });
