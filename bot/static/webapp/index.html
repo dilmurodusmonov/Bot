@@ -352,7 +352,7 @@
     display: flex; align-items: center; justify-content: center; flex-shrink: 0;
   }
   .settings-row-icon-red { background: #E5484D; }
-  .settings-row-icon.bell-shake svg { animation: bellShake 1.8s ease-in-out infinite; transform-origin: 50% 10%; }
+  .bell-shake svg { animation: bellShake 1.8s ease-in-out infinite; transform-origin: 50% 10%; }
   @keyframes bellShake {
     0%, 96%, 100% { transform: rotate(0deg); }
     2% { transform: rotate(14deg); }
@@ -1066,10 +1066,17 @@
 
   function renderHome() {
     navStack = [];
-    Promise.all([api("GET", "/api/categories"), api("GET", "/api/stats")])
+    Promise.all([
+      api("GET", "/api/categories"),
+      api("GET", "/api/stats"),
+      api("GET", "/api/badges").catch(function () { return {}; }),
+    ])
       .then(function (results) {
         var categories = results[0];
         var stats = results[1];
+        var badges = results[2] || {};
+        var pendingCount = state.me.role === "donor" ? badges.donor_pending : badges.needy_pending;
+        var bellClass = pendingCount > 0 ? " bell-shake" : "";
 
         var user = tg && tg.initDataUnsafe && tg.initDataUnsafe.user;
         var photoUrl = user && user.photo_url;
@@ -1088,12 +1095,12 @@
           cards =
             '<button class="menu-card" data-go="donor_add"><span class="icon">' + ICONS.send + "</span>" + tr("add_donation") + "</button>" +
             '<button class="menu-card" data-go="donor_cabinet"><span class="icon">' + ICONS.gift + "</span>" + tr("my_donations") + "</button>" +
-            '<button class="menu-card" data-go="notifications"><span class="icon">' + ICONS.bell + "</span>" + tr("notifications") + "</button>";
+            '<button class="menu-card" data-go="notifications"><span class="icon' + bellClass + '">' + ICONS.bell + "</span>" + tr("notifications") + "</button>";
         } else {
           cards =
             '<button class="menu-card" data-go="needy_categories"><span class="icon">' + ICONS.search + "</span>" + tr("browse_donations") + "</button>" +
             '<button class="menu-card" data-go="needy_cabinet"><span class="icon">' + ICONS.list + "</span>" + tr("my_requests") + "</button>" +
-            '<button class="menu-card" data-go="notifications"><span class="icon">' + ICONS.bell + "</span>" + tr("notifications") + "</button>";
+            '<button class="menu-card" data-go="notifications"><span class="icon' + bellClass + '">' + ICONS.bell + "</span>" + tr("notifications") + "</button>";
         }
 
         var adsHtml =
