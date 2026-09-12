@@ -1484,7 +1484,7 @@
             '<div class="row">📍 ' + escapeHtml(r.address) + "</div>" +
             '<div class="row">📞 ' + escapeHtml(r.phone) + "</div>" +
             "</div>" +
-            '<button class="card-btn" data-ship="' + r.id + '">' + tr("ship_receipt") + "</button>";
+            '<button class="card-btn card-btn-blue" data-ship="' + r.id + '">' + tr("ship_receipt") + "</button>";
         } else if (d.reservation && d.status === "received" && d.reservation.dua_text) {
           body += '<div class="info-box"><span class="dua-icon">🤲</span> ' + escapeHtml(d.reservation.dua_text) + "</div>";
         } else if (d.status === "available") {
