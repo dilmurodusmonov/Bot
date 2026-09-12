@@ -1690,7 +1690,7 @@
         reserved: reservations.filter(function (r) { return r.status === "reserved"; }),
         received: reservations.filter(function (r) { return r.status === "received"; }),
       };
-      var tabOrder = ["shipped", "reserved", "received"];
+      var tabOrder = ["reserved", "shipped", "received"];
       var tabLabels = { shipped: tr("shipped"), reserved: tr("reserved"), received: tr("accepted") };
       var savedTab = state.params && state.params.activeTab;
       var activeTab = (savedTab && groups.hasOwnProperty(savedTab))
