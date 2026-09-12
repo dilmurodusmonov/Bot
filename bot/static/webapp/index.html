@@ -1469,7 +1469,10 @@
       };
       var tabOrder = ["reserved", "available", "done"];
       var tabLabels = { reserved: tr("reserved"), available: tr("waiting"), done: tr("received") };
-      var activeTab = groups.reserved.length ? "reserved" : (groups.available.length ? "available" : "done");
+      var savedTab = state.params && state.params.activeTab;
+      var activeTab = (savedTab && groups.hasOwnProperty(savedTab))
+        ? savedTab
+        : (groups.reserved.length ? "reserved" : (groups.available.length ? "available" : "done"));
 
       function cardHtmlFor(d) {
         var body = donationCardHtml(d);
@@ -1512,6 +1515,8 @@
         app.querySelectorAll(".status-tab").forEach(function (btn) {
           btn.addEventListener("click", function () {
             activeTab = btn.getAttribute("data-tab");
+            state.params.activeTab = activeTab;
+            saveNavState();
             renderTab();
           });
         });
@@ -1674,7 +1679,10 @@
       };
       var tabOrder = ["shipped", "reserved", "received"];
       var tabLabels = { shipped: tr("shipped"), reserved: tr("reserved"), received: tr("accepted") };
-      var activeTab = groups.shipped.length ? "shipped" : (groups.reserved.length ? "reserved" : "received");
+      var savedTab = state.params && state.params.activeTab;
+      var activeTab = (savedTab && groups.hasOwnProperty(savedTab))
+        ? savedTab
+        : (groups.shipped.length ? "shipped" : (groups.reserved.length ? "reserved" : "received"));
 
       function cardHtmlFor(r) {
         if (!r.donation) return "";
@@ -1712,6 +1720,8 @@
         app.querySelectorAll(".status-tab").forEach(function (btn) {
           btn.addEventListener("click", function () {
             activeTab = btn.getAttribute("data-tab");
+            state.params.activeTab = activeTab;
+            saveNavState();
             renderTab();
           });
         });
