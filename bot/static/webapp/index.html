@@ -1498,7 +1498,7 @@
         } else if (d.reservation && d.status === "received" && d.reservation.dua_text) {
           body += '<div class="info-box"><span class="dua-icon">🤲</span> ' + escapeHtml(d.reservation.dua_text) + "</div>";
         } else if (d.status === "available") {
-          body += '<button class="card-btn-outline" data-delete-donation="' + d.id + '">' + tr("delete_donation") + "</button>";
+          body += '<button class="card-btn" data-delete-donation="' + d.id + '">' + tr("delete_donation") + "</button>";
         }
         return body + "</div></div>";
       }
