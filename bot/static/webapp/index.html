@@ -1322,7 +1322,9 @@
       renderDonationPhotoPreviews();
 
       document.getElementById("donation-photo-input").addEventListener("change", function (e) {
-        selectedPhotoFiles = Array.prototype.slice.call(e.target.files || []).slice(0, 3);
+        var newFiles = Array.prototype.slice.call(e.target.files || []);
+        selectedPhotoFiles = selectedPhotoFiles.concat(newFiles).slice(0, 3);
+        e.target.value = "";
         renderDonationPhotoPreviews();
       });
 
