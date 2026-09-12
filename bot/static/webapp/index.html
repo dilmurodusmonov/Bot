@@ -1386,7 +1386,7 @@
               // Yangi ehson "Kutilmoqda" holatida bo'ladi, shuning uchun
               // kabinetning standart tanlovini emas, aynan shu lentani ochamiz.
               goto("donor_cabinet", { activeTab: "available" }, false);
-            }, 4000);
+            }, 5000);
           })
           .catch(function () { if (tg) tg.MainButton.hideProgress(); showError(); });
       });
@@ -1597,11 +1597,11 @@
             api("POST", "/api/donations/" + donationId + "/delete", {})
               .then(function () {
                 if (tg && tg.HapticFeedback) tg.HapticFeedback.notificationOccurred("success");
-                var deletedOverlay = showSuccess(tr("donation_deleted"), "\uD83D\uDE29");
+                var deletedOverlay = showSuccess(tr("donation_deleted"), "\uD83D\uDE13");
                 setTimeout(function () {
                   if (deletedOverlay.parentNode) deletedOverlay.parentNode.removeChild(deletedOverlay);
                   renderDonorCabinet();
-                }, 4000);
+                }, 5000);
               })
               .catch(function () { showError(); });
           });
