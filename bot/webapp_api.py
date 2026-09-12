@@ -3,6 +3,7 @@ from html import escape
 from typing import Optional
 
 from aiogram import Bot
+from aiogram.exceptions import TelegramAPIError
 from aiogram.types import (
     BufferedInputFile,
     InlineKeyboardButton,
@@ -439,27 +440,36 @@ async def api_create_donation(request: web.Request) -> web.Response:
         raise web.HTTPBadRequest(text="missing fields")
 
     await create_user_if_missing(telegram_id)
-    lang = await _lang_for(telegram_id)
     bot: Bot = request.app["bot"]
 
+    # Rasmlar Telegram serverida file_id sifatida saqlanadi, uni olishning
+    # yagona yo'li — suratni yuborish. Foydalanuvchi bu xabarni bot
+    # sahifasida ko'rmasligi uchun file_id olingach darhol o'chiramiz
+    # (o'chirilgan xabarning file_id'si amal qilishda davom etadi).
     if len(photos) == 1:
         photo_bytes, filename = photos[0]
         sent = await bot.send_photo(
             chat_id=telegram_id,
             photo=BufferedInputFile(photo_bytes, filename=filename),
-            caption=t(lang, "donation_added"),
+            disable_notification=True,
         )
         photo_file_ids = [sent.photo[-1].file_id]
+        sent_messages = [sent]
     else:
         media = [
-            InputMediaPhoto(
-                media=BufferedInputFile(photo_bytes, filename=filename),
-                caption=t(lang, "donation_added") if i == 0 else None,
-            )
-            for i, (photo_bytes, filename) in enumerate(photos)
+            InputMediaPhoto(media=BufferedInputFile(photo_bytes, filename=filename))
+            for photo_bytes, filename in photos
         ]
-        sent_messages = await bot.send_media_group(chat_id=telegram_id, media=media)
+        sent_messages = await bot.send_media_group(
+            chat_id=telegram_id, media=media, disable_notification=True
+        )
         photo_file_ids = [msg.photo[-1].file_id for msg in sent_messages]
+
+    for msg in sent_messages:
+        try:
+            await bot.delete_message(chat_id=telegram_id, message_id=msg.message_id)
+        except TelegramAPIError:
+            pass
 
     donation_id = await create_donation(
         donor_id=telegram_id,
