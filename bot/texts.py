@@ -316,7 +316,6 @@ CHANNEL_STATUS_AVAILABLE = "⏳ Mavjud — ilovada band qilishingiz mumkin"
 CHANNEL_STATUS_RESERVED = "🤝 Band qilingan"
 CHANNEL_STATUS_SHIPPED = "🚚 Yo'lda"
 CHANNEL_STATUS_RECEIVED = "✅ Egasiga yetib bordi"
-CHANNEL_PHOTO_NOTE = "🖼 Yana {count} ta rasm — ilovada ko'rishingiz mumkin"
 CHANNEL_OPEN_BUTTON = "🤲 Ehsonni olish"
 
 
