@@ -1835,7 +1835,8 @@
         .then(function () {
           if (tg) { tg.MainButton.hideProgress(); if (tg.HapticFeedback) tg.HapticFeedback.notificationOccurred("success"); }
           navStack = [{ screen: "home", params: {} }];
-          goto("donor_cabinet", {}, false);
+          // Chek yuklangach ehson "Yo'lda" holatiga o'tadi.
+          goto("donor_cabinet", { activeTab: "shipped" }, false);
         })
         .catch(function () {
           if (tg) tg.MainButton.hideProgress();
