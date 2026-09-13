@@ -85,8 +85,17 @@ def _app_url(bot_username: Optional[str], donation_id: int) -> Optional[str]:
     return f"https://t.me/{bot_username}/{MINI_APP_SHORT_NAME}?startapp=d_{donation_id}"
 
 
-def _channel_caption(status: str) -> str:
-    return escape(status_label(status, "uz"), quote=False)
+def _channel_caption(
+    bot_username: Optional[str], donation_id: int, status: str
+) -> str:
+    """Post sarlavhasi — holat yorlig'i, qalin va havorang.
+
+    Telegram'da matn rangini belgilaydigan teg yo'q: havorang faqat
+    havoladan chiqadi. Shuning uchun yorliq ilovaga olib boradigan
+    havolaga o'raladi — bosilsa ehson ilovada ochiladi."""
+    label = f"<b>{escape(status_label(status, 'uz'), quote=False)}</b>"
+    url = _app_url(bot_username, donation_id)
+    return f'<a href="{escape(url)}">{label}</a>' if url else label
 
 
 def _channel_keyboard(
@@ -140,7 +149,7 @@ async def _publish_to_channel(
         msg = await bot.send_photo(
             chat_id=CHANNEL_ID,
             photo=await _channel_photo(bot, photo_ids),
-            caption=_channel_caption("available"),
+            caption=_channel_caption(bot_username, donation_id, "available"),
             reply_markup=_channel_keyboard(bot_username, donation_id, "available"),
         )
         await set_donation_channel_messages(donation_id, [msg.message_id])
@@ -163,7 +172,7 @@ async def _refresh_channel_post(
         await bot.edit_message_caption(
             chat_id=CHANNEL_ID,
             message_id=message_ids[0],
-            caption=_channel_caption(status),
+            caption=_channel_caption(bot_username, donation_id, status),
             reply_markup=_channel_keyboard(bot_username, donation_id, status),
         )
     except Exception:
