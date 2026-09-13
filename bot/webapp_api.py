@@ -86,25 +86,30 @@ def _app_url(request: web.Request, donation_id: int) -> Optional[str]:
     return f"https://t.me/{bot_username}/{MINI_APP_SHORT_NAME}?startapp=d_{donation_id}"
 
 
-def _channel_caption(
-    request: web.Request, donation: dict, status: str, with_link: bool
-) -> str:
-    """Kanal posti sarlavhasi. Albomda inline tugma bo'lmagani uchun
-    (sendMediaGroup reply_markup'ni qabul qilmaydi) havola sarlavhaning
-    o'ziga HTML havola sifatida qo'yiladi."""
-    caption = CHANNEL_POST.format(
+def _channel_caption(donation: dict, status: str) -> str:
+    return CHANNEL_POST.format(
         category=escape(category_name(donation["category"], "uz")),
         description=escape(donation["description"] or ""),
         status=escape(channel_status(status)),
     )
-    url = _app_url(request, donation["id"]) if with_link else None
-    if url:
-        caption += f'\n\n<a href="{escape(url)}">{escape(CHANNEL_OPEN_BUTTON)}</a>'
-    return caption
+
+
+def _channel_keyboard(request: web.Request, donation_id: int) -> Optional[InlineKeyboardMarkup]:
+    url = _app_url(request, donation_id)
+    if not url:
+        return None
+    return InlineKeyboardMarkup(
+        inline_keyboard=[[InlineKeyboardButton(text=CHANNEL_OPEN_BUTTON, url=url)]]
+    )
 
 
 async def _publish_to_channel(request: web.Request, donation_id: int) -> None:
     """Yangi ehsonni kanalga e'lon qiladi va post id'larini saqlaydi.
+
+    Bir nechta rasmli ehson albom bo'lib chiqadi. sendMediaGroup
+    reply_markup'ni qabul qilmagani uchun tugma albomdan keyin
+    yuboriladigan alohida matnli xabarga qo'yiladi — shunda ham barcha
+    rasmlar, ham tugma bo'ladi.
 
     Kanal bilan bog'liq har qanday muammo (bot admin emas, kanal
     o'chirilgan va h.k.) ehson joylanishini buzmasligi kerak — shuning
@@ -115,71 +120,66 @@ async def _publish_to_channel(request: web.Request, donation_id: int) -> None:
     if not donation:
         return
     photo_ids = _donation_photo_ids(donation)
+    caption = _channel_caption(donation, "available")
+    keyboard = _channel_keyboard(request, donation_id)
     bot: Bot = request.app["bot"]
     try:
         if len(photo_ids) > 1:
-            caption = _channel_caption(request, donation, "available", with_link=True)
-            media = [
-                InputMediaPhoto(
-                    media=pid,
-                    caption=caption if i == 0 else None,
-                    parse_mode="HTML" if i == 0 else None,
-                )
-                for i, pid in enumerate(photo_ids)
-            ]
-            sent = await bot.send_media_group(chat_id=CHANNEL_ID, media=media)
-            message_ids = [msg.message_id for msg in sent]
+            sent = await bot.send_media_group(
+                chat_id=CHANNEL_ID,
+                media=[InputMediaPhoto(media=pid) for pid in photo_ids],
+            )
+            text_msg = await bot.send_message(
+                chat_id=CHANNEL_ID, text=caption, reply_markup=keyboard
+            )
+            message_ids = [msg.message_id for msg in sent] + [text_msg.message_id]
         else:
             msg = await bot.send_photo(
                 chat_id=CHANNEL_ID,
                 photo=photo_ids[0],
-                caption=_channel_caption(request, donation, "available", with_link=False),
-                reply_markup=_channel_keyboard(request, donation_id),
+                caption=caption,
+                reply_markup=keyboard,
             )
             message_ids = [msg.message_id]
     except Exception:
-        # Kanal yordamchi kanal, ehson joylanishini buzmasligi kerak.
+        # Kanal yordamchi vosita, ehson joylanishini buzmasligi kerak.
         logger.exception("Kanalga e'lon qilib bo'lmadi (ehson %s)", donation_id)
         return
     await set_donation_channel_messages(donation_id, message_ids)
 
 
-def _channel_keyboard(request: web.Request, donation_id: int) -> Optional[InlineKeyboardMarkup]:
-    """Bitta rasmli post uchun tugma. Albomda tugma qo'yib bo'lmaydi."""
-    url = _app_url(request, donation_id)
-    if not url:
-        return None
-    return InlineKeyboardMarkup(
-        inline_keyboard=[[InlineKeyboardButton(text=CHANNEL_OPEN_BUTTON, url=url)]]
-    )
-
-
 async def _refresh_channel_post(request: web.Request, donation_id: int, status: str) -> None:
     """Kanal postidagi holatni yangilaydi. Ehson band qilingandan keyin
-    ilovaga o'tish havolasi olib tashlanadi — post tarixda qoladi, lekin
-    boshqa band qilinmaydi."""
+    tugma olib tashlanadi — post tarixda qoladi, lekin boshqa band
+    qilinmaydi.
+
+    Albomda matn alohida xabarda turadi (oxirgi id), bitta rasmli
+    postda esa suratning sarlavhasida."""
     if not CHANNEL_ID:
         return
     donation = await get_donation(donation_id)
     message_ids = _channel_message_ids(donation)
     if not message_ids:
         return
-    available = status == "available"
+    caption = _channel_caption(donation, status)
+    keyboard = _channel_keyboard(request, donation_id) if status == "available" else None
     is_album = len(_donation_photo_ids(donation)) > 1
     bot: Bot = request.app["bot"]
     try:
-        await bot.edit_message_caption(
-            chat_id=CHANNEL_ID,
-            message_id=message_ids[0],
-            caption=_channel_caption(
-                request, donation, status, with_link=available and is_album
-            ),
-            parse_mode="HTML",
-            reply_markup=(
-                _channel_keyboard(request, donation_id)
-                if available and not is_album else None
-            ),
-        )
+        if is_album:
+            await bot.edit_message_text(
+                chat_id=CHANNEL_ID,
+                message_id=message_ids[-1],
+                text=caption,
+                reply_markup=keyboard,
+            )
+        else:
+            await bot.edit_message_caption(
+                chat_id=CHANNEL_ID,
+                message_id=message_ids[0],
+                caption=caption,
+                reply_markup=keyboard,
+            )
     except Exception:
         logger.exception("Kanal postini yangilab bo'lmadi (ehson %s)", donation_id)
 
