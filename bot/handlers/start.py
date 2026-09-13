@@ -61,11 +61,7 @@ async def cmd_start(message: Message, state: FSMContext) -> None:
         await message.answer(t(lang, "choose_role"), reply_markup=role_keyboard(lang))
         return
 
-    await message.answer(t(lang, "welcome_back"))
-    if donation_id:
-        await _show_open_app_button(message, lang, donation_id)
-    else:
-        await _show_open_app_hint(message, lang)
+    await _show_open_app_button(message, lang, donation_id)
 
 
 @router.callback_query(F.data.startswith("lang:"))
@@ -77,7 +73,7 @@ async def language_chosen(callback: CallbackQuery, state: FSMContext) -> None:
     user = await get_user(callback.from_user.id)
     await callback.message.edit_text(t(lang, "language_set"))
     if user["role"]:
-        await _show_open_app_hint(callback.message, lang)
+        await _show_open_app_button(callback.message, lang)
     else:
         await callback.message.answer(t(lang, "choose_role"), reply_markup=role_keyboard(lang))
     await callback.answer()
@@ -91,7 +87,7 @@ async def role_chosen(callback: CallbackQuery, state: FSMContext) -> None:
     await state.clear()
 
     await callback.message.edit_text(t(lang, "role_donor" if role == "donor" else "role_needy"))
-    await _show_open_app_hint(callback.message, lang)
+    await _show_open_app_button(callback.message, lang)
     await callback.answer()
 
 
