@@ -306,23 +306,5 @@ def status_label(status: str, lang: str) -> str:
 # Kanalning auditoriyasi aralash, shuning uchun e'lon matni foydalanuvchi
 # tiliga bog'lanmaydi — bitta o'zbekcha shablon ishlatiladi.
 
-# Telegram inline tugmaning kengligini xabar puffagiga qarab beradi,
-# puffak esa eng uzun matnga qarab o'lchanadi. Tugma xabarida ko'rinadigan
-# matn yo'q, shuning uchun kenglikni yorliqning o'zi belgilaydi —
-# ikki chetiga uzilmaydigan probellar qo'shiladi.
-_BUTTON_PAD = "\u00a0" * 14
-
-
-def channel_button_label(text: str) -> str:
-    """Yorliqni ikki chetidan uzilmaydigan probellar bilan to'ldiradi —
-    barcha holatlarda tugmalar bir xil, albomga yaqin enda chiqadi."""
-    return f"{_BUTTON_PAD}{text}{_BUTTON_PAD}"
-
-
 CHANNEL_OPEN_BUTTON = "🤲 Ehsonni olish"
-
-# Albomdan keyin faqat tugma chiqishi uchun matnsiz xabar kerak, lekin
-# Telegram bo'sh matnni qabul qilmaydi — ko'zga ko'rinmaydigan belgi
-# (word joiner) qo'yiladi.
-BUTTON_ONLY_TEXT = "\u2060"
 
