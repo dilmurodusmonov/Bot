@@ -22,7 +22,7 @@ CREATE TABLE IF NOT EXISTS donations (
     description TEXT,
     status TEXT NOT NULL DEFAULT 'available',
     share_count INTEGER NOT NULL DEFAULT 0,
-    channel_message_id INTEGER,
+    channel_message_ids TEXT,
     created_at TIMESTAMPTZ NOT NULL DEFAULT now()
 );
 
@@ -104,11 +104,29 @@ async def _migrate_donation_share_count(conn: asyncpg.Connection) -> None:
 
 
 async def _migrate_donation_channel_message(conn: asyncpg.Connection) -> None:
-    """Ehson kanalga e'lon qilinganda post'ning id'si shu ustunda saqlanadi —
-    keyinchalik holat o'zgarsa post tahrirlanadi yoki o'chiriladi."""
+    """Ehson kanalga e'lon qilinganda post id'lari shu ustunda saqlanadi —
+    keyinchalik holat o'zgarsa post tahrirlanadi yoki o'chiriladi.
+
+    Bir nechta rasmli ehson albom bo'lib chiqadi, ya'ni bir nechta xabar
+    hosil bo'ladi. Shuning uchun id'lar vergul bilan ajratilgan matn
+    sifatida saqlanadi. Avvalgi bitta butun sonli ustun ko'chiriladi."""
     await conn.execute(
-        "ALTER TABLE donations ADD COLUMN IF NOT EXISTS channel_message_id INTEGER"
+        "ALTER TABLE donations ADD COLUMN IF NOT EXISTS channel_message_ids TEXT"
     )
+    has_old = await conn.fetchval(
+        """SELECT EXISTS (
+               SELECT 1 FROM information_schema.columns
+               WHERE table_name = 'donations' AND column_name = 'channel_message_id'
+           )"""
+    )
+    if has_old:
+        await conn.execute(
+            """UPDATE donations
+               SET channel_message_ids = channel_message_id::text
+               WHERE channel_message_id IS NOT NULL
+                 AND channel_message_ids IS NULL"""
+        )
+        await conn.execute("ALTER TABLE donations DROP COLUMN channel_message_id")
 
 
 # --- users -----------------------------------------------------------------
@@ -193,11 +211,13 @@ async def set_donation_status(donation_id: int, status: str) -> None:
     )
 
 
-async def set_donation_channel_message(donation_id: int, message_id: Optional[int]) -> None:
+async def set_donation_channel_messages(
+    donation_id: int, message_ids: Optional[list[int]]
+) -> None:
     await _get_pool().execute(
-        "UPDATE donations SET channel_message_id = $2 WHERE id = $1",
+        "UPDATE donations SET channel_message_ids = $2 WHERE id = $1",
         donation_id,
-        message_id,
+        ",".join(str(mid) for mid in message_ids) if message_ids else None,
     )
 
 
