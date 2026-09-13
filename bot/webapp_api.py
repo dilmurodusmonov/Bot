@@ -94,7 +94,8 @@ def _channel_caption(request: web.Request, donation_id: int, status: str) -> str
     qilinmaydi."""
     url = _app_url(request, donation_id) if status == "available" else None
     if url:
-        return f'<a href="{escape(url)}">{escape(CHANNEL_OPEN_BUTTON, quote=False)}</a>'
+        label = escape(CHANNEL_OPEN_BUTTON, quote=False)
+        return f'<a href="{escape(url)}"><b>{label}</b></a>'
     return escape(status_label(status, "uz"), quote=False)
 
 
