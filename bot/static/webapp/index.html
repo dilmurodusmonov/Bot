@@ -208,9 +208,9 @@
   .confirm-card { max-width: 320px; text-align: left; }
   .confirm-card .toast-text { text-align: center; margin-bottom: 14px; }
   .confirm-rows { background: var(--bg); border: 1px solid var(--border); border-radius: 12px; padding: 12px; }
-  .confirm-row { font-size: 14.5px; line-height: 1.45; word-break: break-word; }
-  .confirm-row + .confirm-row { margin-top: 10px; }
-  .confirm-row-label { display: block; font-size: 12px; color: var(--hint); margin-bottom: 1px; }
+  .confirm-row { display: flex; gap: 8px; font-size: 14.5px; line-height: 1.45; word-break: break-word; }
+  .confirm-row + .confirm-row { margin-top: 9px; }
+  .confirm-row-icon { flex-shrink: 0; }
   .confirm-card .card-btn-outline { color: var(--hint); border-color: rgba(0,0,0,0.18); }
   .toast-text { font-size: 16px; font-weight: 700; color: #000; line-height: 1.4; }
   @keyframes toastPop { from { transform: scale(0.7); opacity: 0; } to { transform: scale(1); opacity: 1; } }
@@ -986,12 +986,12 @@
     rows.forEach(function (row) {
       var item = document.createElement("div");
       item.className = "confirm-row";
-      var label = document.createElement("span");
-      label.className = "confirm-row-label";
-      label.textContent = row.label;
+      var icon = document.createElement("span");
+      icon.className = "confirm-row-icon";
+      icon.textContent = row.icon;
       var value = document.createElement("span");
       value.textContent = row.value;
-      item.appendChild(label);
+      item.appendChild(icon);
       item.appendChild(value);
       list.appendChild(item);
     });
@@ -1941,9 +1941,9 @@
         showConfirm(
           tr("confirm_data_title"),
           [
-            { label: tr("full_name_label"), value: full_name },
-            { label: tr("address_label"), value: address },
-            { label: tr("phone_label"), value: phone },
+            { icon: "\uD83D\uDC64", value: full_name },
+            { icon: "\uD83D\uDCCD", value: address },
+            { icon: "\uD83D\uDCDE", value: phone },
           ],
           function () { submitReservation(full_name, address, phone); },
           armSendButton
