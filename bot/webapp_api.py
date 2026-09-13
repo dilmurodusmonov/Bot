@@ -85,16 +85,17 @@ def _app_url(request: web.Request, donation_id: int) -> Optional[str]:
 
 
 def _channel_caption(request: web.Request, donation_id: int, status: str) -> str:
-    """Kanal posti sarlavhasi: holat qatori va uning ostida ilovaga olib
-    boradigan havola. Havola Telegram'da havorang bo'lib chiqadi.
+    """Kanal posti sarlavhasi.
 
-    Ehson band qilinganda havola olib tashlanadi — post tarixda qoladi,
-    lekin boshqa band qilinmaydi."""
-    caption = escape(status_label(status, "uz"), quote=False)
+    Ehson bo'sh turganda faqat havola ko'rsatiladi — havolaning o'zi
+    ehson hali olinmaganini bildiradi, shuning uchun "Kutilmoqda"
+    yozuvi ortiqcha. Band qilingandan keyin havola olib tashlanadi va
+    o'rniga holat yoziladi: post tarixda qoladi, lekin boshqa band
+    qilinmaydi."""
     url = _app_url(request, donation_id) if status == "available" else None
     if url:
-        caption += f'\n\n<a href="{escape(url)}">{escape(CHANNEL_OPEN_BUTTON, quote=False)}</a>'
-    return caption
+        return f'<a href="{escape(url)}">{escape(CHANNEL_OPEN_BUTTON, quote=False)}</a>'
+    return escape(status_label(status, "uz"), quote=False)
 
 
 async def _publish_to_channel(request: web.Request, donation_id: int) -> None:
