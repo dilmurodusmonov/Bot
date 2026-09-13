@@ -50,6 +50,7 @@ from bot.texts import (
     LANGUAGES,
     category_name,
     channel_button_label,
+    channel_text_line,
     status_label,
     t,
 )
@@ -89,7 +90,7 @@ def _channel_caption(status: str) -> str:
     """Albom ostidagi matn — holat yorlig'i. Bo'sh qoldirib bo'lmaydi:
     albomga inline tugma biriktirilmagani uchun tugma alohida xabarda
     turadi, matnsiz xabar esa bo'sh puffak bo'lib ko'rinadi."""
-    return escape(status_label(status, "uz"), quote=False)
+    return channel_text_line(escape(status_label(status, "uz"), quote=False))
 
 
 def _channel_keyboard(
