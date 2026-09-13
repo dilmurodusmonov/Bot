@@ -57,10 +57,8 @@ TEXTS = {
         "choose_role": "Assalomu alaykum! Ehson ulashish botiga xush kelibsiz.\n\nIltimos, o'z statusingizni tanlang:",
         "role_donor": "🫴 Saxiy",
         "role_needy": "🤲 Muhtoj",
-        "welcome_back": "Xush kelibsiz!",
         "open_app_hint": "📱 Barcha amallar (ehson qo'shish, ko'rish, kabinet) pastdagi menyu tugmasi — \"Kabinet\" orqali ochiladigan ilova ichida bajariladi.\n\nBu yerda esa faqat muhim yangiliklar va bildirishnomalar yuboriladi.",
         "open_app_button": "📱 Ilovani ochish",
-        "donation_added": "✅ Ehsoningiz muvaffaqiyatli joylandi! Rahmat, savobli ish qilyapsiz.",
         "new_reservation_for_donor": (
             "🔔 Ehsoningizga yangi so'rov!\n\n"
             "Bo'lim: {category}\n"
@@ -92,10 +90,8 @@ TEXTS = {
         "choose_role": "Здравствуйте! Добро пожаловать в бот пожертвований.\n\nПожалуйста, выберите свой статус:",
         "role_donor": "🫴 Благотворитель",
         "role_needy": "🤲 Нуждающийся",
-        "welcome_back": "С возвращением!",
         "open_app_hint": "📱 Все действия (добавление, просмотр, кабинет) выполняются внутри приложения, которое открывается кнопкой меню — \"Kabinet\".\n\nЗдесь же вы будете получать только важные уведомления.",
         "open_app_button": "📱 Открыть приложение",
-        "donation_added": "✅ Ваше пожертвование успешно добавлено! Спасибо за доброе дело.",
         "new_reservation_for_donor": (
             "🔔 Новая заявка на ваше пожертвование!\n\n"
             "Раздел: {category}\n"
@@ -127,10 +123,8 @@ TEXTS = {
         "choose_role": "Hello! Welcome to the Charity Sharing bot.\n\nPlease choose your status:",
         "role_donor": "🫴 Donor",
         "role_needy": "🤲 In need",
-        "welcome_back": "Welcome back!",
         "open_app_hint": "📱 All actions (adding, browsing, your cabinet) happen inside the app opened via the \"Kabinet\" menu button.\n\nHere in chat you'll only receive important notifications.",
         "open_app_button": "📱 Open the app",
-        "donation_added": "✅ Your donation has been posted successfully! Thank you for your kindness.",
         "new_reservation_for_donor": (
             "🔔 New request for your donation!\n\n"
             "Category: {category}\n"
@@ -162,10 +156,8 @@ TEXTS = {
         "choose_role": "Ассалаумағалейкум! Қайыр үлестіру ботына қош келдіңіз.\n\nМәртебеңізді таңдаңыз:",
         "role_donor": "🫴 Қайырымды",
         "role_needy": "🤲 Мұқтаж",
-        "welcome_back": "Қош келдіңіз!",
         "open_app_hint": "📱 Барлық әрекеттер (қайыр қосу, көру, кабинет) төмендегі мәзір түймесі — \"Kabinet\" арқылы ашылатын қосымша ішінде орындалады.\n\nМұнда тек маңызды жаңалықтар мен хабарландырулар жіберіледі.",
         "open_app_button": "📱 Қосымшаны ашу",
-        "donation_added": "✅ Қайырыңыз сәтті жарияланды! Рахмет, игі іс жасап жатырсыз.",
         "new_reservation_for_donor": (
             "🔔 Қайырыңызға жаңа сұрау!\n\n"
             "Бөлім: {category}\n"
@@ -197,10 +189,8 @@ TEXTS = {
         "choose_role": "Ассалому алайкум! Ба боти тақсими хайрия хуш омадед.\n\nЛутфан, мақоми худро интихоб намоед:",
         "role_donor": "🫴 Саховатманд",
         "role_needy": "🤲 Ниёзманд",
-        "welcome_back": "Хуш омадед!",
         "open_app_hint": "📱 Ҳамаи амалҳо (илова кардани хайрия, дидан, кабинет) дар дохили барномае, ки бо тугмаи меню — \"Kabinet\" кушода мешавад, иҷро мешаванд.\n\nДар ин ҷо бошад, танҳо огоҳиномаҳои муҳим фиристода мешаванд.",
         "open_app_button": "📱 Кушодани барнома",
-        "donation_added": "✅ Хайрияи шумо бомуваффақият ҷойгир карда шуд! Ташаккур, кори савобе мекунед.",
         "new_reservation_for_donor": (
             "🔔 Дархости нав ба хайрияи шумо!\n\n"
             "Бахш: {category}\n"
@@ -232,10 +222,8 @@ TEXTS = {
         "choose_role": "Ассалому алейкум! Садага үлүштүрүү ботуна кош келиңиз.\n\nСтатусуңузду тандаңыз:",
         "role_donor": "🫴 Кайрымдуу",
         "role_needy": "🤲 Мукташ",
-        "welcome_back": "Кош келиңиз!",
         "open_app_hint": "📱 Бардык аракеттер (садага кошуу, көрүү, кабинет) төмөнкү меню баскычы — \"Kabinet\" аркылуу ачылуучу колдонмонун ичинде аткарылат.\n\nБул жерде болсо, тек гана маанилүү жаңылыктар жана билдирүүлөр жөнөтүлөт.",
         "open_app_button": "📱 Колдонмону ачуу",
-        "donation_added": "✅ Садагаңыз ийгиликтүү жайгаштырылды! Рахмат, сооп иш кылып жатасыз.",
         "new_reservation_for_donor": (
             "🔔 Садагаңызга жаңы сурам!\n\n"
             "Бөлүм: {category}\n"
@@ -267,10 +255,8 @@ TEXTS = {
         "choose_role": "Salam! Sadaka paýlaşyk botuna hoş geldiňiz.\n\nÝagdaýyňyzy saýlaň:",
         "role_donor": "🫴 Sahawatly",
         "role_needy": "🤲 Mätäç",
-        "welcome_back": "Hoş geldiňiz!",
         "open_app_hint": "📱 Ähli hereketler (sadaka goşmak, görmek, kabinet) aşakdaky menýu düwmesi — \"Kabinet\" arkaly açylýan programmanyň içinde ýerine ýetirilýär.\n\nBu ýerde bolsa diňe möhüm täzelikler we bildirişler iberilýär.",
         "open_app_button": "📱 Programmany açmak",
-        "donation_added": "✅ Sadakaňyz üstünlikli ýerleşdirildi! Sag boluň, sogap iş edýärsiňiz.",
         "new_reservation_for_donor": (
             "🔔 Sadakaňyza täze sorag!\n\n"
             "Bölüm: {category}\n"
