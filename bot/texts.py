@@ -308,14 +308,23 @@ def status_label(status: str, lang: str) -> str:
 
 CHANNEL_OPEN_BUTTON = "🤲 Ehsonni olish"
 
-# Telegram inline tugmaning kengligini bevosita belgilab bo'lmaydi — u
-# yorliq uzunligiga qarab o'lchanadi. Kanal skrinshotlari o'lchanganda
-# albom eni 825 px, to'ldirishsiz tugma 510 px, har bir uzilmaydigan
-# probel esa ~7.4 px qo'shishi aniqlandi. (825-510)/7.4 ≈ 43 ta probel,
-# ya'ni har chetiga 21 tadan. Yorliq 58 belgi, Telegram chegarasi 64.
-_BUTTON_PAD = "\u00a0" * 21
+# Telegram tugma va puffak kengligini bevosita belgilab bo'lmaydi — ular
+# matn uzunligiga qarab o'lchanadi. Kanal skrinshotlari o'lchanganda:
+# albom 825 px, to'ldirishsiz tugma 510 px, 7+7 probelli 613 px,
+# 21+21 probelli 791 px. Oxirgi oraliqda bitta uzilmaydigan probel
+# ~6.4 px qo'shadi, ya'ni 825 px uchun har chetiga 23 tadan kerak.
+_BUTTON_PAD = "\u00a0" * 23
 
+# Matn puffagi tugmadan alohida o'lchanadi va faqat o'z matniga qarab
+# kengayadi ("Kutilmoqda" bilan 550 px). Uni albomga yaqinlashtirish
+# uchun matn oxiriga ko'rinmas probellar qo'shiladi — oldiga emas,
+# aks holda yozuv o'ngga surilib ketardi.
+_TEXT_PAD = "\u00a0" * 43
 
 
 def channel_button_label(text: str) -> str:
     return f"{_BUTTON_PAD}{text}{_BUTTON_PAD}"
+
+
+def channel_text_line(text: str) -> str:
+    return f"{text}{_TEXT_PAD}"
