@@ -306,7 +306,12 @@ def status_label(status: str, lang: str) -> str:
 # Kanalning auditoriyasi aralash, shuning uchun e'lon matni foydalanuvchi
 # tiliga bog'lanmaydi — bitta o'zbekcha shablon ishlatiladi.
 
-CHANNEL_OPEN_BUTTON = "🤲 Ehsonni olish"
+# Telegram inline tugmaning kengligini xabar puffagiga qarab beradi,
+# puffak esa eng uzun matnga qarab o'lchanadi. Tugma xabarida ko'rinadigan
+# matn yo'q, shuning uchun kenglikni yorliqning o'zi belgilaydi —
+# ikki chetiga uzilmaydigan probellar qo'shiladi.
+_BUTTON_PAD = "\u00a0" * 7
+CHANNEL_OPEN_BUTTON = f"{_BUTTON_PAD}🤲 Ehsonni olish{_BUTTON_PAD}"
 
 # Albomdan keyin faqat tugma chiqishi uchun matnsiz xabar kerak, lekin
 # Telegram bo'sh matnni qabul qilmaydi — ko'zga ko'rinmaydigan belgi
