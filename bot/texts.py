@@ -306,12 +306,6 @@ def status_label(status: str, lang: str) -> str:
 # Kanalning auditoriyasi aralash, shuning uchun e'lon matni foydalanuvchi
 # tiliga bog'lanmaydi — bitta o'zbekcha shablon ishlatiladi.
 
-CHANNEL_POST = (
-    "{category}\n\n"
-    "{description}\n\n"
-    "{status}"
-)
-
 CHANNEL_STATUS_AVAILABLE = "⏳ Mavjud — ilovada band qilishingiz mumkin"
 CHANNEL_STATUS_RESERVED = "🤝 Band qilingan"
 CHANNEL_STATUS_SHIPPED = "🚚 Yo'lda"

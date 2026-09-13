@@ -47,7 +47,6 @@ from bot.database import (
 from bot.texts import (
     CATEGORIES,
     CHANNEL_OPEN_BUTTON,
-    CHANNEL_POST,
     LANGUAGES,
     category_name,
     channel_status,
@@ -86,12 +85,13 @@ def _app_url(request: web.Request, donation_id: int) -> Optional[str]:
     return f"https://t.me/{bot_username}/{MINI_APP_SHORT_NAME}?startapp=d_{donation_id}"
 
 
-def _channel_caption(donation: dict, status: str) -> str:
-    return CHANNEL_POST.format(
-        category=escape(category_name(donation["category"], "uz")),
-        description=escape(donation["description"] or ""),
-        status=escape(channel_status(status)),
-    )
+def _channel_caption(status: str) -> str:
+    """Kanal postida bo'lim nomi ham, tavsif ham ko'rsatilmaydi — faqat
+    holat qatori qoladi. Uni butunlay olib tashlab bo'lmaydi: albomda
+    tugma alohida xabarga qo'yiladi, matnsiz xabarni esa Telegram
+    qabul qilmaydi. Holat qatori ayni paytda ehson hali mavjudligini
+    ham ko'rsatib turadi."""
+    return escape(channel_status(status))
 
 
 def _channel_keyboard(request: web.Request, donation_id: int) -> Optional[InlineKeyboardMarkup]:
@@ -120,7 +120,7 @@ async def _publish_to_channel(request: web.Request, donation_id: int) -> None:
     if not donation:
         return
     photo_ids = _donation_photo_ids(donation)
-    caption = _channel_caption(donation, "available")
+    caption = _channel_caption("available")
     keyboard = _channel_keyboard(request, donation_id)
     bot: Bot = request.app["bot"]
     try:
@@ -161,7 +161,7 @@ async def _refresh_channel_post(request: web.Request, donation_id: int, status: 
     message_ids = _channel_message_ids(donation)
     if not message_ids:
         return
-    caption = _channel_caption(donation, status)
+    caption = _channel_caption(status)
     keyboard = _channel_keyboard(request, donation_id) if status == "available" else None
     is_album = len(_donation_photo_ids(donation)) > 1
     bot: Bot = request.app["bot"]
