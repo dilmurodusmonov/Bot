@@ -1251,6 +1251,10 @@
           .then(function () {
             state.me.role = role;
             navStack = [];
+            // Kanaldagi havola orqali kelgan bo'lsa, rol tanlangach
+            // to'g'ridan-to'g'ri o'sha ehson ochiladi.
+            var deepId = deepLinkDonationId();
+            if (deepId) { openDeepLink(deepId); return; }
             goto("home", {}, false);
           })
           .catch(function () { showError(); });
@@ -2464,12 +2468,47 @@
     return { stop: function () { clearInterval(timer); } };
   }
 
+  // --- kanaldagi havola orqali ochish ---------------------------------------
+
+  var DEEPLINK_KEY = "ehson_deeplink_done";
+
+  function deepLinkDonationId() {
+    var id = new URLSearchParams(location.search).get("d");
+    if (!id && tg && tg.initDataUnsafe && tg.initDataUnsafe.start_param) {
+      var startParam = tg.initDataUnsafe.start_param;
+      if (startParam.indexOf("d_") === 0) id = startParam.slice(2);
+    }
+    if (!id) return null;
+    // Telegram start_param'ni butun ilova seansi davomida saqlaydi,
+    // shuning uchun havola faqat bir marta ochiladi — aks holda har
+    // reload foydalanuvchini o'sha ehsonga qaytarib turardi.
+    try {
+      if (sessionStorage.getItem(DEEPLINK_KEY) === id) return null;
+    } catch (e) {}
+    return id;
+  }
+
+  // Havoladan kelgan odam ehsonni olmoqchi, shuning uchun ehson muhtoj
+  // tomonidagi ro'yxatda, "Qabul qilish" tugmasi bilan ochiladi.
+  function openDeepLink(id) {
+    try { sessionStorage.setItem(DEEPLINK_KEY, id); } catch (e) {}
+    api("GET", "/api/donation/" + id)
+      .then(function (d) {
+        navStack = [{ screen: "home", params: {} }];
+        goto("needy_list", { category: d.category, highlightId: id }, false);
+      })
+      .catch(function () { goto("home", {}, false); });
+  }
+
   api("GET", "/api/me")
     .then(function (me) {
       state.me = me;
       state.lang = me.language || "uz";
       if (!me.language) { goto("language", {}, false); return; }
       if (!me.role) { goto("role", {}, false); return; }
+      // Kanaldagi havola saqlangan sahifadan ustun turadi.
+      var deepId = deepLinkDonationId();
+      if (deepId) { openDeepLink(deepId); return; }
       var saved = loadNavState();
       var restorable = saved && saved.screen && screens[saved.screen] &&
         saved.screen !== "loading" && saved.screen !== "language" && saved.screen !== "role";
@@ -2484,18 +2523,6 @@
       if (targetScreen && screens[targetScreen]) {
         navStack = [{ screen: "home", params: {} }];
         goto(targetScreen, {}, false);
-        return;
-      }
-      var sharedDonationId = new URLSearchParams(location.search).get("d");
-      if (!sharedDonationId && tg && tg.initDataUnsafe && tg.initDataUnsafe.start_param) {
-        var startParam = tg.initDataUnsafe.start_param;
-        if (startParam.indexOf("d_") === 0) sharedDonationId = startParam.slice(2);
-      }
-      if (sharedDonationId) {
-        api("GET", "/api/donation/" + sharedDonationId).then(function (d) {
-          navStack = [{ screen: "home", params: {} }];
-          goto("needy_list", { category: d.category, highlightId: sharedDonationId }, false);
-        }).catch(function () { goto("home", {}, false); });
         return;
       }
       goto("home", {}, false);
