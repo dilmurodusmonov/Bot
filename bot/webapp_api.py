@@ -257,7 +257,10 @@ async def _read_multipart_photos(request: web.Request) -> tuple[dict, list[tuple
     return fields, photos
 
 
-def _donation_json(d: dict, lang: str, like_count: int = 0, liked_by_me: bool = False) -> dict:
+def _donation_json(
+    d: dict, lang: str, like_count: int = 0, liked_by_me: bool = False,
+    viewer_id: Optional[int] = None,
+) -> dict:
     photo_ids = [d["photo_file_id"]]
     if d.get("photo_file_id_2"):
         photo_ids.append(d["photo_file_id_2"])
@@ -276,6 +279,7 @@ def _donation_json(d: dict, lang: str, like_count: int = 0, liked_by_me: bool = 
         "like_count": like_count,
         "liked_by_me": liked_by_me,
         "share_count": d.get("share_count", 0),
+        "is_mine": d["donor_id"] == viewer_id if viewer_id else False,
     }
 
 
@@ -344,6 +348,7 @@ async def api_donations(request: web.Request) -> web.Response:
                 d, lang,
                 like_count=likes.get(d["id"], {}).get("count", 0),
                 liked_by_me=likes.get(d["id"], {}).get("liked", False),
+                viewer_id=telegram_id,
             )
             for d in donations
         ]
@@ -437,6 +442,9 @@ async def api_create_reservation(request: web.Request) -> web.Response:
     donation = await get_donation(donation_id)
     if not donation or donation["status"] != "available":
         raise web.HTTPConflict(text="already reserved")
+    # O'z ehsonini band qilib bo'lmaydi.
+    if donation["donor_id"] == telegram_id:
+        raise web.HTTPForbidden(text="own donation")
 
     reservation_id = await create_reservation(
         donation_id, telegram_id, full_name, address, phone
