@@ -20,6 +20,11 @@ WEBAPP_URL = f"{_base_url}/webapp?v={_deploy_version}" if _base_url else None
 # botning chatiga kirmasdan, to'g'ridan-to'g'ri ilovaning o'ziga olib boradi).
 MINI_APP_SHORT_NAME = os.getenv("MINI_APP_SHORT_NAME", "app")
 
+# Joylangan ehsonlar e'lon qilinadigan kanal. Bot o'sha kanalda admin
+# bo'lishi kerak ("Post messages" huquqi bilan). Bo'sh qoldirilsa
+# kanalga e'lon qilish butunlay o'chiriladi.
+CHANNEL_ID = os.getenv("CHANNEL_ID", "@ehsonli_qollar").strip()
+
 if not BOT_TOKEN:
     raise RuntimeError(
         "BOT_TOKEN topilmadi. .env faylini yarating (.env.example asosida) "

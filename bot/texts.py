@@ -299,3 +299,31 @@ def category_name(category: str, lang: str) -> str:
 def status_label(status: str, lang: str) -> str:
     lang = lang if lang in LANGUAGES else "uz"
     return STATUS_LABELS.get(status, {}).get(lang, status)
+
+
+# --- kanal e'lonlari ---------------------------------------------------------
+#
+# Kanalning auditoriyasi aralash, shuning uchun e'lon matni foydalanuvchi
+# tiliga bog'lanmaydi — bitta o'zbekcha shablon ishlatiladi.
+
+CHANNEL_POST = (
+    "{category}\n\n"
+    "{description}\n\n"
+    "{status}"
+)
+
+CHANNEL_STATUS_AVAILABLE = "⏳ Mavjud — ilovada band qilishingiz mumkin"
+CHANNEL_STATUS_RESERVED = "🤝 Band qilingan"
+CHANNEL_STATUS_SHIPPED = "🚚 Yo'lda"
+CHANNEL_STATUS_RECEIVED = "✅ Egasiga yetib bordi"
+CHANNEL_PHOTO_NOTE = "🖼 Yana {count} ta rasm — ilovada ko'rishingiz mumkin"
+CHANNEL_OPEN_BUTTON = "🤲 Ehsonni olish"
+
+
+def channel_status(status: str) -> str:
+    return {
+        "available": CHANNEL_STATUS_AVAILABLE,
+        "reserved": CHANNEL_STATUS_RESERVED,
+        "shipped": CHANNEL_STATUS_SHIPPED,
+        "received": CHANNEL_STATUS_RECEIVED,
+    }.get(status, CHANNEL_STATUS_AVAILABLE)
