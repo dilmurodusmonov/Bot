@@ -308,3 +308,18 @@ def status_label(status: str, lang: str) -> str:
 
 CHANNEL_OPEN_BUTTON = "🤲 Ehsonni olish"
 
+# Telegram inline tugmaning kengligini bevosita belgilab bo'lmaydi — u
+# yorliq uzunligiga qarab o'lchanadi. Kanal skrinshotlari o'lchanganda
+# albom eni 825 px, to'ldirishsiz tugma 510 px, har bir uzilmaydigan
+# probel esa ~7.4 px qo'shishi aniqlandi. (825-510)/7.4 ≈ 43 ta probel,
+# ya'ni har chetiga 21 tadan. Yorliq 58 belgi, Telegram chegarasi 64.
+_BUTTON_PAD = "\u00a0" * 21
+
+# Albomdan keyin faqat tugma chiqishi uchun matnsiz xabar kerak, lekin
+# Telegram bo'sh matnni qabul qilmaydi — ko'zga ko'rinmaydigan belgi.
+BUTTON_ONLY_TEXT = "\u2060"
+
+
+def channel_button_label(text: str) -> str:
+    return f"{_BUTTON_PAD}{text}{_BUTTON_PAD}"
+
