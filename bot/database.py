@@ -22,6 +22,7 @@ CREATE TABLE IF NOT EXISTS donations (
     description TEXT,
     status TEXT NOT NULL DEFAULT 'available',
     share_count INTEGER NOT NULL DEFAULT 0,
+    channel_message_id INTEGER,
     created_at TIMESTAMPTZ NOT NULL DEFAULT now()
 );
 
@@ -71,6 +72,7 @@ async def init_db() -> None:
         await _migrate_ad_stats(conn)
         await _migrate_donation_photos(conn)
         await _migrate_donation_share_count(conn)
+        await _migrate_donation_channel_message(conn)
 
 
 async def _migrate_ad_stats(conn: asyncpg.Connection) -> None:
@@ -98,6 +100,14 @@ async def _migrate_donation_photos(conn: asyncpg.Connection) -> None:
 async def _migrate_donation_share_count(conn: asyncpg.Connection) -> None:
     await conn.execute(
         "ALTER TABLE donations ADD COLUMN IF NOT EXISTS share_count INTEGER NOT NULL DEFAULT 0"
+    )
+
+
+async def _migrate_donation_channel_message(conn: asyncpg.Connection) -> None:
+    """Ehson kanalga e'lon qilinganda post'ning id'si shu ustunda saqlanadi —
+    keyinchalik holat o'zgarsa post tahrirlanadi yoki o'chiriladi."""
+    await conn.execute(
+        "ALTER TABLE donations ADD COLUMN IF NOT EXISTS channel_message_id INTEGER"
     )
 
 
@@ -180,6 +190,14 @@ async def get_donations_by_donor(donor_id: int) -> list[dict[str, Any]]:
 async def set_donation_status(donation_id: int, status: str) -> None:
     await _get_pool().execute(
         "UPDATE donations SET status = $1 WHERE id = $2", status, donation_id
+    )
+
+
+async def set_donation_channel_message(donation_id: int, message_id: Optional[int]) -> None:
+    await _get_pool().execute(
+        "UPDATE donations SET channel_message_id = $2 WHERE id = $1",
+        donation_id,
+        message_id,
     )
 
 

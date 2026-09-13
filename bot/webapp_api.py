@@ -13,7 +13,7 @@ from aiogram.types import (
 )
 from aiohttp import web
 
-from bot.config import BASE_URL, MINI_APP_SHORT_NAME, WEBAPP_URL
+from bot.config import BASE_URL, CHANNEL_ID, MINI_APP_SHORT_NAME, WEBAPP_URL
 from bot.database import (
     cancel_reservation,
     count_pending_receive,
@@ -35,6 +35,7 @@ from bot.database import (
     get_reservations_by_needy,
     get_stats,
     get_user,
+    set_donation_channel_message,
     set_donation_status,
     set_reservation_received,
     set_reservation_shipped,
@@ -42,8 +43,117 @@ from bot.database import (
     set_user_role,
     toggle_donation_like,
 )
-from bot.texts import CATEGORIES, LANGUAGES, category_name, status_label, t
+from bot.texts import (
+    CATEGORIES,
+    CHANNEL_OPEN_BUTTON,
+    CHANNEL_PHOTO_NOTE,
+    CHANNEL_POST,
+    LANGUAGES,
+    category_name,
+    channel_status,
+    status_label,
+    t,
+)
 from bot.webapp_auth import validate_init_data
+
+
+# --- kanalga e'lon qilish ----------------------------------------------------
+
+def _channel_caption(donation: dict, photo_count: int, status: str) -> str:
+    caption = CHANNEL_POST.format(
+        category=category_name(donation["category"], "uz"),
+        description=donation["description"] or "",
+        status=channel_status(status),
+    )
+    if photo_count > 1:
+        caption += "\n" + CHANNEL_PHOTO_NOTE.format(count=photo_count - 1)
+    return caption
+
+
+def _channel_keyboard(bot_username: Optional[str], donation_id: int) -> Optional[InlineKeyboardMarkup]:
+    """Kanal postidagi tugma. Kanal postlarida web_app tugmasi ishlamaydi,
+    shuning uchun Mini App'ni to'g'ridan-to'g'ri ochadigan t.me havolasi
+    ishlatiladi."""
+    if not bot_username:
+        return None
+    url = f"https://t.me/{bot_username}/{MINI_APP_SHORT_NAME}?startapp=d_{donation_id}"
+    return InlineKeyboardMarkup(
+        inline_keyboard=[[InlineKeyboardButton(text=CHANNEL_OPEN_BUTTON, url=url)]]
+    )
+
+
+async def _publish_to_channel(request: web.Request, donation_id: int) -> None:
+    """Yangi ehsonni kanalga e'lon qiladi va post id'sini saqlaydi.
+
+    Kanal bilan bog'liq har qanday muammo (bot admin emas, kanal
+    o'chirilgan va h.k.) ehson joylanishini buzmasligi kerak — shuning
+    uchun barcha xatolar yutiladi."""
+    if not CHANNEL_ID:
+        return
+    donation = await get_donation(donation_id)
+    if not donation:
+        return
+    photo_ids = [
+        pid for pid in (
+            donation["photo_file_id"],
+            donation.get("photo_file_id_2"),
+            donation.get("photo_file_id_3"),
+        ) if pid
+    ]
+    bot: Bot = request.app["bot"]
+    try:
+        sent = await bot.send_photo(
+            chat_id=CHANNEL_ID,
+            photo=photo_ids[0],
+            caption=_channel_caption(donation, len(photo_ids), "available"),
+            reply_markup=_channel_keyboard(request.app.get("bot_username"), donation_id),
+        )
+    except TelegramAPIError:
+        return
+    await set_donation_channel_message(donation_id, sent.message_id)
+
+
+async def _refresh_channel_post(request: web.Request, donation_id: int, status: str) -> None:
+    """Kanal postidagi holatni yangilaydi. Ehson band qilingandan keyin
+    tugma olib tashlanadi — post tarixda qoladi, lekin boshqa band
+    qilinmaydi."""
+    if not CHANNEL_ID:
+        return
+    donation = await get_donation(donation_id)
+    if not donation or not donation.get("channel_message_id"):
+        return
+    photo_count = len([
+        pid for pid in (
+            donation["photo_file_id"],
+            donation.get("photo_file_id_2"),
+            donation.get("photo_file_id_3"),
+        ) if pid
+    ])
+    bot: Bot = request.app["bot"]
+    markup = (
+        _channel_keyboard(request.app.get("bot_username"), donation_id)
+        if status == "available" else None
+    )
+    try:
+        await bot.edit_message_caption(
+            chat_id=CHANNEL_ID,
+            message_id=donation["channel_message_id"],
+            caption=_channel_caption(donation, photo_count, status),
+            reply_markup=markup,
+        )
+    except TelegramAPIError:
+        pass
+
+
+async def _remove_channel_post(request: web.Request, donation: dict) -> None:
+    message_id = donation.get("channel_message_id") if donation else None
+    if not CHANNEL_ID or not message_id:
+        return
+    bot: Bot = request.app["bot"]
+    try:
+        await bot.delete_message(chat_id=CHANNEL_ID, message_id=message_id)
+    except TelegramAPIError:
+        pass
 
 
 def _auth_telegram_id(request: web.Request) -> Optional[int]:
@@ -298,6 +408,7 @@ async def api_create_reservation(request: web.Request) -> web.Response:
         donation_id, telegram_id, full_name, address, phone
     )
     await set_donation_status(donation_id, "reserved")
+    await _refresh_channel_post(request, donation_id, "reserved")
 
     donor_lang = await _lang_for(donation["donor_id"])
     bot: Bot = request.app["bot"]
@@ -342,6 +453,7 @@ async def api_confirm_received(request: web.Request) -> web.Response:
     await set_reservation_received(reservation_id, dua_text)
     donation = await get_donation(reservation["donation_id"])
     await set_donation_status(donation["id"], "received")
+    await _refresh_channel_post(request, donation["id"], "received")
 
     donor_lang = await _lang_for(donation["donor_id"])
     bot: Bot = request.app["bot"]
@@ -382,6 +494,7 @@ async def api_cancel_reservation(request: web.Request) -> web.Response:
     donation = await get_donation(reservation["donation_id"])
     await cancel_reservation(reservation_id)
     await set_donation_status(reservation["donation_id"], "available")
+    await _refresh_channel_post(request, reservation["donation_id"], "available")
 
     if donation:
         donor_lang = await _lang_for(donation["donor_id"])
@@ -403,6 +516,7 @@ async def api_delete_donation(request: web.Request) -> web.Response:
     if donation["status"] != "available":
         raise web.HTTPConflict()
 
+    await _remove_channel_post(request, donation)
     await delete_donation(donation_id)
     return web.json_response({"ok": True})
 
@@ -477,6 +591,7 @@ async def api_create_donation(request: web.Request) -> web.Response:
         photo_file_ids=photo_file_ids,
         description=description,
     )
+    await _publish_to_channel(request, donation_id)
     return web.json_response({"ok": True, "donation_id": donation_id})
 
 
@@ -506,6 +621,7 @@ async def api_ship_reservation(request: web.Request) -> web.Response:
 
     await set_reservation_shipped(reservation_id, photo_file_id, receipt_note)
     await set_donation_status(donation["id"], "shipped")
+    await _refresh_channel_post(request, donation["id"], "shipped")
 
     needy_lang = await _lang_for(reservation["needy_id"])
     await bot.send_photo(
