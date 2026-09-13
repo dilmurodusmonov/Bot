@@ -45,6 +45,7 @@ from bot.database import (
     toggle_donation_like,
 )
 from bot.texts import (
+    BUTTON_ONLY_TEXT,
     CATEGORIES,
     CHANNEL_OPEN_BUTTON,
     LANGUAGES,
@@ -103,10 +104,12 @@ def _channel_keyboard(request: web.Request, donation_id: int) -> Optional[Inline
 async def _publish_to_channel(request: web.Request, donation_id: int) -> None:
     """Yangi ehsonni kanalga e'lon qiladi va post id'larini saqlaydi.
 
-    Bir nechta rasmli ehson albom bo'lib chiqadi. sendMediaGroup
-    reply_markup'ni qabul qilmagani uchun tugma albomdan keyin
-    yuboriladigan alohida matnli xabarga qo'yiladi — shunda ham barcha
-    rasmlar, ham tugma bo'ladi.
+    Bir nechta rasmli ehson albom bo'lib chiqadi va holat albomning
+    sarlavhasiga yoziladi. sendMediaGroup reply_markup'ni qabul
+    qilmagani uchun tugma albomdan keyingi alohida xabarga qo'yiladi;
+    o'sha xabar faqat tugmadan iborat ko'rinishi uchun matni ko'zga
+    ko'rinmaydigan belgi bo'ladi. Telegram uni rad etsa, matn o'rniga
+    holat yoziladi — post baribir chiqishi kerak.
 
     Kanal bilan bog'liq har qanday muammo (bot admin emas, kanal
     o'chirilgan va h.k.) ehson joylanishini buzmasligi kerak — shuning
@@ -124,12 +127,20 @@ async def _publish_to_channel(request: web.Request, donation_id: int) -> None:
         if len(photo_ids) > 1:
             sent = await bot.send_media_group(
                 chat_id=CHANNEL_ID,
-                media=[InputMediaPhoto(media=pid) for pid in photo_ids],
+                media=[
+                    InputMediaPhoto(media=pid, caption=caption if i == 0 else None)
+                    for i, pid in enumerate(photo_ids)
+                ],
             )
-            text_msg = await bot.send_message(
-                chat_id=CHANNEL_ID, text=caption, reply_markup=keyboard
-            )
-            message_ids = [msg.message_id for msg in sent] + [text_msg.message_id]
+            try:
+                btn_msg = await bot.send_message(
+                    chat_id=CHANNEL_ID, text=BUTTON_ONLY_TEXT, reply_markup=keyboard
+                )
+            except TelegramAPIError:
+                btn_msg = await bot.send_message(
+                    chat_id=CHANNEL_ID, text=caption, reply_markup=keyboard
+                )
+            message_ids = [msg.message_id for msg in sent] + [btn_msg.message_id]
         else:
             msg = await bot.send_photo(
                 chat_id=CHANNEL_ID,
@@ -150,8 +161,8 @@ async def _refresh_channel_post(request: web.Request, donation_id: int, status: 
     tugma olib tashlanadi — post tarixda qoladi, lekin boshqa band
     qilinmaydi.
 
-    Albomda matn alohida xabarda turadi (oxirgi id), bitta rasmli
-    postda esa suratning sarlavhasida."""
+    Holat ikkala holatda ham suratning sarlavhasida turadi; albomda
+    tugma alohida xabarda bo'lgani uchun u alohida yangilanadi."""
     if not CHANNEL_ID:
         return
     donation = await get_donation(donation_id)
@@ -163,18 +174,16 @@ async def _refresh_channel_post(request: web.Request, donation_id: int, status: 
     is_album = len(_donation_photo_ids(donation)) > 1
     bot: Bot = request.app["bot"]
     try:
+        await bot.edit_message_caption(
+            chat_id=CHANNEL_ID,
+            message_id=message_ids[0],
+            caption=caption,
+            reply_markup=None if is_album else keyboard,
+        )
         if is_album:
-            await bot.edit_message_text(
+            await bot.edit_message_reply_markup(
                 chat_id=CHANNEL_ID,
                 message_id=message_ids[-1],
-                text=caption,
-                reply_markup=keyboard,
-            )
-        else:
-            await bot.edit_message_caption(
-                chat_id=CHANNEL_ID,
-                message_id=message_ids[0],
-                caption=caption,
                 reply_markup=keyboard,
             )
     except Exception:

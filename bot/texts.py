@@ -308,3 +308,8 @@ def status_label(status: str, lang: str) -> str:
 
 CHANNEL_OPEN_BUTTON = "🤲 Ehsonni olish"
 
+# Albomdan keyin faqat tugma chiqishi uchun matnsiz xabar kerak, lekin
+# Telegram bo'sh matnni qabul qilmaydi — ko'zga ko'rinmaydigan belgi
+# (word joiner) qo'yiladi.
+BUTTON_ONLY_TEXT = "\u2060"
+
