@@ -310,7 +310,7 @@ def status_label(status: str, lang: str) -> str:
 # puffak esa eng uzun matnga qarab o'lchanadi. Tugma xabarida ko'rinadigan
 # matn yo'q, shuning uchun kenglikni yorliqning o'zi belgilaydi —
 # ikki chetiga uzilmaydigan probellar qo'shiladi.
-_BUTTON_PAD = "\u00a0" * 7
+_BUTTON_PAD = "\u00a0" * 14
 
 
 def channel_button_label(text: str) -> str:
