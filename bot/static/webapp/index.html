@@ -1018,12 +1018,22 @@
     return overlay;
   }
 
-  // --- telefon raqami maskasi: +998(90)-390-92-72 ---------------------------
+  // --- telefon raqami ------------------------------------------------------
+  //
+  // Maydon "+998" bilan ochiladi va o'zbek raqami +998(90)-390-92-72
+  // ko'rinishiga keltiriladi. Prefiks o'chirilib boshqa mamlakat kodi
+  // yozilsa maska o'chadi va raqam erkin kiritiladi — chet el raqami
+  // majburan o'zbek raqamiga aylanib qolmasligi uchun.
 
-  // Maydonda "+998" prefiksi doim turadi, shuning uchun raqamlar qatori
-  // ham doim 998 bilan boshlanadi — uni olib tashlaymiz. 99 operator kodi
-  // bilan boshlangan raqam ham to'g'ri ishlaydi: "+998(99)-812-34-56"
-  // raqamlari "998998123456" bo'lib, faqat birinchi 998 kesiladi.
+  var UZ_PREFIX = "+998";
+
+  function isUzPhone(value) {
+    return String(value || "").indexOf(UZ_PREFIX) === 0;
+  }
+
+  // "+998" prefiksi tufayli raqamlar qatori doim 998 bilan boshlanadi —
+  // uni olib tashlaymiz. 99 operator kodi ham to'g'ri ishlaydi:
+  // "+998(99)-812-34-56" raqamlari "998998123456", faqat birinchisi kesiladi.
   function phoneLocalDigits(value) {
     var digits = String(value || "").replace(/\D/g, "");
     if (digits.indexOf("998") === 0) digits = digits.slice(3);
@@ -1031,8 +1041,8 @@
   }
 
   function formatPhone(localDigits) {
-    if (!localDigits.length) return "+998";
-    var out = "+998(" + localDigits.slice(0, 2);
+    if (!localDigits.length) return UZ_PREFIX;
+    var out = UZ_PREFIX + "(" + localDigits.slice(0, 2);
     if (localDigits.length >= 2) out += ")";
     if (localDigits.length > 2) out += "-" + localDigits.slice(2, 5);
     if (localDigits.length > 5) out += "-" + localDigits.slice(5, 7);
@@ -1040,27 +1050,40 @@
     return out;
   }
 
+  // Chet el raqami: guruhlash mamlakatga qarab farq qiladi, shuning uchun
+  // faqat "+" va raqamlar qoldiriladi (E.164 bo'yicha eng ko'pi 15 ta).
+  function formatIntlPhone(value) {
+    return "+" + String(value || "").replace(/\D/g, "").slice(0, 15);
+  }
+
+  function phoneIsComplete(value) {
+    if (isUzPhone(value)) return phoneLocalDigits(value).length === 9;
+    var digits = String(value || "").replace(/\D/g, "");
+    return digits.length >= 8 && digits.length <= 15;
+  }
+
   function wirePhoneMask(input) {
     var lastValue = input.value;
-    function apply(digits) {
-      lastValue = formatPhone(digits);
-      input.value = lastValue;
+    function apply(value) {
+      lastValue = value;
+      input.value = value;
     }
     input.addEventListener("focus", function () {
-      if (!input.value) apply("");
+      if (!input.value) apply(UZ_PREFIX);
     });
     input.addEventListener("input", function () {
-      // Prefiksning o'zi o'chirilgan bo'lsa uni qaytaramiz, aks holda
-      // qolgan "99" mahalliy raqam deb o'qilib, (99) kodiga aylanib qolardi.
-      if (input.value.indexOf("+998") !== 0) { apply(""); return; }
-      var digits = phoneLocalDigits(input.value);
-      // Foydalanuvchi ajratuvchi belgini o'chirgan bo'lsa raqamlar soni
-      // o'zgarmaydi — u holda oxirgi raqamni o'zimiz olib tashlaymiz,
-      // aks holda o'chirish ishlamay qolardi.
-      if (input.value.length < lastValue.length && digits === phoneLocalDigits(lastValue)) {
+      var value = input.value;
+      // Hammasi o'chirilsa O'zbekiston prefiksiga qaytamiz.
+      if (!value) { apply(UZ_PREFIX); return; }
+      if (!isUzPhone(value)) { apply(formatIntlPhone(value)); return; }
+      var digits = phoneLocalDigits(value);
+      // Ajratuvchi belgi o'chirilganda raqamlar soni o'zgarmaydi — u holda
+      // oxirgi raqamni o'zimiz olib tashlaymiz, aks holda o'chirish
+      // shu yerda to'xtab qolardi.
+      if (value.length < lastValue.length && digits === phoneLocalDigits(lastValue)) {
         digits = digits.slice(0, -1);
       }
-      apply(digits);
+      apply(formatPhone(digits));
     });
   }
 
@@ -1912,7 +1935,7 @@
         var address = document.getElementById("addr-input").value.trim();
         var phone = document.getElementById("phone-input").value.trim();
         if (!full_name || !address) { showError(tr("fill_all")); return; }
-        if (phoneLocalDigits(phone).length < 9) { showError(tr("phone_invalid")); return; }
+        if (!phoneIsComplete(phone)) { showError(tr("phone_invalid")); return; }
         // Tasdiqlash oynasi turganda tugma bosilmasin.
         hideMainButton();
         showConfirm(
