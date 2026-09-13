@@ -205,6 +205,13 @@
     49% { transform: rotate(-8deg); }
     65% { transform: rotate(5deg); }
   }
+  .confirm-card { max-width: 320px; text-align: left; }
+  .confirm-card .toast-text { text-align: center; margin-bottom: 14px; }
+  .confirm-rows { background: var(--bg); border: 1px solid var(--border); border-radius: 12px; padding: 12px; }
+  .confirm-row { font-size: 14.5px; line-height: 1.45; word-break: break-word; }
+  .confirm-row + .confirm-row { margin-top: 10px; }
+  .confirm-row-label { display: block; font-size: 12px; color: var(--hint); margin-bottom: 1px; }
+  .confirm-card .card-btn-outline { color: var(--hint); border-color: rgba(0,0,0,0.18); }
   .toast-text { font-size: 16px; font-weight: 700; color: #000; line-height: 1.4; }
   @keyframes toastPop { from { transform: scale(0.7); opacity: 0; } to { transform: scale(1); opacity: 1; } }
   .photo-preview-row { display: none; gap: 8px; align-items: center; margin-right: auto; }
@@ -503,7 +510,9 @@
       empty_donations: "Hozircha ehsonlar yo'q.",
       take_it: "Qabul qilish",
       full_name_label: "Ism va familiya", address_label: "Manzil", phone_label: "Telefon raqami",
-      send: "Yuborish", reservation_sent: "So'rovingiz yuborildi! Saxiyga ma'lumotlaringiz yuborildi.",
+      send: "Yuborish",
+      confirm_data_title: "Ma'lumotlar to'g'ri kiritilganini tasdiqlaysizmi?",
+      confirm_yes: "Ha, tasdiqlayman", confirm_edit: "Tahrirlash", reservation_sent: "So'rovingiz yuborildi! Saxiyga ma'lumotlaringiz yuborildi.",
       waiting: "Kutilmoqda", reserved: "Band qilingan", shipped: "Yo'lda", received: "Yetib bordi", accepted: "Qabul qilingan",
       ship_receipt: "Chek yuklash", confirm_received: "Qabul qildim",
       delete_donation: "O'chirish", cancel_reservation: "Bekor qilish",
@@ -554,7 +563,9 @@
       empty_donations: "Пока нет доступных пожертвований.",
       take_it: "Забрать",
       full_name_label: "Полное имя", address_label: "Адрес", phone_label: "Номер телефона",
-      send: "Отправить", reservation_sent: "Ваша заявка отправлена! Данные переданы благотворителю.",
+      send: "Отправить",
+      confirm_data_title: "Подтверждаете, что данные введены верно?",
+      confirm_yes: "Да, подтверждаю", confirm_edit: "Изменить", reservation_sent: "Ваша заявка отправлена! Данные переданы благотворителю.",
       waiting: "Ожидает", reserved: "Забронировано", shipped: "В пути", received: "Доставлено", accepted: "Принято",
       ship_receipt: "Загрузить чек", confirm_received: "Я получил(а)",
       delete_donation: "Удалить", cancel_reservation: "Отменить",
@@ -605,7 +616,9 @@
       empty_donations: "No donations available yet.",
       take_it: "Take it",
       full_name_label: "Full name", address_label: "Address", phone_label: "Phone number",
-      send: "Send", reservation_sent: "Your request was sent! Details were shared with the donor.",
+      send: "Send",
+      confirm_data_title: "Do you confirm the details are correct?",
+      confirm_yes: "Yes, confirm", confirm_edit: "Edit", reservation_sent: "Your request was sent! Details were shared with the donor.",
       waiting: "Waiting", reserved: "Reserved", shipped: "On the way", received: "Delivered", accepted: "Accepted",
       ship_receipt: "Upload receipt", confirm_received: "I received it",
       delete_donation: "Delete", cancel_reservation: "Cancel",
@@ -656,7 +669,9 @@
       empty_donations: "Әзірге қайырлар жоқ.",
       take_it: "Қабылдау",
       full_name_label: "Аты-жөні", address_label: "Мекенжай", phone_label: "Телефон нөмірі",
-      send: "Жіберу", reservation_sent: "Сұрауыңыз жіберілді! Мәліметтеріңіз қайырымдыға жіберілді.",
+      send: "Жіберу",
+      confirm_data_title: "Мәліметтер дұрыс енгізілгенін растайсыз ба?",
+      confirm_yes: "Иә, растаймын", confirm_edit: "Өзгерту", reservation_sent: "Сұрауыңыз жіберілді! Мәліметтеріңіз қайырымдыға жіберілді.",
       waiting: "Күтілуде", reserved: "Брондалған", shipped: "Жолда", received: "Жетті", accepted: "Қабылданды",
       ship_receipt: "Чек жүктеу", confirm_received: "Қабылдадым",
       delete_donation: "Өшіру", cancel_reservation: "Бас тарту",
@@ -699,7 +714,9 @@
       empty_donations: "Ҳоло хайрия нест.",
       take_it: "Қабул кардан",
       full_name_label: "Ном ва насаб", address_label: "Суроға", phone_label: "Рақами телефон",
-      send: "Фиристодан", reservation_sent: "Дархости шумо фиристода шуд! Маълумоти шумо ба саховатманд фиристода шуд.",
+      send: "Фиристодан",
+      confirm_data_title: "Тасдиқ мекунед, ки маълумот дуруст ворид шудааст?",
+      confirm_yes: "Ҳа, тасдиқ мекунам", confirm_edit: "Таҳрир", reservation_sent: "Дархости шумо фиристода шуд! Маълумоти шумо ба саховатманд фиристода шуд.",
       waiting: "Дар интизорӣ", reserved: "Банд карда шуд", shipped: "Дар роҳ", received: "Расид", accepted: "Қабул карда шуд",
       ship_receipt: "Боркунии чек", confirm_received: "Қабул кардам",
       delete_donation: "Нест кардан", cancel_reservation: "Бекор кардан",
@@ -742,7 +759,9 @@
       empty_donations: "Азырынча садагалар жок.",
       take_it: "Кабыл алуу",
       full_name_label: "Аты-жөнү", address_label: "Дареги", phone_label: "Телефон номери",
-      send: "Жиберүү", reservation_sent: "Суранычыңыз жөнөтүлдү! Маалыматыңыз кайрымдууга жиберилди.",
+      send: "Жиберүү",
+      confirm_data_title: "Маалыматтар туура киргизилгенин ырастайсызбы?",
+      confirm_yes: "Ооба, ырастайм", confirm_edit: "Өзгөртүү", reservation_sent: "Суранычыңыз жөнөтүлдү! Маалыматыңыз кайрымдууга жиберилди.",
       waiting: "Күтүлүүдө", reserved: "Брондолгон", shipped: "Жолдо", received: "Жетти", accepted: "Кабыл алынды",
       ship_receipt: "Чек жүктөө", confirm_received: "Кабыл алдым",
       delete_donation: "Өчүрүү", cancel_reservation: "Жокко чыгаруу",
@@ -785,7 +804,9 @@
       empty_donations: "Häzirlikçe sadaka ýok.",
       take_it: "Kabul etmek",
       full_name_label: "Ady we familiýasy", address_label: "Salgysy", phone_label: "Telefon belgisi",
-      send: "Ibermek", reservation_sent: "Soragyňyz iberildi! Maglumatlaryňyz sahawatla iberildi.",
+      send: "Ibermek",
+      confirm_data_title: "Maglumatlaryň dogry girizilendigini tassyklaýarsyňyzmy?",
+      confirm_yes: "Hawa, tassyklaýaryn", confirm_edit: "Üýtget", reservation_sent: "Soragyňyz iberildi! Maglumatlaryňyz sahawatla iberildi.",
       waiting: "Garaşylýar", reserved: "Bronlandy", shipped: "Ýolda", received: "Gowuşdy", accepted: "Kabul edildi",
       ship_receipt: "Çek ýüklemek", confirm_received: "Kabul etdim",
       delete_donation: "Öçürmek", cancel_reservation: "Ýatyrmak",
@@ -936,6 +957,56 @@
     emojiEl.textContent = emoji || "\uD83C\uDF89";
     if (emojiClass) emojiEl.classList.add(emojiClass);
     overlay.querySelector(".toast-text").textContent = msg;
+    document.body.appendChild(overlay);
+    return overlay;
+  }
+
+  // Tasdiqlash oynasi: kiritilgan ma'lumotlarni ko'rsatadi va foydalanuvchi
+  // "Ha" bosgandagina onYes chaqiriladi. O'zi yopilmaydi.
+  function showConfirm(title, rows, onYes, onEdit) {
+    var overlay = document.createElement("div");
+    overlay.className = "toast-overlay";
+    var card = document.createElement("div");
+    card.className = "toast-card confirm-card";
+
+    var titleEl = document.createElement("div");
+    titleEl.className = "toast-text";
+    titleEl.textContent = title;
+    card.appendChild(titleEl);
+
+    var list = document.createElement("div");
+    list.className = "confirm-rows";
+    rows.forEach(function (row) {
+      var item = document.createElement("div");
+      item.className = "confirm-row";
+      var label = document.createElement("span");
+      label.className = "confirm-row-label";
+      label.textContent = row.label;
+      var value = document.createElement("span");
+      value.textContent = row.value;
+      item.appendChild(label);
+      item.appendChild(value);
+      list.appendChild(item);
+    });
+    card.appendChild(list);
+
+    function close() {
+      if (overlay.parentNode) overlay.parentNode.removeChild(overlay);
+    }
+
+    var yesBtn = document.createElement("button");
+    yesBtn.className = "card-btn card-btn-blue";
+    yesBtn.textContent = tr("confirm_yes");
+    yesBtn.addEventListener("click", function () { close(); onYes(); });
+    card.appendChild(yesBtn);
+
+    var editBtn = document.createElement("button");
+    editBtn.className = "card-btn-outline";
+    editBtn.textContent = tr("confirm_edit");
+    editBtn.addEventListener("click", function () { close(); if (onEdit) onEdit(); });
+    card.appendChild(editBtn);
+
+    overlay.appendChild(card);
     document.body.appendChild(overlay);
     return overlay;
   }
@@ -1759,11 +1830,7 @@
       "<label>" + tr("phone_label") + "</label>" +
       '<input id="phone-input" type="tel" placeholder="+998...">';
 
-    setMainButton(tr("send"), function () {
-      var full_name = document.getElementById("fn-input").value.trim();
-      var address = document.getElementById("addr-input").value.trim();
-      var phone = document.getElementById("phone-input").value.trim();
-      if (!full_name || !address || !phone) { showError(tr("fill_all")); return; }
+    function submitReservation(full_name, address, phone) {
       api("POST", "/api/reservations", {
         donation_id: state.params.donationId, full_name: full_name, address: address, phone: phone,
       }).then(function () {
@@ -1779,8 +1846,33 @@
         }, 5000);
       }).catch(function (err) {
         showError(err.status === 409 ? tr("already_taken") : tr("error"));
+        // Xatolikda tugmani qaytaramiz, foydalanuvchi qayta urinib ko'rsin.
+        armSendButton();
       });
-    });
+    }
+
+    function armSendButton() {
+      setMainButton(tr("send"), function () {
+        var full_name = document.getElementById("fn-input").value.trim();
+        var address = document.getElementById("addr-input").value.trim();
+        var phone = document.getElementById("phone-input").value.trim();
+        if (!full_name || !address || !phone) { showError(tr("fill_all")); return; }
+        // Tasdiqlash oynasi turganda tugma bosilmasin.
+        hideMainButton();
+        showConfirm(
+          tr("confirm_data_title"),
+          [
+            { label: tr("full_name_label"), value: full_name },
+            { label: tr("address_label"), value: address },
+            { label: tr("phone_label"), value: phone },
+          ],
+          function () { submitReservation(full_name, address, phone); },
+          armSendButton
+        );
+      });
+    }
+
+    armSendButton();
     setBackButton();
   }
 
