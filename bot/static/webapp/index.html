@@ -1773,8 +1773,9 @@
         var reservedOverlay = showSuccess(tr("reservation_saved"), "\uD83E\uDD1D", "shake");
         setTimeout(function () {
           if (reservedOverlay.parentNode) reservedOverlay.parentNode.removeChild(reservedOverlay);
-          navStack = [];
-          goto("home", {}, false);
+          navStack = [{ screen: "home", params: {} }];
+          // Band qilingan ehson kabinetning "Band qilingan" lentasida turadi.
+          goto("needy_cabinet", { activeTab: "reserved" }, false);
         }, 5000);
       }).catch(function (err) {
         showError(err.status === 409 ? tr("already_taken") : tr("error"));
