@@ -2154,17 +2154,36 @@
       "<label>" + tr("dua_label") + "</label>" +
       '<textarea id="dua-input" placeholder="' + escapeHtml(tr("dua_placeholder")) + '"></textarea>';
 
-    setMainButton(tr("submit"), function () {
-      var dua_text = document.getElementById("dua-input").value.trim();
-      if (!dua_text) { showError(tr("fill_all")); return; }
-      api("POST", "/api/reservations/" + state.params.reservationId + "/receive", { dua_text: dua_text })
+    function submitReceived(duaText) {
+      api("POST", "/api/reservations/" + state.params.reservationId + "/receive", { dua_text: duaText })
         .then(function () {
           if (tg && tg.HapticFeedback) tg.HapticFeedback.notificationOccurred("success");
-          navStack = [];
-          goto("home", {}, false);
+          navStack = [{ screen: "home", params: {} }];
+          // Ehson endi "Qabul qilingan" lentasida turadi.
+          goto("needy_cabinet", { activeTab: "received" }, false);
         })
-        .catch(function () { showError(); });
-    });
+        .catch(function () {
+          showError();
+          armSubmitButton();
+        });
+    }
+
+    function armSubmitButton() {
+      setMainButton(tr("submit"), function () {
+        var duaText = document.getElementById("dua-input").value.trim();
+        if (!duaText) { showError(tr("fill_all")); return; }
+        // Tasdiqlash oynasi turganda tugma bosilmasin.
+        hideMainButton();
+        showConfirm(
+          tr("confirm_data_title"),
+          [{ icon: "\uD83E\uDD32", value: duaText }],
+          function () { submitReceived(duaText); },
+          armSubmitButton
+        );
+      });
+    }
+
+    armSubmitButton();
     setBackButton();
   }
 
