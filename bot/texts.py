@@ -311,7 +311,15 @@ def status_label(status: str, lang: str) -> str:
 # matn yo'q, shuning uchun kenglikni yorliqning o'zi belgilaydi —
 # ikki chetiga uzilmaydigan probellar qo'shiladi.
 _BUTTON_PAD = "\u00a0" * 7
-CHANNEL_OPEN_BUTTON = f"{_BUTTON_PAD}🤲 Ehsonni olish{_BUTTON_PAD}"
+
+
+def channel_button_label(text: str) -> str:
+    """Yorliqni ikki chetidan uzilmaydigan probellar bilan to'ldiradi —
+    barcha holatlarda tugmalar bir xil, albomga yaqin enda chiqadi."""
+    return f"{_BUTTON_PAD}{text}{_BUTTON_PAD}"
+
+
+CHANNEL_OPEN_BUTTON = "🤲 Ehsonni olish"
 
 # Albomdan keyin faqat tugma chiqishi uchun matnsiz xabar kerak, lekin
 # Telegram bo'sh matnni qabul qilmaydi — ko'zga ko'rinmaydigan belgi

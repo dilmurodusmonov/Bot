@@ -50,6 +50,7 @@ from bot.texts import (
     CHANNEL_OPEN_BUTTON,
     LANGUAGES,
     category_name,
+    channel_button_label,
     status_label,
     t,
 )
@@ -85,31 +86,37 @@ def _app_url(request: web.Request, donation_id: int) -> Optional[str]:
     return f"https://t.me/{bot_username}/{MINI_APP_SHORT_NAME}?startapp=d_{donation_id}"
 
 
-def _channel_caption(status: str) -> str:
-    """Kanal postida bo'lim nomi ham, tavsif ham ko'rsatilmaydi — faqat
-    holat qatori qoladi. Ilovadagi kartochkalar bilan bir xil yorliq
-    ishlatiladi, shunda kanal va ilova bir xil tilda gapiradi."""
-    return escape(status_label(status, "uz"), quote=False)
+def _channel_keyboard(
+    request: web.Request, donation_id: int, status: str
+) -> Optional[InlineKeyboardMarkup]:
+    """Albom ostidagi ikki qatorli tugmalar: tepada holat, pastda ehsonni
+    olish. Inline tugmalar klaviatura kengligiga cho'ziladi, ya'ni ikkala
+    qator ham bir xil enda chiqadi; kenglikni esa eng uzun yorliq —
+    to'ldirilgan "Ehsonni olish" — belgilaydi.
 
-
-def _channel_keyboard(request: web.Request, donation_id: int) -> Optional[InlineKeyboardMarkup]:
+    Holat qatori ham havola: alohida ish bajarmaydi, lekin bosilsa
+    foydalanuvchi ilovada ehsonni ko'radi."""
     url = _app_url(request, donation_id)
     if not url:
         return None
-    return InlineKeyboardMarkup(
-        inline_keyboard=[[InlineKeyboardButton(text=CHANNEL_OPEN_BUTTON, url=url)]]
-    )
+    rows = [[InlineKeyboardButton(
+        text=channel_button_label(status_label(status, "uz")), url=url
+    )]]
+    if status == "available":
+        rows.append(
+            [InlineKeyboardButton(text=channel_button_label(CHANNEL_OPEN_BUTTON), url=url)]
+        )
+    return InlineKeyboardMarkup(inline_keyboard=rows)
 
 
 async def _publish_to_channel(request: web.Request, donation_id: int) -> None:
     """Yangi ehsonni kanalga e'lon qiladi va post id'larini saqlaydi.
 
-    Bir nechta rasmli ehson albom bo'lib chiqadi va holat albomning
-    sarlavhasiga yoziladi. sendMediaGroup reply_markup'ni qabul
-    qilmagani uchun tugma albomdan keyingi alohida xabarga qo'yiladi;
-    o'sha xabar faqat tugmadan iborat ko'rinishi uchun matni ko'zga
-    ko'rinmaydigan belgi bo'ladi. Telegram uni rad etsa, matn o'rniga
-    holat yoziladi — post baribir chiqishi kerak.
+    Rasmlar sarlavhasiz albom bo'lib chiqadi, holat va olish tugmasi esa
+    albom ostidagi alohida xabarga inline tugma sifatida qo'yiladi —
+    sendMediaGroup reply_markup'ni qabul qilmaydi. O'sha xabar faqat
+    tugmalardan iborat ko'rinishi uchun matni ko'zga ko'rinmaydigan
+    belgi bo'ladi; Telegram uni rad etsa, matn o'rniga holat yoziladi.
 
     Kanal bilan bog'liq har qanday muammo (bot admin emas, kanal
     o'chirilgan va h.k.) ehson joylanishini buzmasligi kerak — shuning
@@ -120,17 +127,13 @@ async def _publish_to_channel(request: web.Request, donation_id: int) -> None:
     if not donation:
         return
     photo_ids = _donation_photo_ids(donation)
-    caption = _channel_caption("available")
-    keyboard = _channel_keyboard(request, donation_id)
+    keyboard = _channel_keyboard(request, donation_id, "available")
     bot: Bot = request.app["bot"]
     try:
         if len(photo_ids) > 1:
             sent = await bot.send_media_group(
                 chat_id=CHANNEL_ID,
-                media=[
-                    InputMediaPhoto(media=pid, caption=caption if i == 0 else None)
-                    for i, pid in enumerate(photo_ids)
-                ],
+                media=[InputMediaPhoto(media=pid) for pid in photo_ids],
             )
             try:
                 btn_msg = await bot.send_message(
@@ -138,15 +141,14 @@ async def _publish_to_channel(request: web.Request, donation_id: int) -> None:
                 )
             except TelegramAPIError:
                 btn_msg = await bot.send_message(
-                    chat_id=CHANNEL_ID, text=caption, reply_markup=keyboard
+                    chat_id=CHANNEL_ID,
+                    text=escape(status_label("available", "uz"), quote=False),
+                    reply_markup=keyboard,
                 )
             message_ids = [msg.message_id for msg in sent] + [btn_msg.message_id]
         else:
             msg = await bot.send_photo(
-                chat_id=CHANNEL_ID,
-                photo=photo_ids[0],
-                caption=caption,
-                reply_markup=keyboard,
+                chat_id=CHANNEL_ID, photo=photo_ids[0], reply_markup=keyboard
             )
             message_ids = [msg.message_id]
     except Exception:
@@ -157,35 +159,25 @@ async def _publish_to_channel(request: web.Request, donation_id: int) -> None:
 
 
 async def _refresh_channel_post(request: web.Request, donation_id: int, status: str) -> None:
-    """Kanal postidagi holatni yangilaydi. Ehson band qilingandan keyin
-    tugma olib tashlanadi — post tarixda qoladi, lekin boshqa band
-    qilinmaydi.
+    """Kanal postidagi holatni yangilaydi: holat tugmasining yorlig'i
+    almashadi, ehson band qilinganda esa olish tugmasi olib tashlanadi.
 
-    Holat ikkala holatda ham suratning sarlavhasida turadi; albomda
-    tugma alohida xabarda bo'lgani uchun u alohida yangilanadi."""
+    Albomda tugmalar oxirgi xabarda, bitta rasmli postda esa suratning
+    o'zida turadi."""
     if not CHANNEL_ID:
         return
     donation = await get_donation(donation_id)
     message_ids = _channel_message_ids(donation)
     if not message_ids:
         return
-    caption = _channel_caption(status)
-    keyboard = _channel_keyboard(request, donation_id) if status == "available" else None
     is_album = len(_donation_photo_ids(donation)) > 1
     bot: Bot = request.app["bot"]
     try:
-        await bot.edit_message_caption(
+        await bot.edit_message_reply_markup(
             chat_id=CHANNEL_ID,
-            message_id=message_ids[0],
-            caption=caption,
-            reply_markup=None if is_album else keyboard,
+            message_id=message_ids[-1] if is_album else message_ids[0],
+            reply_markup=_channel_keyboard(request, donation_id, status),
         )
-        if is_album:
-            await bot.edit_message_reply_markup(
-                chat_id=CHANNEL_ID,
-                message_id=message_ids[-1],
-                reply_markup=keyboard,
-            )
     except Exception:
         logger.exception("Kanal postini yangilab bo'lmadi (ehson %s)", donation_id)
 
