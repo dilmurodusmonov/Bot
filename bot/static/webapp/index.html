@@ -505,6 +505,7 @@
       submit: "Tasdiqlash", empty_requests: "Sizda hali so'rovlar yo'q.",
       error: "Xatolik yuz berdi, qayta urinib ko'ring.",
       already_taken: "Afsuski bu ehson allaqachon band qilingan.",
+      reservation_saved: "Ushbu ehson band qilindi",
       fill_all: "Iltimos, barcha maydonlarni to'ldiring.",
       thanks_confirmed: "Rahmat! Tasdiqlandi.",
       photo_label: "Rasm", choose_photo: "Rasm tanlash",
@@ -555,6 +556,7 @@
       submit: "Подтвердить", empty_requests: "У вас пока нет заявок.",
       error: "Произошла ошибка, попробуйте снова.",
       already_taken: "К сожалению, это пожертвование уже забронировано.",
+      reservation_saved: "Это пожертвование забронировано",
       fill_all: "Пожалуйста, заполните все поля.",
       thanks_confirmed: "Спасибо! Подтверждено.",
       photo_label: "Фото", choose_photo: "Выбрать фото",
@@ -605,6 +607,7 @@
       submit: "Confirm", empty_requests: "You don't have any requests yet.",
       error: "Something went wrong, please try again.",
       already_taken: "Sorry, this donation is already reserved.",
+      reservation_saved: "This donation has been reserved",
       fill_all: "Please fill in all fields.",
       thanks_confirmed: "Thank you! Confirmed.",
       photo_label: "Photo", choose_photo: "Choose photo",
@@ -655,6 +658,7 @@
       submit: "Растау", empty_requests: "Сізде әлі сұраулар жоқ.",
       error: "Қате орын алды, қайта көріңіз.",
       already_taken: "Өкінішке орай, бұл қайыр әлдеқашан брондалған.",
+      reservation_saved: "Бұл қайыр брондалды",
       fill_all: "Барлық өрістерді толтырыңыз.",
       thanks_confirmed: "Рахмет! Расталды.",
       photo_label: "Сурет", choose_photo: "Сурет таңдау",
@@ -697,6 +701,7 @@
       submit: "Тасдиқ", empty_requests: "Шумо ҳанӯз дархост надоред.",
       error: "Хатогӣ рух дод, дубора кӯшиш кунед.",
       already_taken: "Мутаассифона, ин хайрия аллакай банд карда шудааст.",
+      reservation_saved: "Ин хайрия банд карда шуд",
       fill_all: "Лутфан, ҳамаи майдонҳоро пур кунед.",
       thanks_confirmed: "Ташаккур! Тасдиқ шуд.",
       photo_label: "Расм", choose_photo: "Интихоби расм",
@@ -739,6 +744,7 @@
       submit: "Тастыктоо", empty_requests: "Сизде азырынча суранычтар жок.",
       error: "Ката кетти, кайра аракет кылыңыз.",
       already_taken: "Тилекке каршы, бул садага мурунтан эле брондолгон.",
+      reservation_saved: "Бул садага брондолду",
       fill_all: "Бардык талааларды толтуруңуз.",
       thanks_confirmed: "Рахмат! Тастыкталды.",
       photo_label: "Сүрөт", choose_photo: "Сүрөт тандоо",
@@ -781,6 +787,7 @@
       submit: "Tassyklamak", empty_requests: "Sizde entek sorag ýok.",
       error: "Ýalňyşlyk ýüze çykdy, gaýtadan synanyşyň.",
       already_taken: "Gynansak-da, bu sadaka eýýäm bronlandy.",
+      reservation_saved: "Bu sadaka bronlandy",
       fill_all: "Ähli meýdanlary dolduryň.",
       thanks_confirmed: "Sag boluň! Tassyklandy.",
       photo_label: "Surat", choose_photo: "Surat saýlamak",
@@ -1751,8 +1758,14 @@
         donation_id: state.params.donationId, full_name: full_name, address: address, phone: phone,
       }).then(function () {
         if (tg && tg.HapticFeedback) tg.HapticFeedback.notificationOccurred("success");
-        navStack = [];
-        goto("home", {}, false);
+        // Tugmani o'chiramiz, aks holda xabar turgan vaqtda qayta yuborilishi mumkin.
+        hideMainButton();
+        var reservedOverlay = showSuccess(tr("reservation_saved"), "\uD83E\uDD1D");
+        setTimeout(function () {
+          if (reservedOverlay.parentNode) reservedOverlay.parentNode.removeChild(reservedOverlay);
+          navStack = [];
+          goto("home", {}, false);
+        }, 5000);
       }).catch(function (err) {
         showError(err.status === 409 ? tr("already_taken") : tr("error"));
       });
