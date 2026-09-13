@@ -211,6 +211,7 @@
   .confirm-row { display: flex; gap: 8px; font-size: 14.5px; line-height: 1.45; word-break: break-word; }
   .confirm-row + .confirm-row { margin-top: 9px; }
   .confirm-row-icon { flex-shrink: 0; }
+  .confirm-row-img { width: 72px; height: 72px; object-fit: cover; border-radius: 10px; border: 1px solid var(--border); display: block; }
   .confirm-card .card-btn-outline { color: var(--hint); border-color: rgba(0,0,0,0.18); }
   .toast-text { font-size: 16px; font-weight: 700; color: #000; line-height: 1.4; }
   @keyframes toastPop { from { transform: scale(0.7); opacity: 0; } to { transform: scale(1); opacity: 1; } }
@@ -989,10 +990,17 @@
       var icon = document.createElement("span");
       icon.className = "confirm-row-icon";
       icon.textContent = row.icon;
-      var value = document.createElement("span");
-      value.textContent = row.value;
       item.appendChild(icon);
-      item.appendChild(value);
+      if (row.image) {
+        var img = document.createElement("img");
+        img.className = "confirm-row-img";
+        img.src = row.image;
+        item.appendChild(img);
+      } else {
+        var value = document.createElement("span");
+        value.textContent = row.value;
+        item.appendChild(value);
+      }
       list.appendChild(item);
     });
     card.appendChild(list);
@@ -1816,10 +1824,7 @@
       renderShipPhotoPreview();
     });
 
-    setMainButton(tr("send"), function () {
-      if (!selectedPhotoFile) { showError(tr("photo_required")); return; }
-      var receiptNote = document.getElementById("receipt-note-input").value.trim();
-
+    function submitShipment(receiptNote) {
       if (tg) tg.MainButton.showProgress();
       compressImage(selectedPhotoFile).then(function (compressed) {
         var fd = new FormData();
@@ -1832,8 +1837,32 @@
           navStack = [{ screen: "home", params: {} }];
           goto("donor_cabinet", {}, false);
         })
-        .catch(function () { if (tg) tg.MainButton.hideProgress(); showError(); });
-    });
+        .catch(function () {
+          if (tg) tg.MainButton.hideProgress();
+          showError();
+          armSendButton();
+        });
+    }
+
+    function armSendButton() {
+      setMainButton(tr("send"), function () {
+        if (!selectedPhotoFile) { showError(tr("photo_required")); return; }
+        var receiptNote = document.getElementById("receipt-note-input").value.trim();
+        var previewImg = document.querySelector("#ship-photo-preview-row img");
+        var rows = [{ icon: "\uD83E\uDDFE", image: previewImg ? previewImg.src : "" }];
+        if (receiptNote) rows.push({ icon: "\uD83D\uDE9A", value: receiptNote });
+        // Tasdiqlash oynasi turganda tugma bosilmasin.
+        hideMainButton();
+        showConfirm(
+          tr("confirm_data_title"),
+          rows,
+          function () { submitShipment(receiptNote); },
+          armSendButton
+        );
+      });
+    }
+
+    armSendButton();
     setBackButton();
   }
 
