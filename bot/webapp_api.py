@@ -1,4 +1,5 @@
 import json
+import logging
 from html import escape
 from typing import Optional
 
@@ -54,6 +55,8 @@ from bot.texts import (
     t,
 )
 from bot.webapp_auth import validate_init_data
+
+logger = logging.getLogger(__name__)
 
 
 # --- kanalga e'lon qilish ----------------------------------------------------
@@ -134,7 +137,9 @@ async def _publish_to_channel(request: web.Request, donation_id: int) -> None:
                 reply_markup=_channel_keyboard(request, donation_id),
             )
             message_ids = [msg.message_id]
-    except TelegramAPIError:
+    except Exception:
+        # Kanal yordamchi kanal, ehson joylanishini buzmasligi kerak.
+        logger.exception("Kanalga e'lon qilib bo'lmadi (ehson %s)", donation_id)
         return
     await set_donation_channel_messages(donation_id, message_ids)
 
@@ -175,8 +180,8 @@ async def _refresh_channel_post(request: web.Request, donation_id: int, status: 
                 if available and not is_album else None
             ),
         )
-    except TelegramAPIError:
-        pass
+    except Exception:
+        logger.exception("Kanal postini yangilab bo'lmadi (ehson %s)", donation_id)
 
 
 async def _remove_channel_post(request: web.Request, donation: dict) -> None:
@@ -187,8 +192,8 @@ async def _remove_channel_post(request: web.Request, donation: dict) -> None:
     for message_id in message_ids:
         try:
             await bot.delete_message(chat_id=CHANNEL_ID, message_id=message_id)
-        except TelegramAPIError:
-            pass
+        except Exception:
+            logger.exception("Kanal postini o'chirib bo'lmadi (xabar %s)", message_id)
 
 
 def _auth_telegram_id(request: web.Request) -> Optional[int]:
@@ -452,11 +457,11 @@ async def api_create_reservation(request: web.Request) -> web.Response:
         t(
             donor_lang,
             "new_reservation_for_donor",
-            category=category_name(donation["category"], donor_lang),
-            description=donation["description"],
-            full_name=full_name,
-            address=address,
-            phone=phone,
+            category=escape(category_name(donation["category"], donor_lang)),
+            description=escape(donation["description"] or ""),
+            full_name=escape(full_name),
+            address=escape(address),
+            phone=escape(phone),
         ),
         reply_markup=(
             InlineKeyboardMarkup(inline_keyboard=[[
@@ -494,7 +499,7 @@ async def api_confirm_received(request: web.Request) -> web.Response:
     bot: Bot = request.app["bot"]
     await bot.send_message(
         donation["donor_id"],
-        t(donor_lang, "received_notify_donor", dua_text=dua_text),
+        t(donor_lang, "received_notify_donor", dua_text=escape(dua_text)),
     )
     return web.json_response({"ok": True})
 
@@ -536,7 +541,11 @@ async def api_cancel_reservation(request: web.Request) -> web.Response:
         bot: Bot = request.app["bot"]
         await bot.send_message(
             donation["donor_id"],
-            t(donor_lang, "reservation_cancelled_notify_donor", description=donation["description"]),
+            t(
+                donor_lang,
+                "reservation_cancelled_notify_donor",
+                description=escape(donation["description"] or ""),
+            ),
         )
     return web.json_response({"ok": True})
 
