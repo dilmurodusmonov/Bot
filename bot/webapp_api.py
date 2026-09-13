@@ -45,10 +45,12 @@ from bot.database import (
     toggle_donation_like,
 )
 from bot.texts import (
+    BUTTON_ONLY_TEXT,
     CATEGORIES,
     CHANNEL_OPEN_BUTTON,
     LANGUAGES,
     category_name,
+    channel_button_label,
     status_label,
     t,
 )
@@ -84,83 +86,91 @@ def _app_url(request: web.Request, donation_id: int) -> Optional[str]:
     return f"https://t.me/{bot_username}/{MINI_APP_SHORT_NAME}?startapp=d_{donation_id}"
 
 
-def _channel_caption(request: web.Request, donation_id: int, status: str) -> str:
-    """Kanal posti sarlavhasi.
+def _channel_keyboard(
+    request: web.Request, donation_id: int, status: str
+) -> Optional[InlineKeyboardMarkup]:
+    """Albom ostidagi tugmalar: tepada holat, pastda ehsonni olish.
+    Ehson band qilinganda olish tugmasi olib tashlanadi.
 
-    Ehson bo'sh turganda faqat havola ko'rsatiladi — havolaning o'zi
-    ehson hali olinmaganini bildiradi, shuning uchun "Kutilmoqda"
-    yozuvi ortiqcha. Band qilingandan keyin havola olib tashlanadi va
-    o'rniga holat yoziladi: post tarixda qoladi, lekin boshqa band
-    qilinmaydi."""
-    url = _app_url(request, donation_id) if status == "available" else None
-    if url:
-        label = escape(CHANNEL_OPEN_BUTTON, quote=False)
-        return f'<a href="{escape(url)}"><b>{label}</b></a>'
-    return escape(status_label(status, "uz"), quote=False)
+    Yorliqlar to'ldirilgan — Telegram tugma kengligini yorliqqa qarab
+    o'lchaydi, to'ldirishsiz tugma albomdan ancha tor chiqadi."""
+    url = _app_url(request, donation_id)
+    if not url:
+        return None
+    rows = [[InlineKeyboardButton(
+        text=channel_button_label(status_label(status, "uz")), url=url
+    )]]
+    if status == "available":
+        rows.append(
+            [InlineKeyboardButton(text=channel_button_label(CHANNEL_OPEN_BUTTON), url=url)]
+        )
+    return InlineKeyboardMarkup(inline_keyboard=rows)
 
 
 async def _publish_to_channel(request: web.Request, donation_id: int) -> None:
     """Yangi ehsonni kanalga e'lon qiladi va post id'larini saqlaydi.
 
-    Rasmlar albom bo'lib chiqadi, holat va ilovaga o'tish havolasi esa
-    albomning sarlavhasida turadi — shunda hammasi bitta post bo'ladi.
+    Rasmlar sarlavhasiz albom bo'lib chiqadi, holat va olish tugmasi esa
+    albom ostidagi alohida xabarga inline tugma sifatida qo'yiladi —
+    sendMediaGroup reply_markup'ni qabul qilmaydi. O'sha xabar faqat
+    tugmalardan iborat ko'rinishi uchun matni ko'zga ko'rinmaydigan
+    belgi bo'ladi; Telegram uni rad etsa, matn o'rniga holat yoziladi.
 
-    Kanal bilan bog'liq har qanday muammo (bot admin emas, kanal
-    o'chirilgan va h.k.) ehson joylanishini buzmasligi kerak — shuning
-    uchun barcha xatolar yutiladi."""
+    Kanal bilan bog'liq har qanday muammo ehson joylanishini
+    buzmasligi kerak — shuning uchun barcha xatolar yutiladi."""
     if not CHANNEL_ID:
         return
     donation = await get_donation(donation_id)
     if not donation:
         return
     photo_ids = _donation_photo_ids(donation)
-    caption = _channel_caption(request, donation_id, "available")
+    keyboard = _channel_keyboard(request, donation_id, "available")
     bot: Bot = request.app["bot"]
     try:
         if len(photo_ids) > 1:
             sent = await bot.send_media_group(
                 chat_id=CHANNEL_ID,
-                media=[
-                    InputMediaPhoto(
-                        media=pid,
-                        caption=caption if i == 0 else None,
-                        parse_mode="HTML" if i == 0 else None,
-                    )
-                    for i, pid in enumerate(photo_ids)
-                ],
+                media=[InputMediaPhoto(media=pid) for pid in photo_ids],
             )
-            message_ids = [msg.message_id for msg in sent]
+            try:
+                btn_msg = await bot.send_message(
+                    chat_id=CHANNEL_ID, text=BUTTON_ONLY_TEXT, reply_markup=keyboard
+                )
+            except TelegramAPIError:
+                btn_msg = await bot.send_message(
+                    chat_id=CHANNEL_ID,
+                    text=escape(status_label("available", "uz"), quote=False),
+                    reply_markup=keyboard,
+                )
+            message_ids = [msg.message_id for msg in sent] + [btn_msg.message_id]
         else:
             msg = await bot.send_photo(
-                chat_id=CHANNEL_ID,
-                photo=photo_ids[0],
-                caption=caption,
-                parse_mode="HTML",
+                chat_id=CHANNEL_ID, photo=photo_ids[0], reply_markup=keyboard
             )
             message_ids = [msg.message_id]
     except Exception:
-        # Kanal yordamchi vosita, ehson joylanishini buzmasligi kerak.
         logger.exception("Kanalga e'lon qilib bo'lmadi (ehson %s)", donation_id)
         return
     await set_donation_channel_messages(donation_id, message_ids)
 
 
 async def _refresh_channel_post(request: web.Request, donation_id: int, status: str) -> None:
-    """Kanal postidagi holatni yangilaydi — sarlavha albomning birinchi
-    suratida turadi."""
+    """Holat tugmasining yorlig'ini almashtiradi va ehson band
+    qilinganda olish tugmasini olib tashlaydi. Albomda tugmalar oxirgi
+    xabarda, bitta rasmli postda esa suratning o'zida turadi."""
     if not CHANNEL_ID:
         return
     donation = await get_donation(donation_id)
     message_ids = _channel_message_ids(donation)
     if not message_ids:
         return
+    is_album = len(_donation_photo_ids(donation)) > 1
     bot: Bot = request.app["bot"]
     try:
-        await bot.edit_message_caption(
+        await bot.edit_message_reply_markup(
             chat_id=CHANNEL_ID,
-            message_id=message_ids[0],
-            caption=_channel_caption(request, donation_id, status),
-            parse_mode="HTML",
+            message_id=message_ids[-1] if is_album else message_ids[0],
+            reply_markup=_channel_keyboard(request, donation_id, status),
         )
     except Exception:
         logger.exception("Kanal postini yangilab bo'lmadi (ehson %s)", donation_id)
