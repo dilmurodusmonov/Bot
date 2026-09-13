@@ -306,17 +306,5 @@ def status_label(status: str, lang: str) -> str:
 # Kanalning auditoriyasi aralash, shuning uchun e'lon matni foydalanuvchi
 # tiliga bog'lanmaydi — bitta o'zbekcha shablon ishlatiladi.
 
-CHANNEL_STATUS_AVAILABLE = "⏳ Mavjud — ilovada band qilishingiz mumkin"
-CHANNEL_STATUS_RESERVED = "🤝 Band qilingan"
-CHANNEL_STATUS_SHIPPED = "🚚 Yo'lda"
-CHANNEL_STATUS_RECEIVED = "✅ Egasiga yetib bordi"
 CHANNEL_OPEN_BUTTON = "🤲 Ehsonni olish"
 
-
-def channel_status(status: str) -> str:
-    return {
-        "available": CHANNEL_STATUS_AVAILABLE,
-        "reserved": CHANNEL_STATUS_RESERVED,
-        "shipped": CHANNEL_STATUS_SHIPPED,
-        "received": CHANNEL_STATUS_RECEIVED,
-    }.get(status, CHANNEL_STATUS_AVAILABLE)

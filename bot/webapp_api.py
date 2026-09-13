@@ -49,7 +49,6 @@ from bot.texts import (
     CHANNEL_OPEN_BUTTON,
     LANGUAGES,
     category_name,
-    channel_status,
     status_label,
     t,
 )
@@ -87,11 +86,9 @@ def _app_url(request: web.Request, donation_id: int) -> Optional[str]:
 
 def _channel_caption(status: str) -> str:
     """Kanal postida bo'lim nomi ham, tavsif ham ko'rsatilmaydi — faqat
-    holat qatori qoladi. Uni butunlay olib tashlab bo'lmaydi: albomda
-    tugma alohida xabarga qo'yiladi, matnsiz xabarni esa Telegram
-    qabul qilmaydi. Holat qatori ayni paytda ehson hali mavjudligini
-    ham ko'rsatib turadi."""
-    return escape(channel_status(status))
+    holat qatori qoladi. Ilovadagi kartochkalar bilan bir xil yorliq
+    ishlatiladi, shunda kanal va ilova bir xil tilda gapiradi."""
+    return escape(status_label(status, "uz"), quote=False)
 
 
 def _channel_keyboard(request: web.Request, donation_id: int) -> Optional[InlineKeyboardMarkup]:
@@ -457,11 +454,11 @@ async def api_create_reservation(request: web.Request) -> web.Response:
         t(
             donor_lang,
             "new_reservation_for_donor",
-            category=escape(category_name(donation["category"], donor_lang)),
-            description=escape(donation["description"] or ""),
-            full_name=escape(full_name),
-            address=escape(address),
-            phone=escape(phone),
+            category=escape(category_name(donation["category"], donor_lang), quote=False),
+            description=escape(donation["description"] or "", quote=False),
+            full_name=escape(full_name, quote=False),
+            address=escape(address, quote=False),
+            phone=escape(phone, quote=False),
         ),
         reply_markup=(
             InlineKeyboardMarkup(inline_keyboard=[[
@@ -499,7 +496,7 @@ async def api_confirm_received(request: web.Request) -> web.Response:
     bot: Bot = request.app["bot"]
     await bot.send_message(
         donation["donor_id"],
-        t(donor_lang, "received_notify_donor", dua_text=escape(dua_text)),
+        t(donor_lang, "received_notify_donor", dua_text=escape(dua_text, quote=False)),
     )
     return web.json_response({"ok": True})
 
@@ -544,7 +541,7 @@ async def api_cancel_reservation(request: web.Request) -> web.Response:
             t(
                 donor_lang,
                 "reservation_cancelled_notify_donor",
-                description=escape(donation["description"] or ""),
+                description=escape(donation["description"] or "", quote=False),
             ),
         )
     return web.json_response({"ok": True})
