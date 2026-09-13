@@ -1,3 +1,4 @@
+import asyncio
 import json
 import logging
 from html import escape
@@ -14,6 +15,7 @@ from aiogram.types import (
 )
 from aiohttp import web
 
+from bot.collage import build_collage
 from bot.config import BASE_URL, CHANNEL_ID, MINI_APP_SHORT_NAME, WEBAPP_URL
 from bot.database import (
     cancel_reservation,
@@ -49,8 +51,6 @@ from bot.texts import (
     CHANNEL_OPEN_BUTTON,
     LANGUAGES,
     category_name,
-    channel_button_label,
-    channel_text_line,
     status_label,
     t,
 )
@@ -78,119 +78,102 @@ def _channel_message_ids(donation: dict) -> list[int]:
     return [int(part) for part in raw.split(",") if part]
 
 
-def _app_url(request: web.Request, donation_id: int) -> Optional[str]:
+def _app_url(bot_username: Optional[str], donation_id: int) -> Optional[str]:
     """Mini App'ni to'g'ridan-to'g'ri shu ehson ustida ochadigan havola."""
-    bot_username = request.app.get("bot_username")
     if not bot_username:
         return None
     return f"https://t.me/{bot_username}/{MINI_APP_SHORT_NAME}?startapp=d_{donation_id}"
 
 
 def _channel_caption(status: str) -> str:
-    """Albom ostidagi matn — holat yorlig'i. Bo'sh qoldirib bo'lmaydi:
-    albomga inline tugma biriktirilmagani uchun tugma alohida xabarda
-    turadi, matnsiz xabar esa bo'sh puffak bo'lib ko'rinadi."""
-    return channel_text_line(escape(status_label(status, "uz"), quote=False))
+    return escape(status_label(status, "uz"), quote=False)
 
 
 def _channel_keyboard(
-    request: web.Request, donation_id: int, status: str
+    bot_username: Optional[str], donation_id: int, status: str
 ) -> Optional[InlineKeyboardMarkup]:
-    """Ilovaga o'tish tugmasi. Holat matnda turgani uchun bu yerda faqat
-    bitta tugma bo'ladi; ehson band qilinganda u olib tashlanadi.
-
-    Yorliq to'ldirilgan — Telegram tugma kengligini yorliqqa qarab
-    o'lchaydi, to'ldirishsiz tugma albomdan ancha tor chiqadi."""
-    url = _app_url(request, donation_id)
+    """Ilovaga o'tish tugmasi. Tugma suratga biriktirilgani uchun Telegram
+    uni har doim surat kengligida chizadi — qurilma ekrani va shrift
+    o'lchamidan qat'i nazar. Ehson band qilinganda tugma olib
+    tashlanadi."""
+    url = _app_url(bot_username, donation_id)
     if not url or status != "available":
         return None
     return InlineKeyboardMarkup(
-        inline_keyboard=[
-            [InlineKeyboardButton(text=channel_button_label(CHANNEL_OPEN_BUTTON), url=url)]
-        ]
+        inline_keyboard=[[InlineKeyboardButton(text=CHANNEL_OPEN_BUTTON, url=url)]]
     )
 
 
-async def _publish_to_channel(request: web.Request, donation_id: int) -> None:
-    """Yangi ehsonni kanalga e'lon qiladi va post id'larini saqlaydi.
+async def _download_photo(bot: Bot, file_id: str) -> bytes:
+    file = await bot.get_file(file_id)
+    buf = await bot.download_file(file.file_path)
+    return buf.read()
 
-    Rasmlar sarlavhasiz albom bo'lib chiqadi, uning ostida esa holat
-    matni va ilovaga o'tish tugmasi turgan alohida xabar yuboriladi —
-    sendMediaGroup reply_markup'ni qabul qilmaydi.
 
-    Kanal bilan bog'liq har qanday muammo ehson joylanishini
-    buzmasligi kerak — shuning uchun barcha xatolar yutiladi."""
+async def _channel_photo(bot: Bot, photo_ids: list[str]):
+    """Kanalga yuboriladigan surat. Bir nechta rasm bo'lsa ular bitta
+    kollajga birlashtiriladi — shunda post bitta surat bo'lib chiqadi va
+    tugma aynan surat kengligida turadi."""
+    if len(photo_ids) == 1:
+        return photo_ids[0]
+    photos = [await _download_photo(bot, pid) for pid in photo_ids]
+    return BufferedInputFile(build_collage(photos), filename="ehson.jpg")
+
+
+async def _publish_to_channel(
+    bot: Bot, bot_username: Optional[str], donation_id: int
+) -> None:
+    """Yangi ehsonni kanalga bitta surat va tugma bilan e'lon qiladi.
+
+    Kanal bilan bog'liq har qanday muammo (bot admin emas, rasm yuklab
+    olinmadi va h.k.) ehson joylanishini buzmasligi kerak — funksiya fon
+    vazifasi sifatida chaqiriladi va barcha xatolar jurnalga yoziladi."""
     if not CHANNEL_ID:
         return
-    donation = await get_donation(donation_id)
-    if not donation:
-        return
-    photo_ids = _donation_photo_ids(donation)
-    caption = _channel_caption("available")
-    keyboard = _channel_keyboard(request, donation_id, "available")
-    bot: Bot = request.app["bot"]
     try:
-        if len(photo_ids) > 1:
-            sent = await bot.send_media_group(
-                chat_id=CHANNEL_ID,
-                media=[InputMediaPhoto(media=pid) for pid in photo_ids],
-            )
-            text_msg = await bot.send_message(
-                chat_id=CHANNEL_ID, text=caption, reply_markup=keyboard
-            )
-            message_ids = [msg.message_id for msg in sent] + [text_msg.message_id]
-        else:
-            msg = await bot.send_photo(
-                chat_id=CHANNEL_ID,
-                photo=photo_ids[0],
-                caption=caption,
-                reply_markup=keyboard,
-            )
-            message_ids = [msg.message_id]
+        donation = await get_donation(donation_id)
+        if not donation:
+            return
+        photo_ids = _donation_photo_ids(donation)
+        if not photo_ids:
+            return
+        msg = await bot.send_photo(
+            chat_id=CHANNEL_ID,
+            photo=await _channel_photo(bot, photo_ids),
+            caption=_channel_caption("available"),
+            reply_markup=_channel_keyboard(bot_username, donation_id, "available"),
+        )
+        await set_donation_channel_messages(donation_id, [msg.message_id])
     except Exception:
         logger.exception("Kanalga e'lon qilib bo'lmadi (ehson %s)", donation_id)
-        return
-    await set_donation_channel_messages(donation_id, message_ids)
 
 
-async def _refresh_channel_post(request: web.Request, donation_id: int, status: str) -> None:
-    """Holat matnini almashtiradi va ehson band qilinganda tugmani olib
-    tashlaydi. Albomda matn oxirgi xabarda, bitta rasmli postda esa
-    suratning sarlavhasida turadi."""
+async def _refresh_channel_post(
+    bot: Bot, bot_username: Optional[str], donation_id: int, status: str
+) -> None:
+    """Post sarlavhasidagi holatni yangilaydi va ehson band qilinganda
+    tugmani olib tashlaydi."""
     if not CHANNEL_ID:
         return
     donation = await get_donation(donation_id)
     message_ids = _channel_message_ids(donation)
     if not message_ids:
         return
-    caption = _channel_caption(status)
-    keyboard = _channel_keyboard(request, donation_id, status)
-    is_album = len(_donation_photo_ids(donation)) > 1
-    bot: Bot = request.app["bot"]
     try:
-        if is_album:
-            await bot.edit_message_text(
-                chat_id=CHANNEL_ID,
-                message_id=message_ids[-1],
-                text=caption,
-                reply_markup=keyboard,
-            )
-        else:
-            await bot.edit_message_caption(
-                chat_id=CHANNEL_ID,
-                message_id=message_ids[0],
-                caption=caption,
-                reply_markup=keyboard,
-            )
+        await bot.edit_message_caption(
+            chat_id=CHANNEL_ID,
+            message_id=message_ids[0],
+            caption=_channel_caption(status),
+            reply_markup=_channel_keyboard(bot_username, donation_id, status),
+        )
     except Exception:
         logger.exception("Kanal postini yangilab bo'lmadi (ehson %s)", donation_id)
 
 
-async def _remove_channel_post(request: web.Request, donation: dict) -> None:
+async def _remove_channel_post(bot: Bot, donation: dict) -> None:
     message_ids = _channel_message_ids(donation)
     if not CHANNEL_ID or not message_ids:
         return
-    bot: Bot = request.app["bot"]
     for message_id in message_ids:
         try:
             await bot.delete_message(chat_id=CHANNEL_ID, message_id=message_id)
@@ -450,7 +433,9 @@ async def api_create_reservation(request: web.Request) -> web.Response:
         donation_id, telegram_id, full_name, address, phone
     )
     await set_donation_status(donation_id, "reserved")
-    await _refresh_channel_post(request, donation_id, "reserved")
+    await _refresh_channel_post(
+        request.app["bot"], request.app.get("bot_username"), donation_id, "reserved"
+    )
 
     donor_lang = await _lang_for(donation["donor_id"])
     bot: Bot = request.app["bot"]
@@ -495,7 +480,9 @@ async def api_confirm_received(request: web.Request) -> web.Response:
     await set_reservation_received(reservation_id, dua_text)
     donation = await get_donation(reservation["donation_id"])
     await set_donation_status(donation["id"], "received")
-    await _refresh_channel_post(request, donation["id"], "received")
+    await _refresh_channel_post(
+        bot, request.app.get("bot_username"), donation["id"], "received"
+    )
 
     donor_lang = await _lang_for(donation["donor_id"])
     bot: Bot = request.app["bot"]
@@ -536,7 +523,9 @@ async def api_cancel_reservation(request: web.Request) -> web.Response:
     donation = await get_donation(reservation["donation_id"])
     await cancel_reservation(reservation_id)
     await set_donation_status(reservation["donation_id"], "available")
-    await _refresh_channel_post(request, reservation["donation_id"], "available")
+    await _refresh_channel_post(
+            bot, request.app.get("bot_username"), reservation["donation_id"], "available"
+        )
 
     if donation:
         donor_lang = await _lang_for(donation["donor_id"])
@@ -562,7 +551,7 @@ async def api_delete_donation(request: web.Request) -> web.Response:
     if donation["status"] != "available":
         raise web.HTTPConflict()
 
-    await _remove_channel_post(request, donation)
+    await _remove_channel_post(request.app["bot"], donation)
     await delete_donation(donation_id)
     return web.json_response({"ok": True})
 
@@ -637,7 +626,9 @@ async def api_create_donation(request: web.Request) -> web.Response:
         photo_file_ids=photo_file_ids,
         description=description,
     )
-    await _publish_to_channel(request, donation_id)
+    asyncio.create_task(
+        _publish_to_channel(bot, request.app.get("bot_username"), donation_id)
+    )
     return web.json_response({"ok": True, "donation_id": donation_id})
 
 
@@ -667,7 +658,9 @@ async def api_ship_reservation(request: web.Request) -> web.Response:
 
     await set_reservation_shipped(reservation_id, photo_file_id, receipt_note)
     await set_donation_status(donation["id"], "shipped")
-    await _refresh_channel_post(request, donation["id"], "shipped")
+    await _refresh_channel_post(
+        bot, request.app.get("bot_username"), donation["id"], "shipped"
+    )
 
     needy_lang = await _lang_for(reservation["needy_id"])
     await bot.send_photo(
