@@ -233,7 +233,7 @@
   .photo-preview-row { display: none; gap: 8px; align-items: center; margin-right: auto; }
   .photo-preview-row.show { display: flex; }
   .photo-preview-item { position: relative; flex-shrink: 0; }
-  .photo-preview-row img { width: 84px; height: 84px; object-fit: cover; border-radius: 12px; border: 1px solid var(--border); display: block; }
+  .photo-preview-row img { width: 84px; height: 84px; object-fit: cover; border-radius: 12px; border: 1px solid var(--border); display: block; cursor: zoom-in; }
   .photo-preview-remove {
     position: absolute; top: -6px; right: -6px; width: 20px; height: 20px; border-radius: 50%;
     background: rgba(0,0,0,0.65); color: #fff; border: none; padding: 0; line-height: 0;
@@ -1551,6 +1551,7 @@
           item.className = "photo-preview-item";
           var img = document.createElement("img");
           img.src = URL.createObjectURL(file);
+          img.addEventListener("click", function () { openImageLightbox(img.src); });
           var removeBtn = document.createElement("button");
           removeBtn.type = "button";
           removeBtn.className = "photo-preview-remove";
@@ -1848,6 +1849,7 @@
       item.className = "photo-preview-item";
       var img = document.createElement("img");
       img.src = URL.createObjectURL(selectedPhotoFile);
+      img.addEventListener("click", function () { openImageLightbox(img.src); });
       var removeBtn = document.createElement("button");
       removeBtn.type = "button";
       removeBtn.className = "photo-preview-remove";
