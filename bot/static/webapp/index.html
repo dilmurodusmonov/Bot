@@ -216,7 +216,17 @@
   .confirm-row { display: flex; gap: 8px; font-size: 14.5px; line-height: 1.45; word-break: break-word; }
   .confirm-row + .confirm-row { margin-top: 9px; }
   .confirm-row-icon { flex-shrink: 0; }
-  .confirm-row-img { width: 72px; height: 72px; object-fit: cover; border-radius: 10px; border: 1px solid var(--border); display: block; }
+  .confirm-row-img { width: 72px; height: 72px; object-fit: cover; border-radius: 10px; border: 1px solid var(--border); display: block; cursor: zoom-in; }
+  .img-lightbox {
+    position: fixed; inset: 0; background: rgba(0,0,0,0.88); z-index: 70;
+    display: flex; align-items: center; justify-content: center; padding: 24px;
+  }
+  .img-lightbox img { max-width: 100%; max-height: 100%; border-radius: 10px; display: block; }
+  .img-lightbox-close {
+    position: absolute; top: 16px; right: 16px; width: 36px; height: 36px; border-radius: 50%;
+    background: rgba(255,255,255,0.15); color: #fff; border: none;
+    display: flex; align-items: center; justify-content: center;
+  }
   .confirm-card .card-btn-outline { color: var(--hint); border-color: rgba(0,0,0,0.18); }
   .toast-text { font-size: 16px; font-weight: 700; color: #000; line-height: 1.4; }
   @keyframes toastPop { from { transform: scale(0.7); opacity: 0; } to { transform: scale(1); opacity: 1; } }
@@ -981,6 +991,23 @@
     return overlay;
   }
 
+  // Rasmni to'liq ekranda ochadi — chek kabi kichik eskizni tekshirib
+  // ko'rish uchun. Istalgan joyga bosilsa yopiladi.
+  function openImageLightbox(src) {
+    var box = document.createElement("div");
+    box.className = "img-lightbox";
+    var img = document.createElement("img");
+    img.src = src;
+    box.appendChild(img);
+    var closeBtn = document.createElement("button");
+    closeBtn.className = "img-lightbox-close";
+    closeBtn.innerHTML = ICONS.closeX;
+    box.appendChild(closeBtn);
+    function close() { if (box.parentNode) box.parentNode.removeChild(box); }
+    box.addEventListener("click", close);
+    document.body.appendChild(box);
+  }
+
   // Tasdiqlash oynasi: kiritilgan ma'lumotlarni ko'rsatadi va foydalanuvchi
   // "Ha" bosgandagina onYes chaqiriladi. O'zi yopilmaydi.
   function showConfirm(title, rows, onYes, onEdit) {
@@ -1007,6 +1034,7 @@
         var img = document.createElement("img");
         img.className = "confirm-row-img";
         img.src = row.image;
+        img.addEventListener("click", function () { openImageLightbox(row.image); });
         item.appendChild(img);
       } else {
         var value = document.createElement("span");
