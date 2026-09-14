@@ -241,8 +241,13 @@
   .img-lightbox {
     position: fixed; inset: 0; background: rgba(0,0,0,0.88); z-index: 70;
     display: flex; align-items: center; justify-content: center; padding: 24px;
+    overflow: hidden;
   }
-  .img-lightbox img { max-width: 100%; max-height: 100%; border-radius: 10px; display: block; }
+  .img-lightbox img {
+    max-width: 100%; max-height: 100%; border-radius: 10px; display: block;
+    touch-action: none; transform-origin: center center;
+  }
+  .img-lightbox img.animate { transition: transform 0.18s ease; }
   .img-lightbox-close {
     position: absolute; top: 16px; right: 16px; width: 36px; height: 36px; border-radius: 50%;
     background: rgba(255,255,255,0.15); color: #fff; border: none;
@@ -1045,19 +1050,114 @@
   }
 
   // Rasmni to'liq ekranda ochadi — chek kabi kichik eskizni tekshirib
-  // ko'rish uchun. Istalgan joyga bosilsa yopiladi.
+  // ko'rish uchun. Ikki barmoq bilan yaqinlashtirish/siljitish va ikki
+  // marta bosib kattalashtirish mumkin. Kattalashmagan holatda istalgan
+  // joyga bosilsa yopiladi.
   function openImageLightbox(src) {
     var box = document.createElement("div");
     box.className = "img-lightbox";
     var img = document.createElement("img");
     img.src = src;
+    img.draggable = false;
     box.appendChild(img);
     var closeBtn = document.createElement("button");
     closeBtn.className = "img-lightbox-close";
     closeBtn.innerHTML = ICONS.closeX;
     box.appendChild(closeBtn);
     function close() { if (box.parentNode) box.parentNode.removeChild(box); }
-    box.addEventListener("click", close);
+    closeBtn.addEventListener("click", function (e) { e.stopPropagation(); close(); });
+
+    var MAX_SCALE = 4, DOUBLE_TAP_SCALE = 2.4;
+    var scale = 1, panX = 0, panY = 0;
+    var pinchStartDist = 0, pinchStartScale = 1;
+    var dragging = false, dragStartX = 0, dragStartY = 0, panStartX = 0, panStartY = 0;
+    var moved = false, touchStartTime = 0, lastTapTime = 0;
+
+    function setTransform(animate) {
+      img.classList.toggle("animate", !!animate);
+      img.style.transform = "translate(" + panX + "px, " + panY + "px) scale(" + scale + ")";
+    }
+
+    function clampPan() {
+      var maxPanX = (img.offsetWidth * (scale - 1)) / 2;
+      var maxPanY = (img.offsetHeight * (scale - 1)) / 2;
+      panX = Math.max(-maxPanX, Math.min(maxPanX, panX));
+      panY = Math.max(-maxPanY, Math.min(maxPanY, panY));
+    }
+
+    function resetZoom(animate) {
+      scale = 1; panX = 0; panY = 0;
+      setTransform(animate);
+    }
+
+    function touchDist(t0, t1) {
+      var dx = t0.clientX - t1.clientX, dy = t0.clientY - t1.clientY;
+      return Math.sqrt(dx * dx + dy * dy);
+    }
+
+    img.addEventListener("touchstart", function (e) {
+      moved = false;
+      touchStartTime = Date.now();
+      if (e.touches.length === 2) {
+        pinchStartDist = touchDist(e.touches[0], e.touches[1]);
+        pinchStartScale = scale;
+      } else if (e.touches.length === 1 && scale > 1) {
+        dragging = true;
+        dragStartX = e.touches[0].clientX;
+        dragStartY = e.touches[0].clientY;
+        panStartX = panX;
+        panStartY = panY;
+      }
+    }, { passive: true });
+
+    img.addEventListener("touchmove", function (e) {
+      if (e.touches.length === 2) {
+        moved = true;
+        var d = touchDist(e.touches[0], e.touches[1]);
+        scale = Math.max(1, Math.min(MAX_SCALE, pinchStartScale * (d / pinchStartDist)));
+        clampPan();
+        setTransform(false);
+        e.preventDefault();
+      } else if (e.touches.length === 1 && dragging) {
+        moved = true;
+        panX = panStartX + (e.touches[0].clientX - dragStartX);
+        panY = panStartY + (e.touches[0].clientY - dragStartY);
+        clampPan();
+        setTransform(false);
+        e.preventDefault();
+      }
+    }, { passive: false });
+
+    img.addEventListener("touchend", function (e) {
+      dragging = false;
+      if (scale <= 1.02) {
+        resetZoom(true);
+      } else {
+        clampPan();
+        setTransform(true);
+      }
+      if (!moved && e.touches.length === 0 && Date.now() - touchStartTime < 300) {
+        var now = Date.now();
+        if (now - lastTapTime < 300) {
+          // Ikki marta bosildi — kattalashtirish yoki asl holatga qaytarish.
+          lastTapTime = 0;
+          if (scale > 1) {
+            resetZoom(true);
+          } else {
+            scale = DOUBLE_TAP_SCALE;
+            setTransform(true);
+          }
+        } else {
+          lastTapTime = now;
+        }
+      }
+    });
+
+    box.addEventListener("click", function () {
+      // Kattalashtirilgan holatda bosish yopmasin — faqat X tugmasi yopadi.
+      if (scale > 1) return;
+      close();
+    });
     document.body.appendChild(box);
   }
 
