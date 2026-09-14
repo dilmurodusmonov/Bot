@@ -496,6 +496,7 @@ async def api_confirm_received(request: web.Request) -> web.Response:
     if reservation["status"] != "shipped":
         raise web.HTTPConflict()
 
+    bot: Bot = request.app["bot"]
     await set_reservation_received(reservation_id, dua_text)
     donation = await get_donation(reservation["donation_id"])
     await set_donation_status(donation["id"], "received")
@@ -504,7 +505,6 @@ async def api_confirm_received(request: web.Request) -> web.Response:
     )
 
     donor_lang = await _lang_for(donation["donor_id"])
-    bot: Bot = request.app["bot"]
     await bot.send_message(
         donation["donor_id"],
         t(donor_lang, "received_notify_donor", dua_text=escape(dua_text, quote=False)),
@@ -539,16 +539,16 @@ async def api_cancel_reservation(request: web.Request) -> web.Response:
     if reservation["status"] != "reserved":
         raise web.HTTPConflict()
 
+    bot: Bot = request.app["bot"]
     donation = await get_donation(reservation["donation_id"])
     await cancel_reservation(reservation_id)
     await set_donation_status(reservation["donation_id"], "available")
     await _refresh_channel_post(
-            bot, request.app.get("bot_username"), reservation["donation_id"], "available"
-        )
+        bot, request.app.get("bot_username"), reservation["donation_id"], "available"
+    )
 
     if donation:
         donor_lang = await _lang_for(donation["donor_id"])
-        bot: Bot = request.app["bot"]
         await bot.send_message(
             donation["donor_id"],
             t(
