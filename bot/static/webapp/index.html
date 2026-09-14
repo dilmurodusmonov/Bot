@@ -198,6 +198,11 @@
   }
   .toast-emoji { display: block; font-size: 44px; line-height: 1; margin-bottom: 14px; }
   .toast-emoji.shake { transform-origin: 70% 70%; animation: toastShake 1.4s ease-in-out infinite; }
+  .toast-emoji.drive { animation: toastDrive 1.1s ease-in-out infinite; }
+  @keyframes toastDrive {
+    0%, 100% { transform: translateX(-6px); }
+    50% { transform: translateX(6px); }
+  }
   @keyframes toastShake {
     0%, 80%, 100% { transform: rotate(0deg); }
     15% { transform: rotate(-14deg); }
@@ -525,6 +530,7 @@
       error: "Xatolik yuz berdi, qayta urinib ko'ring.",
       already_taken: "Afsuski bu ehson allaqachon band qilingan.",
       reservation_saved: "Ushbu ehson band qilindi",
+      shipment_sent: "Ehson yo'lga chiqdi!",
       fill_all: "Iltimos, barcha maydonlarni to'ldiring.",
       thanks_confirmed: "Rahmat! Tasdiqlandi.",
       photo_label: "Rasm", choose_photo: "Rasm tanlash",
@@ -579,6 +585,7 @@
       error: "Произошла ошибка, попробуйте снова.",
       already_taken: "К сожалению, это пожертвование уже забронировано.",
       reservation_saved: "Это пожертвование забронировано",
+      shipment_sent: "Пожертвование в пути!",
       fill_all: "Пожалуйста, заполните все поля.",
       thanks_confirmed: "Спасибо! Подтверждено.",
       photo_label: "Фото", choose_photo: "Выбрать фото",
@@ -633,6 +640,7 @@
       error: "Something went wrong, please try again.",
       already_taken: "Sorry, this donation is already reserved.",
       reservation_saved: "This donation has been reserved",
+      shipment_sent: "Your donation is on the way!",
       fill_all: "Please fill in all fields.",
       thanks_confirmed: "Thank you! Confirmed.",
       photo_label: "Photo", choose_photo: "Choose photo",
@@ -687,6 +695,7 @@
       error: "Қате орын алды, қайта көріңіз.",
       already_taken: "Өкінішке орай, бұл қайыр әлдеқашан брондалған.",
       reservation_saved: "Бұл қайыр брондалды",
+      shipment_sent: "Қайыр жолда!",
       fill_all: "Барлық өрістерді толтырыңыз.",
       thanks_confirmed: "Рахмет! Расталды.",
       photo_label: "Сурет", choose_photo: "Сурет таңдау",
@@ -733,6 +742,7 @@
       error: "Хатогӣ рух дод, дубора кӯшиш кунед.",
       already_taken: "Мутаассифона, ин хайрия аллакай банд карда шудааст.",
       reservation_saved: "Ин хайрия банд карда шуд",
+      shipment_sent: "Хайрия дар роҳ аст!",
       fill_all: "Лутфан, ҳамаи майдонҳоро пур кунед.",
       thanks_confirmed: "Ташаккур! Тасдиқ шуд.",
       photo_label: "Расм", choose_photo: "Интихоби расм",
@@ -779,6 +789,7 @@
       error: "Ката кетти, кайра аракет кылыңыз.",
       already_taken: "Тилекке каршы, бул садага мурунтан эле брондолгон.",
       reservation_saved: "Бул садага брондолду",
+      shipment_sent: "Кайрымдуулук жолдо!",
       fill_all: "Бардык талааларды толтуруңуз.",
       thanks_confirmed: "Рахмат! Тастыкталды.",
       photo_label: "Сүрөт", choose_photo: "Сүрөт тандоо",
@@ -825,6 +836,7 @@
       error: "Ýalňyşlyk ýüze çykdy, gaýtadan synanyşyň.",
       already_taken: "Gynansak-da, bu sadaka eýýäm bronlandy.",
       reservation_saved: "Bu sadaka bronlandy",
+      shipment_sent: "Sadaka ýolda!",
       fill_all: "Ähli meýdanlary dolduryň.",
       thanks_confirmed: "Sag boluň! Tassyklandy.",
       photo_label: "Surat", choose_photo: "Surat saýlamak",
@@ -1838,9 +1850,14 @@
       })
         .then(function () {
           if (tg) { tg.MainButton.hideProgress(); if (tg.HapticFeedback) tg.HapticFeedback.notificationOccurred("success"); }
-          navStack = [{ screen: "home", params: {} }];
-          // Chek yuklangach ehson "Yo'lda" holatiga o'tadi.
-          goto("donor_cabinet", { activeTab: "shipped" }, false);
+          hideMainButton();
+          var sentOverlay = showSuccess(tr("shipment_sent"), "🚚", "drive");
+          setTimeout(function () {
+            if (sentOverlay.parentNode) sentOverlay.parentNode.removeChild(sentOverlay);
+            navStack = [{ screen: "home", params: {} }];
+            // Chek yuklangach ehson "Yo'lda" holatiga o'tadi.
+            goto("donor_cabinet", { activeTab: "shipped" }, false);
+          }, 5000);
         })
         .catch(function () {
           if (tg) tg.MainButton.hideProgress();
