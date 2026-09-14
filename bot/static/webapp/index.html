@@ -215,6 +215,12 @@
     49% { transform: rotate(-8deg); }
     65% { transform: rotate(5deg); }
   }
+  .toast-emoji.pop { animation: toastPopEmoji 1.1s ease-in-out infinite; }
+  @keyframes toastPopEmoji {
+    0%, 100% { transform: scale(1) rotate(0deg); }
+    30% { transform: scale(1.22) rotate(-10deg); }
+    60% { transform: scale(0.94) rotate(8deg); }
+  }
   .confirm-card { max-width: 320px; text-align: left; }
   .confirm-card .toast-text { text-align: center; margin-bottom: 14px; }
   .confirm-rows { background: var(--bg); border: 1px solid var(--border); border-radius: 12px; padding: 12px; }
@@ -1617,7 +1623,7 @@
             }
             // Tugmani o'chiramiz, aks holda 2 soniya ichida qayta bosilishi mumkin.
             hideMainButton();
-            var successOverlay = showSuccess(tr("donation_saved"));
+            var successOverlay = showSuccess(tr("donation_saved"), "🎉", "pop");
             setTimeout(function () {
               if (successOverlay.parentNode) successOverlay.parentNode.removeChild(successOverlay);
               navStack = [{ screen: "home", params: {} }];
