@@ -171,13 +171,6 @@
   .card-date { font-size: 11px; color: var(--hint); letter-spacing: 0.3px; margin-top: 2px; }
   .info-box { background: rgba(0,0,0,0.04); border-radius: 10px; padding: 10px 12px; font-size: 13.5px; line-height: 1.6; margin-top: 8px; }
   .info-box .row { display: flex; gap: 6px; }
-  .dua-hint {
-    display: flex; align-items: center; gap: 8px;
-    background: rgba(78,164,245,0.1); border: 1px solid rgba(78,164,245,0.22);
-    border-radius: 12px; padding: 12px 14px; font-size: 14px; line-height: 1.4;
-    color: var(--text); margin-bottom: 14px;
-  }
-  .dua-hint .dua-icon { font-size: 20px; flex-shrink: 0; }
   .card-btn {
     margin-top: 10px; width: 100%; background: linear-gradient(135deg, var(--accent1), var(--accent2));
     color: #fff; border: none; border-radius: 10px; padding: 12px; font-size: 14.5px; font-weight: 600;
@@ -205,6 +198,7 @@
   }
   .toast-emoji { display: block; font-size: 44px; line-height: 1; margin-bottom: 14px; }
   .toast-emoji.shake { transform-origin: 70% 70%; animation: toastShake 1.4s ease-in-out infinite; }
+  .toast-emoji.pulse { animation: duaPulse 1.6s ease-in-out infinite; }
   /* Kartochkadagi .truck-road bilan bir xil uslub: truck o'zi qotib
      turadi, ostidagi yo'l chizig'i orqaga siljib, oldinga
      harakatlanish taassurotini beradi. */
@@ -2236,7 +2230,6 @@
 
   function renderNeedyDuaForm() {
     app.innerHTML =
-      '<div class="dua-hint"><span class="dua-icon">🤲</span><span>' + tr("dua_hint") + "</span></div>" +
       "<label>" + tr("dua_label") + "</label>" +
       '<textarea id="dua-input" placeholder="' + escapeHtml(tr("dua_placeholder")) + '"></textarea>';
 
@@ -2244,9 +2237,14 @@
       api("POST", "/api/reservations/" + state.params.reservationId + "/receive", { dua_text: duaText })
         .then(function () {
           if (tg && tg.HapticFeedback) tg.HapticFeedback.notificationOccurred("success");
-          navStack = [{ screen: "home", params: {} }];
-          // Ehson endi "Qabul qilingan" lentasida turadi.
-          goto("needy_cabinet", { activeTab: "received" }, false);
+          hideMainButton();
+          var duaOverlay = showSuccess(tr("dua_hint"), "🤲", "pulse");
+          setTimeout(function () {
+            if (duaOverlay.parentNode) duaOverlay.parentNode.removeChild(duaOverlay);
+            navStack = [{ screen: "home", params: {} }];
+            // Ehson endi "Qabul qilingan" lentasida turadi.
+            goto("needy_cabinet", { activeTab: "received" }, false);
+          }, 5000);
         })
         .catch(function () {
           showError();
