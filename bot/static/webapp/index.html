@@ -171,6 +171,13 @@
   .card-date { font-size: 11px; color: var(--hint); letter-spacing: 0.3px; margin-top: 2px; }
   .info-box { background: rgba(0,0,0,0.04); border-radius: 10px; padding: 10px 12px; font-size: 13.5px; line-height: 1.6; margin-top: 8px; }
   .info-box .row { display: flex; gap: 6px; }
+  .dua-hint {
+    display: flex; align-items: center; gap: 8px;
+    background: rgba(78,164,245,0.1); border: 1px solid rgba(78,164,245,0.22);
+    border-radius: 12px; padding: 12px 14px; font-size: 14px; line-height: 1.4;
+    color: var(--text); margin-bottom: 14px;
+  }
+  .dua-hint .dua-icon { font-size: 20px; flex-shrink: 0; }
   .card-btn {
     margin-top: 10px; width: 100%; background: linear-gradient(135deg, var(--accent1), var(--accent2));
     color: #fff; border: none; border-radius: 10px; padding: 12px; font-size: 14.5px; font-weight: 600;
@@ -540,6 +547,7 @@
       confirm_delete_donation: "Ehsonni o'chirishga ishonchingiz komilmi?",
       confirm_cancel_reservation: "So'rovni bekor qilishga ishonchingiz komilmi?",
       dua_label: "Duo / minnatdorchilik so'zlaringiz", dua_placeholder: "Rahmat sizga...",
+      dua_hint: "Ehson egasini haqqiga duo qilib qoying...",
       submit: "Tasdiqlash", empty_requests: "Sizda hali so'rovlar yo'q.",
       error: "Xatolik yuz berdi, qayta urinib ko'ring.",
       already_taken: "Afsuski bu ehson allaqachon band qilingan.",
@@ -595,6 +603,7 @@
       confirm_delete_donation: "Вы уверены, что хотите удалить пожертвование?",
       confirm_cancel_reservation: "Вы уверены, что хотите отменить заявку?",
       dua_label: "Слова благодарности", dua_placeholder: "Спасибо вам...",
+      dua_hint: "Помолитесь за дарителя...",
       submit: "Подтвердить", empty_requests: "У вас пока нет заявок.",
       error: "Произошла ошибка, попробуйте снова.",
       already_taken: "К сожалению, это пожертвование уже забронировано.",
@@ -650,6 +659,7 @@
       confirm_delete_donation: "Are you sure you want to delete this donation?",
       confirm_cancel_reservation: "Are you sure you want to cancel this request?",
       dua_label: "Words of thanks", dua_placeholder: "Thank you...",
+      dua_hint: "Say a prayer for the donor...",
       submit: "Confirm", empty_requests: "You don't have any requests yet.",
       error: "Something went wrong, please try again.",
       already_taken: "Sorry, this donation is already reserved.",
@@ -705,6 +715,7 @@
       confirm_delete_donation: "Қайырды өшіруге сенімдісіз бе?",
       confirm_cancel_reservation: "Сұрауды бас тартуға сенімдісіз бе?",
       dua_label: "Алғыс/тілек сөздеріңіз", dua_placeholder: "Рахмет сізге...",
+      dua_hint: "Ехсон иесі үшін дұға қылыңыз...",
       submit: "Растау", empty_requests: "Сізде әлі сұраулар жоқ.",
       error: "Қате орын алды, қайта көріңіз.",
       already_taken: "Өкінішке орай, бұл қайыр әлдеқашан брондалған.",
@@ -752,6 +763,7 @@
       confirm_delete_donation: "Оё шумо мутмаин ҳастед, ки хайрияро нест кунед?",
       confirm_cancel_reservation: "Оё шумо мутмаин ҳастед, ки дархостро бекор кунед?",
       dua_label: "Дуо / суханони миннатдорӣ", dua_placeholder: "Ташаккур ба шумо...",
+      dua_hint: "Барои соҳиби эҳсон дуо кунед...",
       submit: "Тасдиқ", empty_requests: "Шумо ҳанӯз дархост надоред.",
       error: "Хатогӣ рух дод, дубора кӯшиш кунед.",
       already_taken: "Мутаассифона, ин хайрия аллакай банд карда шудааст.",
@@ -799,6 +811,7 @@
       confirm_delete_donation: "Садаганы өчүрүүгө ишенесизби?",
       confirm_cancel_reservation: "Суранычты жокко чыгарууга ишенесизби?",
       dua_label: "Дуба/ырахмат сөздөрүңүз", dua_placeholder: "Рахмат сизге...",
+      dua_hint: "Ехсон ээси үчүн дуба кылыңыз...",
       submit: "Тастыктоо", empty_requests: "Сизде азырынча суранычтар жок.",
       error: "Ката кетти, кайра аракет кылыңыз.",
       already_taken: "Тилекке каршы, бул садага мурунтан эле брондолгон.",
@@ -846,6 +859,7 @@
       confirm_delete_donation: "Sadakany öçürmäge ynanýarsyňyzmy?",
       confirm_cancel_reservation: "Sorag ýatyrmaga ynanýarsyňyzmy?",
       dua_label: "Doga/minnetdarlyk sözleriňiz", dua_placeholder: "Sag boluň...",
+      dua_hint: "Sadaka eýesi üçin doga ediň...",
       submit: "Tassyklamak", empty_requests: "Sizde entek sorag ýok.",
       error: "Ýalňyşlyk ýüze çykdy, gaýtadan synanyşyň.",
       already_taken: "Gynansak-da, bu sadaka eýýäm bronlandy.",
@@ -2222,6 +2236,7 @@
 
   function renderNeedyDuaForm() {
     app.innerHTML =
+      '<div class="dua-hint"><span class="dua-icon">🤲</span><span>' + tr("dua_hint") + "</span></div>" +
       "<label>" + tr("dua_label") + "</label>" +
       '<textarea id="dua-input" placeholder="' + escapeHtml(tr("dua_placeholder")) + '"></textarea>';
 
