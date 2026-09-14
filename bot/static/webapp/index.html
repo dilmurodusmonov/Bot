@@ -1866,7 +1866,7 @@
             api("POST", "/api/donations/" + donationId + "/delete", {})
               .then(function () {
                 if (tg && tg.HapticFeedback) tg.HapticFeedback.notificationOccurred("success");
-                var deletedOverlay = showSuccess(tr("donation_deleted"), "\uD83D\uDE13");
+                var deletedOverlay = showSuccess(tr("donation_deleted"), "\uD83D\uDE13", "shake");
                 setTimeout(function () {
                   if (deletedOverlay.parentNode) deletedOverlay.parentNode.removeChild(deletedOverlay);
                   renderDonorCabinet();
