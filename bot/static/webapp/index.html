@@ -1896,11 +1896,15 @@
       } else {
         // Kanaldagi "Ehsonni olish" havolasi orqali kelgan odam ham ehsonni
         // ola bilishi kerak — u hali "Muhtoj" rolini tanlamagan bo'lishi
-        // mumkin. O'z ehsonini esa hech kim band qila olmaydi.
+        // mumkin.
         var canReserve = state.me.role === "needy" || !!state.params.fromChannel;
+        // BETA: bitta test akkaunt bilan ham saxiy, ham muhtoj rolini
+        // sinash uchun "d.is_mine" tekshiruvi vaqtincha o'chirilgan.
+        // Ilova ishga tushirilganda "canReserve && !d.is_mine" qaytarilishi
+        // kerak — hozircha o'z ehsonini ham band qilib ko'rish mumkin.
         app.innerHTML = donations.map(function (d) {
           var body = donationCardHtml(d);
-          if (canReserve && !d.is_mine) {
+          if (canReserve) {
             body += '<button class="card-btn" data-take="' + d.id + '">' + tr("take_it") + "</button>";
           }
           return body + "</div></div>";
