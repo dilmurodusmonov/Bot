@@ -2475,6 +2475,17 @@
 
   var DEEPLINK_KEY = "ehson_deeplink_done";
 
+  // tg.initDataUnsafe.auth_date Mini App har safar YANGI ochilganda
+  // (jumladan xuddi shu havola qayta bosilganda) yangilanadi, lekin
+  // bitta ochilish ichida sahifa reload qilinsa o'zgarmay qoladi.
+  // Shuning uchun "bir marta ochish" belgisini id + auth_date juftligi
+  // bilan qo'yamiz: xuddi shu ochilishda qayta ishlanmaydi, lekin
+  // havola keyinroq (yangi auth_date bilan) yana bosilsa ishlayveradi.
+  function deepLinkSessionKey(id) {
+    var authDate = tg && tg.initDataUnsafe && tg.initDataUnsafe.auth_date;
+    return id + ":" + (authDate || "");
+  }
+
   function deepLinkDonationId() {
     var id = new URLSearchParams(location.search).get("d");
     if (!id && tg && tg.initDataUnsafe && tg.initDataUnsafe.start_param) {
@@ -2482,11 +2493,8 @@
       if (startParam.indexOf("d_") === 0) id = startParam.slice(2);
     }
     if (!id) return null;
-    // Telegram start_param'ni butun ilova seansi davomida saqlaydi,
-    // shuning uchun havola faqat bir marta ochiladi — aks holda har
-    // reload foydalanuvchini o'sha ehsonga qaytarib turardi.
     try {
-      if (sessionStorage.getItem(DEEPLINK_KEY) === id) return null;
+      if (sessionStorage.getItem(DEEPLINK_KEY) === deepLinkSessionKey(id)) return null;
     } catch (e) {}
     return id;
   }
@@ -2494,7 +2502,7 @@
   // Havoladan kelgan odam ehsonni olmoqchi, shuning uchun ehson muhtoj
   // tomonidagi ro'yxatda, "Qabul qilish" tugmasi bilan ochiladi.
   function openDeepLink(id) {
-    try { sessionStorage.setItem(DEEPLINK_KEY, id); } catch (e) {}
+    try { sessionStorage.setItem(DEEPLINK_KEY, deepLinkSessionKey(id)); } catch (e) {}
     api("GET", "/api/donation/" + id)
       .then(function (d) {
         navStack = [{ screen: "home", params: {} }];
