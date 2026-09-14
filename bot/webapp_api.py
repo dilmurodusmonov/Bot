@@ -442,9 +442,11 @@ async def api_create_reservation(request: web.Request) -> web.Response:
     donation = await get_donation(donation_id)
     if not donation or donation["status"] != "available":
         raise web.HTTPConflict(text="already reserved")
-    # O'z ehsonini band qilib bo'lmaydi.
-    if donation["donor_id"] == telegram_id:
-        raise web.HTTPForbidden(text="own donation")
+    # BETA: bitta test akkaunt bilan ham saxiy, ham muhtoj rolini sinash
+    # uchun o'z ehsonini band qilish vaqtincha ochiq qoldirildi. Ilova
+    # ishga tushirilganda quyidagi tekshiruv qaytarilishi kerak:
+    #   if donation["donor_id"] == telegram_id:
+    #       raise web.HTTPForbidden(text="own donation")
 
     reservation_id = await create_reservation(
         donation_id, telegram_id, full_name, address, phone
