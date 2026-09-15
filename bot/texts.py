@@ -61,12 +61,12 @@ TEXTS = {
         "open_app_button": "📱 Ilovani ochish",
         "new_reservation_for_donor": (
             "🔔 Ehsoningizga yangi so'rov!\n\n"
-            "Bo'lim: {category}\n"
-            "Ehson: {description}\n\n"
+            "Bo'lim: <b>{category}</b>\n"
+            "Ehson: <b>{description}</b>\n\n"
             "Muhtoj ma'lumotlari:\n"
-            "👤 {full_name}\n"
-            "📍 {address}\n"
-            "📞 {phone}\n\n"
+            "👤 <b>{full_name}</b>\n"
+            "📍 <b>{address}</b>\n"
+            "📞 <b>{phone}</b>\n\n"
             "Iltimos, ehsonni ko'rsatilgan manzilga yaqin kuryerlik orqali yuboring va \"Kabinet\" ilovasi orqali pochta chekini yuklang."
         ),
         "shipped_saved_donor": "✅ Rahmat! Ehson yo'lga chiqqanligi tasdiqlandi va Muhtojga xabar berildi.",
@@ -76,11 +76,11 @@ TEXTS = {
         ),
         "received_notify_donor": (
             "🎉 Ehsoningiz muvaffaqiyatli yetib bordi!\n\n"
-            "Muhtojning duosi/minnatdorchiligi:\n\"{dua_text}\""
+            "Muhtojning duosi/minnatdorchiligi:\n<b>\"{dua_text}\"</b>"
         ),
         "unknown_command": "Iltimos, \"Kabinet\" ilovasidan foydalaning.",
         "reservation_cancelled_notify_donor": (
-            "ℹ️ Muhtoj \"{description}\" ehsoningizga bo'lgan so'rovini bekor qildi.\n\n"
+            "ℹ️ Muhtoj <b>\"{description}\"</b> ehsoningizga bo'lgan so'rovini bekor qildi.\n\n"
             "Ehson yana \"mavjud\" holatiga qaytarildi."
         ),
     },
@@ -94,12 +94,12 @@ TEXTS = {
         "open_app_button": "📱 Открыть приложение",
         "new_reservation_for_donor": (
             "🔔 Новая заявка на ваше пожертвование!\n\n"
-            "Раздел: {category}\n"
-            "Пожертвование: {description}\n\n"
+            "Раздел: <b>{category}</b>\n"
+            "Пожертвование: <b>{description}</b>\n\n"
             "Данные нуждающегося:\n"
-            "👤 {full_name}\n"
-            "📍 {address}\n"
-            "📞 {phone}\n\n"
+            "👤 <b>{full_name}</b>\n"
+            "📍 <b>{address}</b>\n"
+            "📞 <b>{phone}</b>\n\n"
             "Пожалуйста, отправьте пожертвование по указанному адресу через ближайшую курьерскую службу и загрузите чек в приложении \"Kabinet\"."
         ),
         "shipped_saved_donor": "✅ Спасибо! Подтверждена отправка пожертвования, нуждающийся уведомлён.",
@@ -109,11 +109,11 @@ TEXTS = {
         ),
         "received_notify_donor": (
             "🎉 Ваше пожертвование успешно доставлено!\n\n"
-            "Слова благодарности от нуждающегося:\n\"{dua_text}\""
+            "Слова благодарности от нуждающегося:\n<b>\"{dua_text}\"</b>"
         ),
         "unknown_command": "Пожалуйста, используйте приложение \"Kabinet\".",
         "reservation_cancelled_notify_donor": (
-            "ℹ️ Нуждающийся отменил заявку на пожертвование \"{description}\".\n\n"
+            "ℹ️ Нуждающийся отменил заявку на пожертвование <b>\"{description}\"</b>.\n\n"
             "Пожертвование снова доступно."
         ),
     },
@@ -127,12 +127,12 @@ TEXTS = {
         "open_app_button": "📱 Open the app",
         "new_reservation_for_donor": (
             "🔔 New request for your donation!\n\n"
-            "Category: {category}\n"
-            "Donation: {description}\n\n"
+            "Category: <b>{category}</b>\n"
+            "Donation: <b>{description}</b>\n\n"
             "Recipient details:\n"
-            "👤 {full_name}\n"
-            "📍 {address}\n"
-            "📞 {phone}\n\n"
+            "👤 <b>{full_name}</b>\n"
+            "📍 <b>{address}</b>\n"
+            "📞 <b>{phone}</b>\n\n"
             "Please ship the donation to the given address via a nearby courier and upload the receipt in the \"Kabinet\" app."
         ),
         "shipped_saved_donor": "✅ Thank you! Shipment confirmed and the recipient has been notified.",
@@ -142,11 +142,11 @@ TEXTS = {
         ),
         "received_notify_donor": (
             "🎉 Your donation was successfully delivered!\n\n"
-            "Words of thanks from the recipient:\n\"{dua_text}\""
+            "Words of thanks from the recipient:\n<b>\"{dua_text}\"</b>"
         ),
         "unknown_command": "Please use the \"Kabinet\" app.",
         "reservation_cancelled_notify_donor": (
-            "ℹ️ The recipient cancelled their request for \"{description}\".\n\n"
+            "ℹ️ The recipient cancelled their request for <b>\"{description}\"</b>.\n\n"
             "The donation is available again."
         ),
     },
@@ -160,12 +160,12 @@ TEXTS = {
         "open_app_button": "📱 Қосымшаны ашу",
         "new_reservation_for_donor": (
             "🔔 Қайырыңызға жаңа сұрау!\n\n"
-            "Бөлім: {category}\n"
-            "Қайыр: {description}\n\n"
+            "Бөлім: <b>{category}</b>\n"
+            "Қайыр: <b>{description}</b>\n\n"
             "Мұқтаж мәліметтері:\n"
-            "👤 {full_name}\n"
-            "📍 {address}\n"
-            "📞 {phone}\n\n"
+            "👤 <b>{full_name}</b>\n"
+            "📍 <b>{address}</b>\n"
+            "📞 <b>{phone}</b>\n\n"
             "Қайырды көрсетілген мекенжайға жақын жеткізу қызметі арқылы жіберіп, \"Kabinet\" қосымшасы арқылы чекті жүктеңіз."
         ),
         "shipped_saved_donor": "✅ Рахмет! Қайырдың жолға шыққаны расталды және мұқтажға хабарланды.",
@@ -175,11 +175,11 @@ TEXTS = {
         ),
         "received_notify_donor": (
             "🎉 Қайырыңыз сәтті жетті!\n\n"
-            "Мұқтаждың алғысы/тілегі:\n\"{dua_text}\""
+            "Мұқтаждың алғысы/тілегі:\n<b>\"{dua_text}\"</b>"
         ),
         "unknown_command": "Өтінемін, \"Kabinet\" қосымшасын пайдаланыңыз.",
         "reservation_cancelled_notify_donor": (
-            "ℹ️ Мұқтаж \"{description}\" қайырыңызға деген сұрауын бас тартты.\n\n"
+            "ℹ️ Мұқтаж <b>\"{description}\"</b> қайырыңызға деген сұрауын бас тартты.\n\n"
             "Қайыр қайтадан \"қолжетімді\" күйіне қайтарылды."
         ),
     },
@@ -193,12 +193,12 @@ TEXTS = {
         "open_app_button": "📱 Кушодани барнома",
         "new_reservation_for_donor": (
             "🔔 Дархости нав ба хайрияи шумо!\n\n"
-            "Бахш: {category}\n"
-            "Хайрия: {description}\n\n"
+            "Бахш: <b>{category}</b>\n"
+            "Хайрия: <b>{description}</b>\n\n"
             "Маълумоти ниёзманд:\n"
-            "👤 {full_name}\n"
-            "📍 {address}\n"
-            "📞 {phone}\n\n"
+            "👤 <b>{full_name}</b>\n"
+            "📍 <b>{address}</b>\n"
+            "📞 <b>{phone}</b>\n\n"
             "Лутфан, хайрияро ба суроғаи нишондодашуда тавассути хидмати расонии наздик фиристед ва тавассути барномаи \"Kabinet\" чекро бор кунед."
         ),
         "shipped_saved_donor": "✅ Ташаккур! Фиристодани хайрия тасдиқ шуд ва ба ниёзманд хабар дода шуд.",
@@ -208,11 +208,11 @@ TEXTS = {
         ),
         "received_notify_donor": (
             "🎉 Хайрияи шумо бомуваффақият расид!\n\n"
-            "Дуо/суханони миннатдории ниёзманд:\n\"{dua_text}\""
+            "Дуо/суханони миннатдории ниёзманд:\n<b>\"{dua_text}\"</b>"
         ),
         "unknown_command": "Лутфан, аз барномаи \"Kabinet\" истифода баред.",
         "reservation_cancelled_notify_donor": (
-            "ℹ️ Ниёзманд дархости худро нисбат ба хайрияи \"{description}\" бекор кард.\n\n"
+            "ℹ️ Ниёзманд дархости худро нисбат ба хайрияи <b>\"{description}\"</b> бекор кард.\n\n"
             "Хайрия дубора ба ҳолати \"дастрас\" баргашт."
         ),
     },
@@ -226,12 +226,12 @@ TEXTS = {
         "open_app_button": "📱 Колдонмону ачуу",
         "new_reservation_for_donor": (
             "🔔 Садагаңызга жаңы сурам!\n\n"
-            "Бөлүм: {category}\n"
-            "Садага: {description}\n\n"
+            "Бөлүм: <b>{category}</b>\n"
+            "Садага: <b>{description}</b>\n\n"
             "Мукташ маалыматтары:\n"
-            "👤 {full_name}\n"
-            "📍 {address}\n"
-            "📞 {phone}\n\n"
+            "👤 <b>{full_name}</b>\n"
+            "📍 <b>{address}</b>\n"
+            "📞 <b>{phone}</b>\n\n"
             "Садаганы көрсөтүлгөн дарекке жакын жеткирүү кызматы аркылуу жөнөтүп, \"Kabinet\" колдонмосу аркылуу чекти жүктөңүз."
         ),
         "shipped_saved_donor": "✅ Рахмат! Садаганын жолго чыкканы тастыкталды жана мукташка билдирилди.",
@@ -241,11 +241,11 @@ TEXTS = {
         ),
         "received_notify_donor": (
             "🎉 Садагаңыз ийгиликтүү жетти!\n\n"
-            "Мукташтын дубасы/ыраазычылыгы:\n\"{dua_text}\""
+            "Мукташтын дубасы/ыраазычылыгы:\n<b>\"{dua_text}\"</b>"
         ),
         "unknown_command": "Сураныч, \"Kabinet\" колдонмосун колдонуңуз.",
         "reservation_cancelled_notify_donor": (
-            "ℹ️ Мукташ \"{description}\" садагаңызга болгон суранычын жокко чыгарды.\n\n"
+            "ℹ️ Мукташ <b>\"{description}\"</b> садагаңызга болгон суранычын жокко чыгарды.\n\n"
             "Садага кайра \"жеткиликтүү\" абалына кайтарылды."
         ),
     },
@@ -259,12 +259,12 @@ TEXTS = {
         "open_app_button": "📱 Programmany açmak",
         "new_reservation_for_donor": (
             "🔔 Sadakaňyza täze sorag!\n\n"
-            "Bölüm: {category}\n"
-            "Sadaka: {description}\n\n"
+            "Bölüm: <b>{category}</b>\n"
+            "Sadaka: <b>{description}</b>\n\n"
             "Mätäjiň maglumatlary:\n"
-            "👤 {full_name}\n"
-            "📍 {address}\n"
-            "📞 {phone}\n\n"
+            "👤 <b>{full_name}</b>\n"
+            "📍 <b>{address}</b>\n"
+            "📞 <b>{phone}</b>\n\n"
             "Sadakany görkezilen salga golaý eltip beriş gullugy arkaly iberip, \"Kabinet\" programmasy arkaly çeki ýükläň."
         ),
         "shipped_saved_donor": "✅ Sag boluň! Sadakanyň ýola çykandygy tassyklandy we mätäje habar berildi.",
@@ -274,11 +274,11 @@ TEXTS = {
         ),
         "received_notify_donor": (
             "🎉 Sadakaňyz üstünlikli gowuşdy!\n\n"
-            "Mätäjiň dogasy/minnetdarlygy:\n\"{dua_text}\""
+            "Mätäjiň dogasy/minnetdarlygy:\n<b>\"{dua_text}\"</b>"
         ),
         "unknown_command": "Haýyş, \"Kabinet\" programmasyny ulanyň.",
         "reservation_cancelled_notify_donor": (
-            "ℹ️ Mätäç \"{description}\" sadakaňyza bolan soragyny ýatyrdy.\n\n"
+            "ℹ️ Mätäç <b>\"{description}\"</b> sadakaňyza bolan soragyny ýatyrdy.\n\n"
             "Sadaka ýene-de \"elýeterli\" ýagdaýyna gaýtaryldy."
         ),
     },
