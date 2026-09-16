@@ -85,6 +85,14 @@ TEXTS = {
         ),
         "view_receipt_button": "🧾 Chekni ko'rish",
         "receipt_unavailable": "Chek topilmadi.",
+        "ship_reminder": (
+            "⏰ Eslatma! <b>{description}</b> ehsoningizni hali yo'lga chiqarmadingiz. "
+            "Iltimos, tezroq yuboring va \"Kabinet\" ilovasida chekni yuklang."
+        ),
+        "receive_reminder": (
+            "⏰ Eslatma! Ehsoningiz yo'lda, lekin hali qabul qilganingizni tasdiqlamadingiz. "
+            "Iltimos, \"Kabinet\" ilovasida tasdiqlang."
+        ),
     },
     "ru": {
         "choose_language": "🌐 Выберите язык:",
@@ -120,6 +128,14 @@ TEXTS = {
         ),
         "view_receipt_button": "🧾 Посмотреть чек",
         "receipt_unavailable": "Чек не найден.",
+        "ship_reminder": (
+            "⏰ Напоминание! Вы ещё не отправили пожертвование «<b>{description}</b>». "
+            "Пожалуйста, отправьте его как можно скорее и загрузите чек в приложении \"Kabinet\"."
+        ),
+        "receive_reminder": (
+            "⏰ Напоминание! Ваше пожертвование в пути, но вы ещё не подтвердили получение. "
+            "Пожалуйста, подтвердите в приложении \"Kabinet\"."
+        ),
     },
     "en": {
         "choose_language": "🌐 Choose your language:",
@@ -155,6 +171,14 @@ TEXTS = {
         ),
         "view_receipt_button": "🧾 View receipt",
         "receipt_unavailable": "Receipt not found.",
+        "ship_reminder": (
+            "⏰ Reminder! You haven't shipped your donation \"<b>{description}</b>\" yet. "
+            "Please ship it soon and upload the receipt in the \"Kabinet\" app."
+        ),
+        "receive_reminder": (
+            "⏰ Reminder! Your donation is on the way, but you haven't confirmed receipt yet. "
+            "Please confirm in the \"Kabinet\" app."
+        ),
     },
     "kk": {
         "choose_language": "🌐 Тілді таңдаңыз:",
@@ -190,6 +214,14 @@ TEXTS = {
         ),
         "view_receipt_button": "🧾 Чекті көру",
         "receipt_unavailable": "Чек табылмады.",
+        "ship_reminder": (
+            "⏰ Еске салу! Сіз әлі <b>«{description}»</b> қайырыңызды жолға шығармадыңыз. "
+            "Өтінемін, жақын арада жіберіп, \"Kabinet\" қосымшасында чекті жүктеңіз."
+        ),
+        "receive_reminder": (
+            "⏰ Еске салу! Қайырыңыз жолда, бірақ сіз әлі қабылдағаныңызды растамадыңыз. "
+            "Өтінемін, \"Kabinet\" қосымшасында растаңыз."
+        ),
     },
     "tg": {
         "choose_language": "🌐 Забонро интихоб кунед:",
@@ -225,6 +257,14 @@ TEXTS = {
         ),
         "view_receipt_button": "🧾 Дидани чек",
         "receipt_unavailable": "Чек ёфт нашуд.",
+        "ship_reminder": (
+            "⏰ Ёдоварӣ! Шумо ҳанӯз хайрияи <b>«{description}»</b>-ро нафиристодаед. "
+            "Лутфан, наздиктар фиристед ва дар барномаи \"Kabinet\" чекро бор кунед."
+        ),
+        "receive_reminder": (
+            "⏰ Ёдоварӣ! Хайрияи шумо дар роҳ аст, аммо шумо ҳанӯз қабул карданатонро тасдиқ накардаед. "
+            "Лутфан, дар барномаи \"Kabinet\" тасдиқ кунед."
+        ),
     },
     "ky": {
         "choose_language": "🌐 Тилди тандаңыз:",
@@ -260,6 +300,14 @@ TEXTS = {
         ),
         "view_receipt_button": "🧾 Чекти көрүү",
         "receipt_unavailable": "Чек табылган жок.",
+        "ship_reminder": (
+            "⏰ Эскертүү! Сиз әли <b>«{description}»</b> садагаңызды жолго чыгарган жоксуз. "
+            "Сураныч, жакын арада жөнөтүп, \"Kabinet\" колдонмосунда чекти жүктөңүз."
+        ),
+        "receive_reminder": (
+            "⏰ Эскертүү! Садагаңыз жолдо, бирок сиз әли кабыл алганыңызды тастыктаган жоксуз. "
+            "Сураныч, \"Kabinet\" колдонмосунда тастыктаңыз."
+        ),
     },
     "tk": {
         "choose_language": "🌐 Dili saýlaň:",
@@ -295,6 +343,14 @@ TEXTS = {
         ),
         "view_receipt_button": "🧾 Çeki görmek",
         "receipt_unavailable": "Çek tapylmady.",
+        "ship_reminder": (
+            "⏰ Ýatlatma! Siz entäk <b>«{description}»</b> sadakaňyzy ýola çykarmadyňyz. "
+            "Haýyş, ýakyn wagtda iberiň we \"Kabinet\" programmasynda çeki ýükläň."
+        ),
+        "receive_reminder": (
+            "⏰ Ýatlatma! Sadakaňyz ýolda, ýöne siz entäk kabul edendigiňizi tassyklamadyňyz. "
+            "Haýyş, \"Kabinet\" programmasynda tassyklaň."
+        ),
     },
 }
 
