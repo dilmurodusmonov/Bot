@@ -11,7 +11,14 @@ from aiogram.types import (
 )
 
 from bot.config import WEBAPP_URL
-from bot.database import create_user_if_missing, get_user, set_user_language, set_user_role
+from bot.database import (
+    create_user_if_missing,
+    get_donation,
+    get_reservation,
+    get_user,
+    set_user_language,
+    set_user_role,
+)
 from bot.keyboards import language_keyboard, role_keyboard
 from bot.texts import t
 from bot.utils import get_lang
@@ -88,6 +95,26 @@ async def role_chosen(callback: CallbackQuery, state: FSMContext) -> None:
 
     await callback.message.edit_text(t(lang, "role_donor" if role == "donor" else "role_needy"))
     await _show_open_app_button(callback.message, lang)
+    await callback.answer()
+
+
+@router.callback_query(F.data.startswith("receipt:"))
+async def show_receipt(callback: CallbackQuery) -> None:
+    """Bot chatidagi "Chekni ko'rish" tugmasi — chek rasmi xabar
+    ichida doim ko'rinib turish o'rniga, faqat bosilganda yuboriladi."""
+    lang = await get_lang(callback.from_user.id)
+    reservation_id = int(callback.data.split(":", 1)[1])
+    reservation = await get_reservation(reservation_id)
+    donation = await get_donation(reservation["donation_id"]) if reservation else None
+
+    allowed = reservation and donation and callback.from_user.id in (
+        reservation["needy_id"], donation["donor_id"],
+    )
+    if not allowed or not reservation.get("receipt_photo_file_id"):
+        await callback.answer(t(lang, "receipt_unavailable"), show_alert=True)
+        return
+
+    await callback.message.answer_photo(reservation["receipt_photo_file_id"])
     await callback.answer()
 
 

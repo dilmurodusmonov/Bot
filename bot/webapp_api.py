@@ -98,6 +98,19 @@ def _channel_caption(
     return f'<a href="{escape(url)}">{label}</a>' if url else label
 
 
+def _receipt_keyboard(lang: str, reservation_id: int) -> InlineKeyboardMarkup:
+    """Bot chatida chek rasmini katta holda ko'rsatish o'rniga, qisqa
+    matnli xabar ostiga tugma qo'yiladi — bosilganda chek alohida
+    rasm sifatida yuboriladi (bot/handlers/start.py'dagi
+    "receipt:" callback handleri orqali)."""
+    return InlineKeyboardMarkup(inline_keyboard=[[
+        InlineKeyboardButton(
+            text=t(lang, "view_receipt_button"),
+            callback_data=f"receipt:{reservation_id}",
+        )
+    ]])
+
+
 def _channel_keyboard(
     bot_username: Optional[str], donation_id: int, status: str
 ) -> Optional[InlineKeyboardMarkup]:
@@ -668,12 +681,20 @@ async def api_ship_reservation(request: web.Request) -> web.Response:
     lang = await _lang_for(telegram_id)
     bot: Bot = request.app["bot"]
 
+    # file_id olishning yagona yo'li — suratni yuborish. Bot chatini
+    # katta rasm bilan band qilmaslik uchun xabar darhol o'chiriladi
+    # (o'chirilgan xabarning file_id'si amal qilishda davom etadi),
+    # o'rniga qisqa matnli xabar + "Chekni ko'rish" tugmasi yuboriladi.
     sent = await bot.send_photo(
         chat_id=telegram_id,
         photo=BufferedInputFile(photo_bytes, filename=filename),
-        caption=t(lang, "shipped_saved_donor"),
+        disable_notification=True,
     )
     photo_file_id = sent.photo[-1].file_id
+    try:
+        await bot.delete_message(chat_id=telegram_id, message_id=sent.message_id)
+    except TelegramAPIError:
+        pass
 
     await set_reservation_shipped(reservation_id, photo_file_id, receipt_note)
     await set_donation_status(donation["id"], "shipped")
@@ -681,11 +702,17 @@ async def api_ship_reservation(request: web.Request) -> web.Response:
         bot, request.app.get("bot_username"), donation["id"], "shipped"
     )
 
+    await bot.send_message(
+        telegram_id,
+        t(lang, "shipped_saved_donor"),
+        reply_markup=_receipt_keyboard(lang, reservation_id),
+    )
+
     needy_lang = await _lang_for(reservation["needy_id"])
-    await bot.send_photo(
-        chat_id=reservation["needy_id"],
-        photo=photo_file_id,
-        caption=t(needy_lang, "shipped_notify_needy"),
+    await bot.send_message(
+        reservation["needy_id"],
+        t(needy_lang, "shipped_notify_needy"),
+        reply_markup=_receipt_keyboard(needy_lang, reservation_id),
     )
     return web.json_response({"ok": True})
 
