@@ -40,6 +40,8 @@ from bot.database import (
     get_user,
     set_donation_channel_messages,
     set_donation_status,
+    set_donor_notify_message,
+    set_needy_notify_message,
     set_reservation_received,
     set_reservation_shipped,
     set_user_language,
@@ -219,6 +221,26 @@ async def _require_user_id(request: web.Request) -> int:
 async def _lang_for(telegram_id: int) -> str:
     user = await get_user(telegram_id)
     return (user and user["language"]) or "uz"
+
+
+async def _send_tracked_message(
+    bot: Bot,
+    chat_id: int,
+    old_message_id: Optional[int],
+    text: str,
+    reply_markup: Optional[InlineKeyboardMarkup] = None,
+) -> int:
+    """Ehsonning holati o'zgarganda, shu ehsonga oid oldingi bildirishnoma
+    xabari o'chirilib, o'rniga yangisi yuboriladi — bot chatida eskirgan
+    holat xabarlari to'planib qolmasligi uchun (masalan, "yangi so'rov"
+    xabari ehson yo'lga chiqqanda o'chadi)."""
+    if old_message_id:
+        try:
+            await bot.delete_message(chat_id=chat_id, message_id=old_message_id)
+        except TelegramAPIError:
+            pass
+    sent = await bot.send_message(chat_id, text, reply_markup=reply_markup)
+    return sent.message_id
 
 
 async def _read_multipart_photo(request: web.Request) -> tuple[dict, bytes, str]:
@@ -471,8 +493,10 @@ async def api_create_reservation(request: web.Request) -> web.Response:
 
     donor_lang = await _lang_for(donation["donor_id"])
     bot: Bot = request.app["bot"]
-    await bot.send_message(
+    message_id = await _send_tracked_message(
+        bot,
         donation["donor_id"],
+        None,
         t(
             donor_lang,
             "new_reservation_for_donor",
@@ -492,6 +516,7 @@ async def api_create_reservation(request: web.Request) -> web.Response:
             if WEBAPP_URL else None
         ),
     )
+    await set_donor_notify_message(reservation_id, message_id)
     return web.json_response({"ok": True, "reservation_id": reservation_id})
 
 
@@ -518,10 +543,25 @@ async def api_confirm_received(request: web.Request) -> web.Response:
     )
 
     donor_lang = await _lang_for(donation["donor_id"])
-    await bot.send_message(
+    donor_message_id = await _send_tracked_message(
+        bot,
         donation["donor_id"],
+        reservation["donor_notify_message_id"],
         t(donor_lang, "received_notify_donor", dua_text=escape(dua_text, quote=False)),
     )
+    await set_donor_notify_message(reservation_id, donor_message_id)
+
+    # Muhtojning o'zi qabulni tasdiqlayapti — unga yangi xabar kerak emas,
+    # faqat "Yo'lda" bildirishnomasi endi eskirgani uchun o'chiriladi.
+    if reservation["needy_notify_message_id"]:
+        try:
+            await bot.delete_message(
+                chat_id=reservation["needy_id"],
+                message_id=reservation["needy_notify_message_id"],
+            )
+        except TelegramAPIError:
+            pass
+        await set_needy_notify_message(reservation_id, None)
     return web.json_response({"ok": True})
 
 
@@ -562,8 +602,13 @@ async def api_cancel_reservation(request: web.Request) -> web.Response:
 
     if donation:
         donor_lang = await _lang_for(donation["donor_id"])
-        await bot.send_message(
+        # Bekor qilingan bronning yozuvi o'chirilgani uchun (cancel_reservation)
+        # yangi xabar id'ini saqlashning hojati yo'q — bu bronning tsikli
+        # shu yerda tugaydi.
+        await _send_tracked_message(
+            bot,
             donation["donor_id"],
+            reservation["donor_notify_message_id"],
             t(
                 donor_lang,
                 "reservation_cancelled_notify_donor",
@@ -702,18 +747,24 @@ async def api_ship_reservation(request: web.Request) -> web.Response:
         bot, request.app.get("bot_username"), donation["id"], "shipped"
     )
 
-    await bot.send_message(
+    donor_message_id = await _send_tracked_message(
+        bot,
         telegram_id,
+        reservation["donor_notify_message_id"],
         t(lang, "shipped_saved_donor"),
         reply_markup=_receipt_keyboard(lang, reservation_id),
     )
+    await set_donor_notify_message(reservation_id, donor_message_id)
 
     needy_lang = await _lang_for(reservation["needy_id"])
-    await bot.send_message(
+    needy_message_id = await _send_tracked_message(
+        bot,
         reservation["needy_id"],
+        reservation["needy_notify_message_id"],
         t(needy_lang, "shipped_notify_needy"),
         reply_markup=_receipt_keyboard(needy_lang, reservation_id),
     )
+    await set_needy_notify_message(reservation_id, needy_message_id)
     return web.json_response({"ok": True})
 
 
