@@ -37,6 +37,8 @@ CREATE TABLE IF NOT EXISTS reservations (
     receipt_note TEXT,
     dua_text TEXT,
     status TEXT NOT NULL DEFAULT 'reserved',
+    donor_notify_message_id BIGINT,
+    needy_notify_message_id BIGINT,
     created_at TIMESTAMPTZ NOT NULL DEFAULT now(),
     shipped_at TIMESTAMPTZ,
     received_at TIMESTAMPTZ
@@ -73,6 +75,7 @@ async def init_db() -> None:
         await _migrate_donation_photos(conn)
         await _migrate_donation_share_count(conn)
         await _migrate_donation_channel_message(conn)
+        await _migrate_reservation_notify_messages(conn)
 
 
 async def _migrate_ad_stats(conn: asyncpg.Connection) -> None:
@@ -112,6 +115,17 @@ async def _migrate_donation_channel_message(conn: asyncpg.Connection) -> None:
     sifatida saqlanadi. Avvalgi bitta butun sonli ustun ko'chiriladi."""
     await conn.execute(
         "ALTER TABLE donations ADD COLUMN IF NOT EXISTS channel_message_ids TEXT"
+    )
+
+
+async def _migrate_reservation_notify_messages(conn: asyncpg.Connection) -> None:
+    """Bot chatida holat almashganda eskirgan bildirishnoma xabari
+    o'chirilishi uchun, oxirgi yuborilgan xabar id'si saqlanadi."""
+    await conn.execute(
+        "ALTER TABLE reservations ADD COLUMN IF NOT EXISTS donor_notify_message_id BIGINT"
+    )
+    await conn.execute(
+        "ALTER TABLE reservations ADD COLUMN IF NOT EXISTS needy_notify_message_id BIGINT"
     )
     has_old = await conn.fetchval(
         """SELECT EXISTS (
@@ -287,6 +301,20 @@ async def get_reservations_by_needy(needy_id: int) -> list[dict[str, Any]]:
         needy_id,
     )
     return [dict(row) for row in rows]
+
+
+async def set_donor_notify_message(reservation_id: int, message_id: Optional[int]) -> None:
+    await _get_pool().execute(
+        "UPDATE reservations SET donor_notify_message_id = $1 WHERE id = $2",
+        message_id, reservation_id,
+    )
+
+
+async def set_needy_notify_message(reservation_id: int, message_id: Optional[int]) -> None:
+    await _get_pool().execute(
+        "UPDATE reservations SET needy_notify_message_id = $1 WHERE id = $2",
+        message_id, reservation_id,
+    )
 
 
 async def set_reservation_shipped(
