@@ -101,16 +101,18 @@ def _channel_caption(
     return f'<a href="{escape(url)}">{label}</a>' if url else label
 
 
-def _receipt_keyboard(lang: str, reservation_id: int) -> InlineKeyboardMarkup:
+def _receipt_keyboard(
+    lang: str, reservation_id: int, screen: str
+) -> Optional[InlineKeyboardMarkup]:
     """Bot chatida chek rasmini katta holda ko'rsatish o'rniga, qisqa
-    matnli xabar ostiga tugma qo'yiladi — bosilganda chek alohida
-    rasm sifatida yuboriladi (bot/handlers/start.py'dagi
-    "receipt:" callback handleri orqali)."""
+    matnli xabar ostiga tugma qo'yiladi — bosilganda Mini App aynan
+    shu chekni ko'rsatadigan bo'limda ochiladi (deep-link, bootstrap
+    kodidagi "r" parametri orqali)."""
+    if not WEBAPP_URL:
+        return None
+    url = f"{WEBAPP_URL}&screen={screen}&activeTab=shipped&r={reservation_id}"
     return InlineKeyboardMarkup(inline_keyboard=[[
-        InlineKeyboardButton(
-            text=t(lang, "view_receipt_button"),
-            callback_data=f"receipt:{reservation_id}",
-        )
+        InlineKeyboardButton(text=t(lang, "view_receipt_button"), web_app=WebAppInfo(url=url))
     ]])
 
 
@@ -405,6 +407,11 @@ async def api_my_donations(request: web.Request) -> web.Response:
                     "phone": res["phone"],
                     "status": res["status"],
                     "dua_text": res["dua_text"],
+                    "receipt_photo_url": (
+                        f"/api/photo/{res['receipt_photo_file_id']}"
+                        if res["receipt_photo_file_id"]
+                        else None
+                    ),
                 }
         result.append(item)
     return web.json_response(result)
@@ -733,7 +740,7 @@ async def api_ship_reservation(request: web.Request) -> web.Response:
         telegram_id,
         reservation["donor_notify_message_id"],
         t(lang, "shipped_saved_donor"),
-        reply_markup=_receipt_keyboard(lang, reservation_id),
+        reply_markup=_receipt_keyboard(lang, reservation_id, "donor_cabinet"),
     )
     await set_donor_notify_message(reservation_id, donor_message_id)
 
@@ -743,7 +750,7 @@ async def api_ship_reservation(request: web.Request) -> web.Response:
         reservation["needy_id"],
         reservation["needy_notify_message_id"],
         t(needy_lang, "shipped_notify_needy"),
-        reply_markup=_receipt_keyboard(needy_lang, reservation_id),
+        reply_markup=_receipt_keyboard(needy_lang, reservation_id, "needy_cabinet"),
     )
     await set_needy_notify_message(reservation_id, needy_message_id)
     return web.json_response({"ok": True})

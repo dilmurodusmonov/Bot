@@ -69,7 +69,7 @@ TEXTS = {
             "📞 <b>{phone}</b>\n\n"
             "Iltimos, ehsonni ko'rsatilgan manzilga yaqin kuryerlik orqali yuboring va \"Kabinet\" ilovasi orqali pochta chekini yuklang."
         ),
-        "shipped_saved_donor": "✅ Rahmat! Ehson yo'lga chiqqanligi tasdiqlandi va Muhtojga xabar berildi.",
+        "shipped_saved_donor": "✅ Rahmat! Ehson yo'lga chiqqanligi tasdiqlandi va Muhtojga xabar berildi. Muhtoj tasdiqlaganda sizga xabar beramiz.",
         "shipped_notify_needy": (
             "📦 Xushxabar! Sizning ehsoningiz yo'lga chiqdi.\n\n"
             "Pochta cheki quyida biriktirilgan. Ehson qo'lingizga tegishi bilan \"Kabinet\" ilovasida qabul qilganingizni tasdiqlang."
@@ -84,7 +84,6 @@ TEXTS = {
             "Ehson yana \"mavjud\" holatiga qaytarildi."
         ),
         "view_receipt_button": "🧾 Chekni ko'rish",
-        "receipt_unavailable": "Chek topilmadi.",
         "ship_reminder": (
             "⏰ Eslatma! <b>{description}</b> ehsoningizni hali yo'lga chiqarmadingiz. "
             "Iltimos, tezroq yuboring va \"Kabinet\" ilovasida chekni yuklang."
@@ -112,7 +111,7 @@ TEXTS = {
             "📞 <b>{phone}</b>\n\n"
             "Пожалуйста, отправьте пожертвование по указанному адресу через ближайшую курьерскую службу и загрузите чек в приложении \"Kabinet\"."
         ),
-        "shipped_saved_donor": "✅ Спасибо! Подтверждена отправка пожертвования, нуждающийся уведомлён.",
+        "shipped_saved_donor": "✅ Спасибо! Подтверждена отправка пожертвования, нуждающийся уведомлён. Как только он подтвердит получение, мы сообщим вам.",
         "shipped_notify_needy": (
             "📦 Хорошая новость! Ваше пожертвование в пути.\n\n"
             "Почтовый чек прикреплён ниже. Когда получите посылку, подтвердите получение в приложении \"Kabinet\"."
@@ -127,7 +126,6 @@ TEXTS = {
             "Пожертвование снова доступно."
         ),
         "view_receipt_button": "🧾 Посмотреть чек",
-        "receipt_unavailable": "Чек не найден.",
         "ship_reminder": (
             "⏰ Напоминание! Вы ещё не отправили пожертвование «<b>{description}</b>». "
             "Пожалуйста, отправьте его как можно скорее и загрузите чек в приложении \"Kabinet\"."
@@ -155,7 +153,7 @@ TEXTS = {
             "📞 <b>{phone}</b>\n\n"
             "Please ship the donation to the given address via a nearby courier and upload the receipt in the \"Kabinet\" app."
         ),
-        "shipped_saved_donor": "✅ Thank you! Shipment confirmed and the recipient has been notified.",
+        "shipped_saved_donor": "✅ Thank you! Shipment confirmed and the recipient has been notified. We'll let you know once they confirm receipt.",
         "shipped_notify_needy": (
             "📦 Good news! Your donation is on the way.\n\n"
             "The shipping receipt is attached below. Confirm receipt in the \"Kabinet\" app once you get the package."
@@ -170,7 +168,6 @@ TEXTS = {
             "The donation is available again."
         ),
         "view_receipt_button": "🧾 View receipt",
-        "receipt_unavailable": "Receipt not found.",
         "ship_reminder": (
             "⏰ Reminder! You haven't shipped your donation \"<b>{description}</b>\" yet. "
             "Please ship it soon and upload the receipt in the \"Kabinet\" app."
@@ -198,7 +195,7 @@ TEXTS = {
             "📞 <b>{phone}</b>\n\n"
             "Қайырды көрсетілген мекенжайға жақын жеткізу қызметі арқылы жіберіп, \"Kabinet\" қосымшасы арқылы чекті жүктеңіз."
         ),
-        "shipped_saved_donor": "✅ Рахмет! Қайырдың жолға шыққаны расталды және мұқтажға хабарланды.",
+        "shipped_saved_donor": "✅ Рахмет! Қайырдың жолға шыққаны расталды және мұқтажға хабарланды. Мұқтаж растаған кезде сізге хабарлаймыз.",
         "shipped_notify_needy": (
             "📦 Қуанышты хабар! Сіздің қайырыңыз жолға шықты.\n\n"
             "Пошта чегі төменде тіркелген. Қайыр қолыңызға тигенде \"Kabinet\" қосымшасында қабылдағаныңызды растаңыз."
@@ -213,7 +210,6 @@ TEXTS = {
             "Қайыр қайтадан \"қолжетімді\" күйіне қайтарылды."
         ),
         "view_receipt_button": "🧾 Чекті көру",
-        "receipt_unavailable": "Чек табылмады.",
         "ship_reminder": (
             "⏰ Еске салу! Сіз әлі <b>«{description}»</b> қайырыңызды жолға шығармадыңыз. "
             "Өтінемін, жақын арада жіберіп, \"Kabinet\" қосымшасында чекті жүктеңіз."
@@ -241,7 +237,7 @@ TEXTS = {
             "📞 <b>{phone}</b>\n\n"
             "Лутфан, хайрияро ба суроғаи нишондодашуда тавассути хидмати расонии наздик фиристед ва тавассути барномаи \"Kabinet\" чекро бор кунед."
         ),
-        "shipped_saved_donor": "✅ Ташаккур! Фиристодани хайрия тасдиқ шуд ва ба ниёзманд хабар дода шуд.",
+        "shipped_saved_donor": "✅ Ташаккур! Фиристодани хайрия тасдиқ шуд ва ба ниёзманд хабар дода шуд. Ҳангоми тасдиқи қабули ниёзманд ба шумо хабар медиҳем.",
         "shipped_notify_needy": (
             "📦 Хушхабар! Хайрияи шумо дар роҳ аст.\n\n"
             "Чеки почта дар поён замима шудааст. Ҳамин ки хайрия ба дастатон расид, дар барномаи \"Kabinet\" қабул карданатонро тасдиқ кунед."
@@ -256,7 +252,6 @@ TEXTS = {
             "Хайрия дубора ба ҳолати \"дастрас\" баргашт."
         ),
         "view_receipt_button": "🧾 Дидани чек",
-        "receipt_unavailable": "Чек ёфт нашуд.",
         "ship_reminder": (
             "⏰ Ёдоварӣ! Шумо ҳанӯз хайрияи <b>«{description}»</b>-ро нафиристодаед. "
             "Лутфан, наздиктар фиристед ва дар барномаи \"Kabinet\" чекро бор кунед."
@@ -284,7 +279,7 @@ TEXTS = {
             "📞 <b>{phone}</b>\n\n"
             "Садаганы көрсөтүлгөн дарекке жакын жеткирүү кызматы аркылуу жөнөтүп, \"Kabinet\" колдонмосу аркылуу чекти жүктөңүз."
         ),
-        "shipped_saved_donor": "✅ Рахмат! Садаганын жолго чыкканы тастыкталды жана мукташка билдирилди.",
+        "shipped_saved_donor": "✅ Рахмат! Садаганын жолго чыкканы тастыкталды жана мукташка билдирилди. Мукташ тастыктаганда сизге билдиребиз.",
         "shipped_notify_needy": (
             "📦 Кубанычтуу кабар! Сиздин садагаңыз жолдо.\n\n"
             "Почта чеги төмөндө тиркелген. Садага колуңузга тийери менен \"Kabinet\" колдонмосунда кабыл алганыңызды тастыктаңыз."
@@ -299,7 +294,6 @@ TEXTS = {
             "Садага кайра \"жеткиликтүү\" абалына кайтарылды."
         ),
         "view_receipt_button": "🧾 Чекти көрүү",
-        "receipt_unavailable": "Чек табылган жок.",
         "ship_reminder": (
             "⏰ Эскертүү! Сиз әли <b>«{description}»</b> садагаңызды жолго чыгарган жоксуз. "
             "Сураныч, жакын арада жөнөтүп, \"Kabinet\" колдонмосунда чекти жүктөңүз."
@@ -327,7 +321,7 @@ TEXTS = {
             "📞 <b>{phone}</b>\n\n"
             "Sadakany görkezilen salga golaý eltip beriş gullugy arkaly iberip, \"Kabinet\" programmasy arkaly çeki ýükläň."
         ),
-        "shipped_saved_donor": "✅ Sag boluň! Sadakanyň ýola çykandygy tassyklandy we mätäje habar berildi.",
+        "shipped_saved_donor": "✅ Sag boluň! Sadakanyň ýola çykandygy tassyklandy we mätäje habar berildi. Mätäç tassyklanda size habar bereris.",
         "shipped_notify_needy": (
             "📦 Guwandyryjy habar! Siziň sadakaňyz ýolda.\n\n"
             "Poçta çeki aşakda goşulan. Sadaka eliňize gowşanda \"Kabinet\" programmasynda kabul edendigiňizi tassyklaň."
@@ -342,7 +336,6 @@ TEXTS = {
             "Sadaka ýene-de \"elýeterli\" ýagdaýyna gaýtaryldy."
         ),
         "view_receipt_button": "🧾 Çeki görmek",
-        "receipt_unavailable": "Çek tapylmady.",
         "ship_reminder": (
             "⏰ Ýatlatma! Siz entäk <b>«{description}»</b> sadakaňyzy ýola çykarmadyňyz. "
             "Haýyş, ýakyn wagtda iberiň we \"Kabinet\" programmasynda çeki ýükläň."
