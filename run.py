@@ -29,7 +29,7 @@ async def main() -> None:
 
     if WEBAPP_URL:
         await bot.set_chat_menu_button(
-            menu_button=MenuButtonWebApp(text="Ehson ilovasi", web_app=WebAppInfo(url=WEBAPP_URL))
+            menu_button=MenuButtonWebApp(text="Ehson App", web_app=WebAppInfo(url=WEBAPP_URL))
         )
 
     asyncio.create_task(run_reminder_loop(bot))
