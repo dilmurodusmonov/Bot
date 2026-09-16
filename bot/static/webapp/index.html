@@ -1919,6 +1919,8 @@
             '<div class="row">📞 ' + escapeHtml(r.phone) + "</div>" +
             "</div>" +
             '<button class="card-btn card-btn-blue" data-ship="' + r.id + '">' + tr("ship_receipt") + "</button>";
+        } else if (d.reservation && d.status === "shipped" && d.reservation.receipt_photo_url) {
+          body += '<img class="receipt-thumb" src="' + d.reservation.receipt_photo_url + '" alt="">';
         } else if (d.reservation && d.status === "received" && d.reservation.dua_text) {
           body += '<div class="info-box"><span class="dua-icon">🤲</span> ' + escapeHtml(d.reservation.dua_text) + "</div>";
         } else if (d.status === "available") {
@@ -1942,6 +1944,9 @@
         app.innerHTML = tabsHtml + listHtml;
         wireCardGalleries();
         wireCardActions();
+        app.querySelectorAll(".receipt-thumb").forEach(function (img) {
+          img.addEventListener("click", function () { openImageLightbox(img.src); });
+        });
         list.forEach(function (d) {
           if (d.status !== "reserved") return;
           var el = app.querySelector('[data-donation-id="' + d.id + '"]');
@@ -2723,6 +2728,29 @@
       .catch(function () { goto("home", {}, false); });
   }
 
+  // --- bot chatidagi "Chekni ko'rish" tugmasi orqali ochish ------------------
+
+  var RECEIPT_DEEPLINK_KEY = "ehson_receipt_deeplink_done";
+
+  function receiptDeepLink() {
+    var params = new URLSearchParams(location.search);
+    var reservationId = params.get("r");
+    var screen = params.get("screen");
+    if (!reservationId || !screen || !screens[screen]) return null;
+    try {
+      if (sessionStorage.getItem(RECEIPT_DEEPLINK_KEY) === deepLinkSessionKey(reservationId)) return null;
+    } catch (e) {}
+    return { reservationId: reservationId, screen: screen, activeTab: params.get("activeTab") || undefined };
+  }
+
+  // Saqlangan navigatsiya holatidan ustun turadi — aks holda foydalanuvchi
+  // avvalgi sahifada qolib, chekni topolmay qoladi.
+  function openReceiptDeepLink(link) {
+    try { sessionStorage.setItem(RECEIPT_DEEPLINK_KEY, deepLinkSessionKey(link.reservationId)); } catch (e) {}
+    navStack = [{ screen: "home", params: {} }];
+    goto(link.screen, { activeTab: link.activeTab }, false);
+  }
+
   api("GET", "/api/me")
     .then(function (me) {
       state.me = me;
@@ -2732,6 +2760,8 @@
       // Kanaldagi havola saqlangan sahifadan ustun turadi.
       var deepId = deepLinkDonationId();
       if (deepId) { openDeepLink(deepId); return; }
+      var receiptLink = receiptDeepLink();
+      if (receiptLink) { openReceiptDeepLink(receiptLink); return; }
       var saved = loadNavState();
       var restorable = saved && saved.screen && screens[saved.screen] &&
         saved.screen !== "loading" && saved.screen !== "language" && saved.screen !== "role";
