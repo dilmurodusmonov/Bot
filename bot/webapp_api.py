@@ -497,7 +497,7 @@ async def api_create_reservation(request: web.Request) -> web.Response:
         reply_markup=(
             InlineKeyboardMarkup(inline_keyboard=[[
                 InlineKeyboardButton(
-                    text=t(donor_lang, "open_app_button"),
+                    text=t(donor_lang, "upload_receipt_button"),
                     web_app=WebAppInfo(url=f"{WEBAPP_URL}&screen=donor_cabinet"),
                 )
             ]])
