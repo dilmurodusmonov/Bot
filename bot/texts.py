@@ -52,6 +52,13 @@ STATUS_LABELS = {
 
 TEXTS = {
     "uz": {
+        "welcome_intro": (
+            "Assalomu alaykum, Ehson App botimizda sizni ko'rganimizdan xursandmiz 😊\n"
+            "Siz bizning Ehson App botimiz orqali uyingizdagi foydalanilmayotgan\n"
+            "{categories}\n\n"
+            "ehson qilishingiz mumkin.\n\n"
+            "Aslida olganimiz emas berganimiz biznikidir 😊"
+        ),
         "choose_language": "🌐 Tilni tanlang:",
         "language_set": "✅ Til o'zbekcha qilib o'rnatildi.",
         "choose_role": "Assalomu alaykum! Ehson ulashish botiga xush kelibsiz.\n\nIltimos, o'z statusingizni tanlang:",
@@ -94,6 +101,13 @@ TEXTS = {
         ),
     },
     "ru": {
+        "welcome_intro": (
+            "Здравствуйте, рады видеть вас в боте Ehson App 😊\n"
+            "Через наш бот Ehson App вы можете пожертвовать неиспользуемые вещи из дома:\n"
+            "{categories}\n\n"
+            "Сделать пожертвование можно прямо сейчас.\n\n"
+            "Ведь по-настоящему наше — то, что мы отдаём, а не то, что получаем 😊"
+        ),
         "choose_language": "🌐 Выберите язык:",
         "language_set": "✅ Язык изменён на русский.",
         "choose_role": "Здравствуйте! Добро пожаловать в бот пожертвований.\n\nПожалуйста, выберите свой статус:",
@@ -136,6 +150,13 @@ TEXTS = {
         ),
     },
     "en": {
+        "welcome_intro": (
+            "Hello, we're glad to see you in the Ehson App bot 😊\n"
+            "Through our Ehson App bot you can donate unused items from your home:\n"
+            "{categories}\n\n"
+            "You can make a donation right now.\n\n"
+            "After all, what's truly ours is what we give, not what we receive 😊"
+        ),
         "choose_language": "🌐 Choose your language:",
         "language_set": "✅ Language set to English.",
         "choose_role": "Hello! Welcome to the Charity Sharing bot.\n\nPlease choose your status:",
@@ -178,6 +199,13 @@ TEXTS = {
         ),
     },
     "kk": {
+        "welcome_intro": (
+            "Ассалаумағалейкум, сізді Ehson App ботымызда көргенімізге қуаныштымыз 😊\n"
+            "Ehson App ботымыз арқылы үйіңіздегі пайдаланылмай жатқан заттарды қайыр ретінде бере аласыз:\n"
+            "{categories}\n\n"
+            "Қайырды дәл қазір бере аласыз.\n\n"
+            "Шынында да бізге тиесілісі — алғанымыз емес, бергеніміз 😊"
+        ),
         "choose_language": "🌐 Тілді таңдаңыз:",
         "language_set": "✅ Тіл қазақ тіліне орнатылды.",
         "choose_role": "Ассалаумағалейкум! Қайыр үлестіру ботына қош келдіңіз.\n\nМәртебеңізді таңдаңыз:",
@@ -220,6 +248,13 @@ TEXTS = {
         ),
     },
     "tg": {
+        "welcome_intro": (
+            "Ассалому алайкум, шуморо дар боти Ehson App дидан хурсандем 😊\n"
+            "Тавассути боти Ehson App шумо метавонед чизҳои дар хона истифоданашударо ҳамчун хайрия диҳед:\n"
+            "{categories}\n\n"
+            "Хайрия карданро ҳозир оғоз кунед.\n\n"
+            "Дар ҳақиқат моли мо он чизест, ки медиҳем, на он чизе, ки мегирем 😊"
+        ),
         "choose_language": "🌐 Забонро интихоб кунед:",
         "language_set": "✅ Забон ба тоҷикӣ гузошта шуд.",
         "choose_role": "Ассалому алайкум! Ба боти тақсими хайрия хуш омадед.\n\nЛутфан, мақоми худро интихоб намоед:",
@@ -262,6 +297,13 @@ TEXTS = {
         ),
     },
     "ky": {
+        "welcome_intro": (
+            "Ассалому алейкум, сизди Ehson App ботубузда көргөнүбүзгө кубанычтабыз 😊\n"
+            "Ehson App ботубуз аркылуу үйүңүздөгү колдонулбаган буюмдарды садага катары бере аласыз:\n"
+            "{categories}\n\n"
+            "Садаганы азыр эле бере аласыз.\n\n"
+            "Чындыгында бизге таандык болгону — алганыбыз эмес, бергенибиз 😊"
+        ),
         "choose_language": "🌐 Тилди тандаңыз:",
         "language_set": "✅ Тил кыргызчага орнотулду.",
         "choose_role": "Ассалому алейкум! Садага үлүштүрүү ботуна кош келиңиз.\n\nСтатусуңузду тандаңыз:",
@@ -304,6 +346,13 @@ TEXTS = {
         ),
     },
     "tk": {
+        "welcome_intro": (
+            "Salam, Ehson App botymyzda sizi görenimize begenýäris 😊\n"
+            "Ehson App botymyz arkaly öýüňizdäki ulanylmaýan zatlary sadaka hökmünde berip bilersiňiz:\n"
+            "{categories}\n\n"
+            "Sadakany häzir berip bilersiňiz.\n\n"
+            "Hakykatdanam bize degişlisi — alanymyz däl, berenimiz 😊"
+        ),
         "choose_language": "🌐 Dili saýlaň:",
         "language_set": "✅ Dil türkmen diline sazlandy.",
         "choose_role": "Salam! Sadaka paýlaşyk botuna hoş geldiňiz.\n\nÝagdaýyňyzy saýlaň:",
@@ -357,6 +406,14 @@ def t(lang: str, key: str, **kwargs) -> str:
 def category_name(category: str, lang: str) -> str:
     lang = lang if lang in LANGUAGES else "uz"
     return CATEGORIES.get(category, {}).get(lang, category)
+
+
+def categories_list(lang: str) -> str:
+    """/start xush kelibsiz xabarida bo'limlar ro'yxatini ko'rsatish uchun —
+    CATEGORIES'dan olinadi, shuning uchun bo'lim qo'shilsa/o'zgarsa
+    alohida yangilash kerak emas."""
+    lang = lang if lang in LANGUAGES else "uz"
+    return "\n".join(cat[lang] for cat in CATEGORIES.values())
 
 
 def status_label(status: str, lang: str) -> str:
