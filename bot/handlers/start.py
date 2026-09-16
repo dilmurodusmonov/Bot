@@ -53,11 +53,16 @@ async def cmd_start(message: Message, state: FSMContext) -> None:
     donation_id = payload[2:] if payload and payload.startswith("d_") else None
 
     lang = user["language"] or "uz"
+    # donation_id berilgan bo'lsa (masalan /d/{id} ulashish sahifasidan),
+    # "Ehson App" tugmasining o'zi to'g'ridan-to'g'ri o'sha ehsonga olib
+    # boradi — shuning uchun pastda alohida "Ilovani ochish" xabari
+    # kerak emas.
+    url = f"{WEBAPP_URL}&d={donation_id}" if WEBAPP_URL and donation_id else WEBAPP_URL
     await message.answer(
         t(lang, "welcome_intro", categories=categories_list(lang)),
         reply_markup=(
             InlineKeyboardMarkup(inline_keyboard=[[
-                InlineKeyboardButton(text="Ehson App", web_app=WebAppInfo(url=WEBAPP_URL))
+                InlineKeyboardButton(text="Ehson App", web_app=WebAppInfo(url=url))
             ]])
             if WEBAPP_URL else None
         ),
@@ -70,8 +75,6 @@ async def cmd_start(message: Message, state: FSMContext) -> None:
     if not user["role"]:
         await message.answer(t(lang, "choose_role"), reply_markup=role_keyboard(lang))
         return
-
-    await _show_open_app_button(message, lang, donation_id)
 
 
 @router.callback_query(F.data.startswith("lang:"))
