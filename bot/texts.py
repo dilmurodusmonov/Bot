@@ -54,9 +54,8 @@ TEXTS = {
     "uz": {
         "welcome_intro": (
             "Assalomu alaykum, Ehson App botimizda sizni ko'rganimizdan xursandmiz. 😊\n"
-            "Siz bizning Ehson App botimiz orqali uyingizdagi foydalanilmayotgan:\n\n"
+            "Siz bizning Ehson App botimiz orqali uyingizdagi foydalanilmayotgan quyidagi barcha narsalarni ehson qilishingiz mumkin:\n\n"
             "{categories}\n\n"
-            "ehson qilishingiz mumkin.\n"
             "<b>Aslida olganimiz emas berganimiz biznikidir... 😊</b>"
         ),
         "choose_language": "🌐 Tilni tanlang:",
@@ -103,9 +102,8 @@ TEXTS = {
     "ru": {
         "welcome_intro": (
             "Здравствуйте, рады видеть вас в боте Ehson App. 😊\n"
-            "Через наш бот Ehson App вы можете пожертвовать неиспользуемые вещи из дома:\n\n"
+            "Через наш бот Ehson App вы можете пожертвовать все нижеперечисленные неиспользуемые вещи из дома:\n\n"
             "{categories}\n\n"
-            "Сделать пожертвование можно прямо сейчас.\n"
             "<b>Ведь по-настоящему наше — то, что мы отдаём, а не то, что получаем... 😊</b>"
         ),
         "choose_language": "🌐 Выберите язык:",
@@ -152,9 +150,8 @@ TEXTS = {
     "en": {
         "welcome_intro": (
             "Hello, we're glad to see you in the Ehson App bot. 😊\n"
-            "Through our Ehson App bot you can donate unused items from your home:\n\n"
+            "Through our Ehson App bot you can donate all of the following unused items from your home:\n\n"
             "{categories}\n\n"
-            "You can make a donation right now.\n"
             "<b>After all, what's truly ours is what we give, not what we receive... 😊</b>"
         ),
         "choose_language": "🌐 Choose your language:",
@@ -201,9 +198,8 @@ TEXTS = {
     "kk": {
         "welcome_intro": (
             "Ассалаумағалейкум, сізді Ehson App ботымызда көргенімізге қуаныштымыз. 😊\n"
-            "Ehson App ботымыз арқылы үйіңіздегі пайдаланылмай жатқан заттарды қайыр ретінде бере аласыз:\n\n"
+            "Ehson App ботымыз арқылы үйіңіздегі пайдаланылмай жатқан төмендегі барлық заттарды қайыр ретінде бере аласыз:\n\n"
             "{categories}\n\n"
-            "Қайырды дәл қазір бере аласыз.\n"
             "<b>Шынында да бізге тиесілісі — алғанымыз емес, бергеніміз... 😊</b>"
         ),
         "choose_language": "🌐 Тілді таңдаңыз:",
@@ -250,9 +246,8 @@ TEXTS = {
     "tg": {
         "welcome_intro": (
             "Ассалому алайкум, шуморо дар боти Ehson App дидан хурсандем. 😊\n"
-            "Тавассути боти Ehson App шумо метавонед чизҳои дар хона истифоданашударо ҳамчун хайрия диҳед:\n\n"
+            "Тавассути боти Ehson App шумо метавонед ҳамаи чизҳои зерини дар хона истифоданашударо хайрия диҳед:\n\n"
             "{categories}\n\n"
-            "Хайрия карданро ҳозир оғоз кунед.\n"
             "<b>Дар ҳақиқат моли мо он чизест, ки медиҳем, на он чизе, ки мегирем... 😊</b>"
         ),
         "choose_language": "🌐 Забонро интихоб кунед:",
@@ -299,9 +294,8 @@ TEXTS = {
     "ky": {
         "welcome_intro": (
             "Ассалому алейкум, сизди Ehson App ботубузда көргөнүбүзгө кубанычтабыз. 😊\n"
-            "Ehson App ботубуз аркылуу үйүңүздөгү колдонулбаган буюмдарды садага катары бере аласыз:\n\n"
+            "Ehson App ботубуз аркылуу үйүңүздөгү колдонулбаган төмөнкү бардык буюмдарды садага катары бере аласыз:\n\n"
             "{categories}\n\n"
-            "Садаганы азыр эле бере аласыз.\n"
             "<b>Чындыгында бизге таандык болгону — алганыбыз эмес, бергенибиз... 😊</b>"
         ),
         "choose_language": "🌐 Тилди тандаңыз:",
@@ -348,9 +342,8 @@ TEXTS = {
     "tk": {
         "welcome_intro": (
             "Salam, Ehson App botymyzda sizi görenimize begenýäris. 😊\n"
-            "Ehson App botymyz arkaly öýüňizdäki ulanylmaýan zatlary sadaka hökmünde berip bilersiňiz:\n\n"
+            "Ehson App botymyz arkaly öýüňizdäki ulanylmaýan aşakdaky ähli zatlary sadaka hökmünde berip bilersiňiz:\n\n"
             "{categories}\n\n"
-            "Sadakany häzir berip bilersiňiz.\n"
             "<b>Hakykatdanam bize degişlisi — alanymyz däl, berenimiz... 😊</b>"
         ),
         "choose_language": "🌐 Dili saýlaň:",
@@ -413,7 +406,7 @@ def categories_list(lang: str) -> str:
     CATEGORIES'dan olinadi, shuning uchun bo'lim qo'shilsa/o'zgarsa
     alohida yangilash kerak emas."""
     lang = lang if lang in LANGUAGES else "uz"
-    return "\n".join(cat[lang] for cat in CATEGORIES.values())
+    return "\n\n".join(cat[lang] for cat in CATEGORIES.values())
 
 
 def status_label(status: str, lang: str) -> str:
