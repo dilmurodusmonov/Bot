@@ -11,6 +11,7 @@ from bot.config import BOT_TOKEN, WEBAPP_URL
 from bot.database import init_db
 from bot.handlers import start
 from bot.keepalive import start_webserver
+from bot.reminders import run_reminder_loop
 
 
 async def main() -> None:
@@ -30,6 +31,8 @@ async def main() -> None:
         await bot.set_chat_menu_button(
             menu_button=MenuButtonWebApp(text="Ehson ilovasi", web_app=WebAppInfo(url=WEBAPP_URL))
         )
+
+    asyncio.create_task(run_reminder_loop(bot))
 
     await dp.start_polling(bot)
 

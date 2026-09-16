@@ -48,6 +48,7 @@ from bot.database import (
     set_user_role,
     toggle_donation_like,
 )
+from bot.notify import send_tracked_message as _send_tracked_message
 from bot.texts import (
     CATEGORIES,
     CHANNEL_OPEN_BUTTON,
@@ -221,26 +222,6 @@ async def _require_user_id(request: web.Request) -> int:
 async def _lang_for(telegram_id: int) -> str:
     user = await get_user(telegram_id)
     return (user and user["language"]) or "uz"
-
-
-async def _send_tracked_message(
-    bot: Bot,
-    chat_id: int,
-    old_message_id: Optional[int],
-    text: str,
-    reply_markup: Optional[InlineKeyboardMarkup] = None,
-) -> int:
-    """Ehsonning holati o'zgarganda, shu ehsonga oid oldingi bildirishnoma
-    xabari o'chirilib, o'rniga yangisi yuboriladi — bot chatida eskirgan
-    holat xabarlari to'planib qolmasligi uchun (masalan, "yangi so'rov"
-    xabari ehson yo'lga chiqqanda o'chadi)."""
-    if old_message_id:
-        try:
-            await bot.delete_message(chat_id=chat_id, message_id=old_message_id)
-        except TelegramAPIError:
-            pass
-    sent = await bot.send_message(chat_id, text, reply_markup=reply_markup)
-    return sent.message_id
 
 
 async def _read_multipart_photo(request: web.Request) -> tuple[dict, bytes, str]:

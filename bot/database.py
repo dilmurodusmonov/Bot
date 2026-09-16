@@ -39,6 +39,10 @@ CREATE TABLE IF NOT EXISTS reservations (
     status TEXT NOT NULL DEFAULT 'reserved',
     donor_notify_message_id BIGINT,
     needy_notify_message_id BIGINT,
+    donor_reminder_count INTEGER NOT NULL DEFAULT 0,
+    donor_last_reminder_at TIMESTAMPTZ,
+    needy_reminder_count INTEGER NOT NULL DEFAULT 0,
+    needy_last_reminder_at TIMESTAMPTZ,
     created_at TIMESTAMPTZ NOT NULL DEFAULT now(),
     shipped_at TIMESTAMPTZ,
     received_at TIMESTAMPTZ
@@ -126,6 +130,18 @@ async def _migrate_reservation_notify_messages(conn: asyncpg.Connection) -> None
     )
     await conn.execute(
         "ALTER TABLE reservations ADD COLUMN IF NOT EXISTS needy_notify_message_id BIGINT"
+    )
+    await conn.execute(
+        "ALTER TABLE reservations ADD COLUMN IF NOT EXISTS donor_reminder_count INTEGER NOT NULL DEFAULT 0"
+    )
+    await conn.execute(
+        "ALTER TABLE reservations ADD COLUMN IF NOT EXISTS donor_last_reminder_at TIMESTAMPTZ"
+    )
+    await conn.execute(
+        "ALTER TABLE reservations ADD COLUMN IF NOT EXISTS needy_reminder_count INTEGER NOT NULL DEFAULT 0"
+    )
+    await conn.execute(
+        "ALTER TABLE reservations ADD COLUMN IF NOT EXISTS needy_last_reminder_at TIMESTAMPTZ"
     )
     has_old = await conn.fetchval(
         """SELECT EXISTS (
@@ -301,6 +317,38 @@ async def get_reservations_by_needy(needy_id: int) -> list[dict[str, Any]]:
         needy_id,
     )
     return [dict(row) for row in rows]
+
+
+async def get_reservations_pending_ship() -> list[dict[str, Any]]:
+    """Saxiy hali yo'lga chiqarmagan bronlar — eslatma yuborish uchun."""
+    rows = await _get_pool().fetch("SELECT * FROM reservations WHERE status = 'reserved'")
+    return [dict(row) for row in rows]
+
+
+async def get_reservations_pending_receive() -> list[dict[str, Any]]:
+    """Muhtoj hali qabul qilganini tasdiqlamagan bronlar — eslatma yuborish uchun."""
+    rows = await _get_pool().fetch("SELECT * FROM reservations WHERE status = 'shipped'")
+    return [dict(row) for row in rows]
+
+
+async def record_donor_reminder(reservation_id: int, message_id: int) -> None:
+    await _get_pool().execute(
+        """UPDATE reservations
+           SET donor_notify_message_id = $1, donor_reminder_count = donor_reminder_count + 1,
+               donor_last_reminder_at = now()
+           WHERE id = $2""",
+        message_id, reservation_id,
+    )
+
+
+async def record_needy_reminder(reservation_id: int, message_id: int) -> None:
+    await _get_pool().execute(
+        """UPDATE reservations
+           SET needy_notify_message_id = $1, needy_reminder_count = needy_reminder_count + 1,
+               needy_last_reminder_at = now()
+           WHERE id = $2""",
+        message_id, reservation_id,
+    )
 
 
 async def set_donor_notify_message(reservation_id: int, message_id: Optional[int]) -> None:
