@@ -407,11 +407,6 @@ async def api_my_donations(request: web.Request) -> web.Response:
                     "phone": res["phone"],
                     "status": res["status"],
                     "dua_text": res["dua_text"],
-                    "receipt_photo_url": (
-                        f"/api/photo/{res['receipt_photo_file_id']}"
-                        if res["receipt_photo_file_id"]
-                        else None
-                    ),
                 }
         result.append(item)
     return web.json_response(result)
@@ -439,11 +434,6 @@ async def api_my_requests(request: web.Request) -> web.Response:
                         liked_by_me=like.get("liked", False),
                     )
                     if donation else None
-                ),
-                "receipt_photo_url": (
-                    f"/api/photo/{r['receipt_photo_file_id']}"
-                    if r["receipt_photo_file_id"]
-                    else None
                 ),
                 "receipt_note": r["receipt_note"],
                 "dua_text": r["dua_text"],
