@@ -53,7 +53,15 @@ async def cmd_start(message: Message, state: FSMContext) -> None:
     donation_id = payload[2:] if payload and payload.startswith("d_") else None
 
     lang = user["language"] or "uz"
-    await message.answer(t(lang, "welcome_intro", categories=categories_list(lang)))
+    await message.answer(
+        t(lang, "welcome_intro", categories=categories_list(lang)),
+        reply_markup=(
+            InlineKeyboardMarkup(inline_keyboard=[[
+                InlineKeyboardButton(text="Ehson App", web_app=WebAppInfo(url=WEBAPP_URL))
+            ]])
+            if WEBAPP_URL else None
+        ),
+    )
 
     if not user["language"]:
         await message.answer(t("uz", "choose_language"), reply_markup=language_keyboard())
