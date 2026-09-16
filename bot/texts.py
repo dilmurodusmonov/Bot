@@ -83,6 +83,8 @@ TEXTS = {
             "ℹ️ Muhtoj <b>\"{description}\"</b> ehsoningizga bo'lgan so'rovini bekor qildi.\n\n"
             "Ehson yana \"mavjud\" holatiga qaytarildi."
         ),
+        "view_receipt_button": "🧾 Chekni ko'rish",
+        "receipt_unavailable": "Chek topilmadi.",
     },
     "ru": {
         "choose_language": "🌐 Выберите язык:",
@@ -116,6 +118,8 @@ TEXTS = {
             "ℹ️ Нуждающийся отменил заявку на пожертвование <b>\"{description}\"</b>.\n\n"
             "Пожертвование снова доступно."
         ),
+        "view_receipt_button": "🧾 Посмотреть чек",
+        "receipt_unavailable": "Чек не найден.",
     },
     "en": {
         "choose_language": "🌐 Choose your language:",
@@ -149,6 +153,8 @@ TEXTS = {
             "ℹ️ The recipient cancelled their request for <b>\"{description}\"</b>.\n\n"
             "The donation is available again."
         ),
+        "view_receipt_button": "🧾 View receipt",
+        "receipt_unavailable": "Receipt not found.",
     },
     "kk": {
         "choose_language": "🌐 Тілді таңдаңыз:",
@@ -182,6 +188,8 @@ TEXTS = {
             "ℹ️ Мұқтаж <b>\"{description}\"</b> қайырыңызға деген сұрауын бас тартты.\n\n"
             "Қайыр қайтадан \"қолжетімді\" күйіне қайтарылды."
         ),
+        "view_receipt_button": "🧾 Чекті көру",
+        "receipt_unavailable": "Чек табылмады.",
     },
     "tg": {
         "choose_language": "🌐 Забонро интихоб кунед:",
@@ -215,6 +223,8 @@ TEXTS = {
             "ℹ️ Ниёзманд дархости худро нисбат ба хайрияи <b>\"{description}\"</b> бекор кард.\n\n"
             "Хайрия дубора ба ҳолати \"дастрас\" баргашт."
         ),
+        "view_receipt_button": "🧾 Дидани чек",
+        "receipt_unavailable": "Чек ёфт нашуд.",
     },
     "ky": {
         "choose_language": "🌐 Тилди тандаңыз:",
@@ -248,6 +258,8 @@ TEXTS = {
             "ℹ️ Мукташ <b>\"{description}\"</b> садагаңызга болгон суранычын жокко чыгарды.\n\n"
             "Садага кайра \"жеткиликтүү\" абалына кайтарылды."
         ),
+        "view_receipt_button": "🧾 Чекти көрүү",
+        "receipt_unavailable": "Чек табылган жок.",
     },
     "tk": {
         "choose_language": "🌐 Dili saýlaň:",
@@ -281,6 +293,8 @@ TEXTS = {
             "ℹ️ Mätäç <b>\"{description}\"</b> sadakaňyza bolan soragyny ýatyrdy.\n\n"
             "Sadaka ýene-de \"elýeterli\" ýagdaýyna gaýtaryldy."
         ),
+        "view_receipt_button": "🧾 Çeki görmek",
+        "receipt_unavailable": "Çek tapylmady.",
     },
 }
 
