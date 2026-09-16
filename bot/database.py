@@ -441,6 +441,34 @@ async def get_stats() -> dict[str, Any]:
     return stats
 
 
+async def get_reminder_stats() -> dict[str, Any]:
+    """Admin panel uchun — javob berilmagan tranzaksion xabarlarga
+    yuborilgan eslatmalar bo'yicha statistika."""
+    pool = _get_pool()
+    stats: dict[str, Any] = {}
+
+    stats["donor_reminders_sent"] = await pool.fetchval(
+        "SELECT COALESCE(SUM(donor_reminder_count), 0) FROM reservations"
+    )
+    stats["needy_reminders_sent"] = await pool.fetchval(
+        "SELECT COALESCE(SUM(needy_reminder_count), 0) FROM reservations"
+    )
+    stats["pending_ship_total"] = await pool.fetchval(
+        "SELECT COUNT(*) FROM reservations WHERE status = 'reserved'"
+    )
+    stats["pending_ship_reminded"] = await pool.fetchval(
+        "SELECT COUNT(*) FROM reservations WHERE status = 'reserved' AND donor_reminder_count > 0"
+    )
+    stats["pending_receive_total"] = await pool.fetchval(
+        "SELECT COUNT(*) FROM reservations WHERE status = 'shipped'"
+    )
+    stats["pending_receive_reminded"] = await pool.fetchval(
+        "SELECT COUNT(*) FROM reservations WHERE status = 'shipped' AND needy_reminder_count > 0"
+    )
+
+    return stats
+
+
 async def get_category_stats() -> dict[str, dict[str, int]]:
     rows = await _get_pool().fetch(
         """SELECT category,

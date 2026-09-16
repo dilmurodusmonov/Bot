@@ -5,7 +5,7 @@ from datetime import datetime, timezone
 from aiohttp import web
 
 from bot.config import ADMIN_PASSWORD, ADMIN_USERNAME
-from bot.database import get_recent_donations, get_stats
+from bot.database import get_recent_donations, get_reminder_stats, get_stats
 from bot.texts import CATEGORIES, category_name, status_label
 
 STATUS_ORDER = ("available", "reserved", "shipped", "received")
@@ -43,8 +43,9 @@ async def dashboard_handler(request: web.Request) -> web.Response:
         return _unauthorized()
 
     stats = await get_stats()
+    reminder_stats = await get_reminder_stats()
     recent = await get_recent_donations(10)
-    html = _render_dashboard(stats, recent)
+    html = _render_dashboard(stats, reminder_stats, recent)
     return web.Response(text=html, content_type="text/html")
 
 
@@ -75,7 +76,7 @@ def _recent_row(donation: dict) -> str:
     """
 
 
-def _render_dashboard(stats: dict, recent: list) -> str:
+def _render_dashboard(stats: dict, reminder_stats: dict, recent: list) -> str:
     by_status = stats.get("donations_by_status", {})
     by_category = stats.get("donations_by_category", {})
 
@@ -121,6 +122,8 @@ def _render_dashboard(stats: dict, recent: list) -> str:
   h1 {{ font-size: 20px; margin: 0; }}
   .subtitle {{ color: #7C8A99; font-size: 13px; margin-top: 2px; }}
   .cards {{ display: grid; grid-template-columns: repeat(auto-fit, minmax(180px, 1fr)); gap: 14px; margin-bottom: 28px; }}
+  .cards-sub {{ margin-bottom: 0; }}
+  .cards-sub .card {{ background: #1D2530; }}
   .card {{ background: #171E27; border-radius: 16px; padding: 18px 20px; }}
   .card .value {{ font-size: 30px; font-weight: 700; }}
   .card .label {{ color: #7C8A99; font-size: 13.5px; margin-top: 4px; }}
@@ -172,6 +175,27 @@ def _render_dashboard(stats: dict, recent: list) -> str:
       <div class="label">Muvaffaqiyatli yetib borgan</div>
     </div>
   </div>
+
+  <section>
+    <h2>Eslatmalar (javob berilmagan tranzaksion xabarlar)</h2>
+    <div class="cards cards-sub">
+      <div class="card">
+        <div class="value">{reminder_stats.get('donor_reminders_sent', 0) + reminder_stats.get('needy_reminders_sent', 0)}</div>
+        <div class="label">Jami yuborilgan eslatmalar</div>
+        <div class="sub">🫴 {reminder_stats.get('donor_reminders_sent', 0)} saxiyga · 🙏 {reminder_stats.get('needy_reminders_sent', 0)} muhtojga</div>
+      </div>
+      <div class="card">
+        <div class="value">{reminder_stats.get('pending_ship_total', 0)}</div>
+        <div class="label">Yo'lga chiqarish kutilmoqda</div>
+        <div class="sub">shundan {reminder_stats.get('pending_ship_reminded', 0)} taga eslatma yuborilgan</div>
+      </div>
+      <div class="card">
+        <div class="value">{reminder_stats.get('pending_receive_total', 0)}</div>
+        <div class="label">Qabulni tasdiqlash kutilmoqda</div>
+        <div class="sub">shundan {reminder_stats.get('pending_receive_reminded', 0)} taga eslatma yuborilgan</div>
+      </div>
+    </div>
+  </section>
 
   <section>
     <h2>Status bo'yicha</h2>
