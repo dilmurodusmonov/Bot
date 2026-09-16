@@ -65,6 +65,7 @@ TEXTS = {
         "role_needy": "🤲 Muhtoj",
         "open_app_hint": "📱 Barcha amallar (ehson qo'shish, ko'rish, kabinet) pastdagi menyu tugmasi — \"Kabinet\" orqali ochiladigan ilova ichida bajariladi.\n\nBu yerda esa faqat muhim yangiliklar va bildirishnomalar yuboriladi.",
         "open_app_button": "📱 Ilovani ochish",
+        "upload_receipt_button": "🧾 Chekni yuklang",
         "new_reservation_for_donor": (
             "🔔 Ehsoningizga yangi so'rov!\n\n"
             "Bo'lim: <b>{category}</b>\n"
@@ -73,7 +74,7 @@ TEXTS = {
             "👤 <b>{full_name}</b>\n"
             "📍 <b>{address}</b>\n"
             "📞 <b>{phone}</b>\n\n"
-            "Iltimos, ehsonni ko'rsatilgan manzilga yaqin kuryerlik orqali yuboring va \"Kabinet\" ilovasi orqali pochta chekini yuklang."
+            "Iltimos, ehsonni ko'rsatilgan manzilga yaqin kuryerlik orqali yuboring va Ehson App orqali pochta chekini yuklang."
         ),
         "shipped_saved_donor": "✅ Rahmat! Ehson yo'lga chiqqanligi tasdiqlandi va Muhtojga xabar berildi. Muhtoj tasdiqlaganda sizga xabar beramiz.",
         "shipped_notify_needy": (
@@ -113,6 +114,7 @@ TEXTS = {
         "role_needy": "🤲 Нуждающийся",
         "open_app_hint": "📱 Все действия (добавление, просмотр, кабинет) выполняются внутри приложения, которое открывается кнопкой меню — \"Kabinet\".\n\nЗдесь же вы будете получать только важные уведомления.",
         "open_app_button": "📱 Открыть приложение",
+        "upload_receipt_button": "🧾 Загрузить чек",
         "new_reservation_for_donor": (
             "🔔 Новая заявка на ваше пожертвование!\n\n"
             "Раздел: <b>{category}</b>\n"
@@ -121,7 +123,7 @@ TEXTS = {
             "👤 <b>{full_name}</b>\n"
             "📍 <b>{address}</b>\n"
             "📞 <b>{phone}</b>\n\n"
-            "Пожалуйста, отправьте пожертвование по указанному адресу через ближайшую курьерскую службу и загрузите чек в приложении \"Kabinet\"."
+            "Пожалуйста, отправьте пожертвование по указанному адресу через ближайшую курьерскую службу и загрузите чек через Ehson App."
         ),
         "shipped_saved_donor": "✅ Спасибо! Подтверждена отправка пожертвования, нуждающийся уведомлён. Как только он подтвердит получение, мы сообщим вам.",
         "shipped_notify_needy": (
@@ -161,6 +163,7 @@ TEXTS = {
         "role_needy": "🤲 In need",
         "open_app_hint": "📱 All actions (adding, browsing, your cabinet) happen inside the app opened via the \"Kabinet\" menu button.\n\nHere in chat you'll only receive important notifications.",
         "open_app_button": "📱 Open the app",
+        "upload_receipt_button": "🧾 Upload receipt",
         "new_reservation_for_donor": (
             "🔔 New request for your donation!\n\n"
             "Category: <b>{category}</b>\n"
@@ -169,7 +172,7 @@ TEXTS = {
             "👤 <b>{full_name}</b>\n"
             "📍 <b>{address}</b>\n"
             "📞 <b>{phone}</b>\n\n"
-            "Please ship the donation to the given address via a nearby courier and upload the receipt in the \"Kabinet\" app."
+            "Please ship the donation to the given address via a nearby courier and upload the receipt via Ehson App."
         ),
         "shipped_saved_donor": "✅ Thank you! Shipment confirmed and the recipient has been notified. We'll let you know once they confirm receipt.",
         "shipped_notify_needy": (
@@ -209,6 +212,7 @@ TEXTS = {
         "role_needy": "🤲 Мұқтаж",
         "open_app_hint": "📱 Барлық әрекеттер (қайыр қосу, көру, кабинет) төмендегі мәзір түймесі — \"Kabinet\" арқылы ашылатын қосымша ішінде орындалады.\n\nМұнда тек маңызды жаңалықтар мен хабарландырулар жіберіледі.",
         "open_app_button": "📱 Қосымшаны ашу",
+        "upload_receipt_button": "🧾 Чекті жүктеңіз",
         "new_reservation_for_donor": (
             "🔔 Қайырыңызға жаңа сұрау!\n\n"
             "Бөлім: <b>{category}</b>\n"
@@ -217,7 +221,7 @@ TEXTS = {
             "👤 <b>{full_name}</b>\n"
             "📍 <b>{address}</b>\n"
             "📞 <b>{phone}</b>\n\n"
-            "Қайырды көрсетілген мекенжайға жақын жеткізу қызметі арқылы жіберіп, \"Kabinet\" қосымшасы арқылы чекті жүктеңіз."
+            "Қайырды көрсетілген мекенжайға жақын жеткізу қызметі арқылы жіберіп, Ehson App арқылы чекті жүктеңіз."
         ),
         "shipped_saved_donor": "✅ Рахмет! Қайырдың жолға шыққаны расталды және мұқтажға хабарланды. Мұқтаж растаған кезде сізге хабарлаймыз.",
         "shipped_notify_needy": (
@@ -257,6 +261,7 @@ TEXTS = {
         "role_needy": "🤲 Ниёзманд",
         "open_app_hint": "📱 Ҳамаи амалҳо (илова кардани хайрия, дидан, кабинет) дар дохили барномае, ки бо тугмаи меню — \"Kabinet\" кушода мешавад, иҷро мешаванд.\n\nДар ин ҷо бошад, танҳо огоҳиномаҳои муҳим фиристода мешаванд.",
         "open_app_button": "📱 Кушодани барнома",
+        "upload_receipt_button": "🧾 Чекро бор кунед",
         "new_reservation_for_donor": (
             "🔔 Дархости нав ба хайрияи шумо!\n\n"
             "Бахш: <b>{category}</b>\n"
@@ -265,7 +270,7 @@ TEXTS = {
             "👤 <b>{full_name}</b>\n"
             "📍 <b>{address}</b>\n"
             "📞 <b>{phone}</b>\n\n"
-            "Лутфан, хайрияро ба суроғаи нишондодашуда тавассути хидмати расонии наздик фиристед ва тавассути барномаи \"Kabinet\" чекро бор кунед."
+            "Лутфан, хайрияро ба суроғаи нишондодашуда тавассути хидмати расонии наздик фиристед ва тавассути Ehson App чекро бор кунед."
         ),
         "shipped_saved_donor": "✅ Ташаккур! Фиристодани хайрия тасдиқ шуд ва ба ниёзманд хабар дода шуд. Ҳангоми тасдиқи қабули ниёзманд ба шумо хабар медиҳем.",
         "shipped_notify_needy": (
@@ -305,6 +310,7 @@ TEXTS = {
         "role_needy": "🤲 Мукташ",
         "open_app_hint": "📱 Бардык аракеттер (садага кошуу, көрүү, кабинет) төмөнкү меню баскычы — \"Kabinet\" аркылуу ачылуучу колдонмонун ичинде аткарылат.\n\nБул жерде болсо, тек гана маанилүү жаңылыктар жана билдирүүлөр жөнөтүлөт.",
         "open_app_button": "📱 Колдонмону ачуу",
+        "upload_receipt_button": "🧾 Чекти жүктөңүз",
         "new_reservation_for_donor": (
             "🔔 Садагаңызга жаңы сурам!\n\n"
             "Бөлүм: <b>{category}</b>\n"
@@ -313,7 +319,7 @@ TEXTS = {
             "👤 <b>{full_name}</b>\n"
             "📍 <b>{address}</b>\n"
             "📞 <b>{phone}</b>\n\n"
-            "Садаганы көрсөтүлгөн дарекке жакын жеткирүү кызматы аркылуу жөнөтүп, \"Kabinet\" колдонмосу аркылуу чекти жүктөңүз."
+            "Садаганы көрсөтүлгөн дарекке жакын жеткирүү кызматы аркылуу жөнөтүп, Ehson App аркылуу чекти жүктөңүз."
         ),
         "shipped_saved_donor": "✅ Рахмат! Садаганын жолго чыкканы тастыкталды жана мукташка билдирилди. Мукташ тастыктаганда сизге билдиребиз.",
         "shipped_notify_needy": (
@@ -353,6 +359,7 @@ TEXTS = {
         "role_needy": "🤲 Mätäç",
         "open_app_hint": "📱 Ähli hereketler (sadaka goşmak, görmek, kabinet) aşakdaky menýu düwmesi — \"Kabinet\" arkaly açylýan programmanyň içinde ýerine ýetirilýär.\n\nBu ýerde bolsa diňe möhüm täzelikler we bildirişler iberilýär.",
         "open_app_button": "📱 Programmany açmak",
+        "upload_receipt_button": "🧾 Çeki ýükläň",
         "new_reservation_for_donor": (
             "🔔 Sadakaňyza täze sorag!\n\n"
             "Bölüm: <b>{category}</b>\n"
@@ -361,7 +368,7 @@ TEXTS = {
             "👤 <b>{full_name}</b>\n"
             "📍 <b>{address}</b>\n"
             "📞 <b>{phone}</b>\n\n"
-            "Sadakany görkezilen salga golaý eltip beriş gullugy arkaly iberip, \"Kabinet\" programmasy arkaly çeki ýükläň."
+            "Sadakany görkezilen salga golaý eltip beriş gullugy arkaly iberip, Ehson App arkaly çeki ýükläň."
         ),
         "shipped_saved_donor": "✅ Sag boluň! Sadakanyň ýola çykandygy tassyklandy we mätäje habar berildi. Mätäç tassyklanda size habar bereris.",
         "shipped_notify_needy": (
