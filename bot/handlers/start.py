@@ -13,7 +13,7 @@ from aiogram.types import (
 from bot.config import WEBAPP_URL
 from bot.database import create_user_if_missing, get_user, set_user_language, set_user_role
 from bot.keyboards import language_keyboard, role_keyboard
-from bot.texts import t
+from bot.texts import categories_list, t
 from bot.utils import get_lang
 
 router = Router()
@@ -52,11 +52,13 @@ async def cmd_start(message: Message, state: FSMContext) -> None:
     payload = args[1] if len(args) > 1 else None
     donation_id = payload[2:] if payload and payload.startswith("d_") else None
 
+    lang = user["language"] or "uz"
+    await message.answer(t(lang, "welcome_intro", categories=categories_list(lang)))
+
     if not user["language"]:
         await message.answer(t("uz", "choose_language"), reply_markup=language_keyboard())
         return
 
-    lang = user["language"]
     if not user["role"]:
         await message.answer(t(lang, "choose_role"), reply_markup=role_keyboard(lang))
         return
