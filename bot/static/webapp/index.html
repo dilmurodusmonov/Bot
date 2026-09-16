@@ -99,7 +99,6 @@
     50% { box-shadow: 0 0 0 3px #4EA4F5, 0 0 18px 6px rgba(78,164,245,0.6); }
   }
   .card img { width: 100%; aspect-ratio: 1 / 1; object-fit: cover; display: block; background: #232B36; }
-  .receipt-thumb { cursor: zoom-in; }
   .card-media { position: relative; }
   .card-gallery { display: flex; overflow-x: auto; scroll-snap-type: x mandatory; scrollbar-width: none; }
   .card-gallery::-webkit-scrollbar { display: none; }
@@ -1928,8 +1927,6 @@
             '<div class="row">📞 ' + escapeHtml(r.phone) + "</div>" +
             "</div>" +
             '<button class="card-btn card-btn-blue" data-ship="' + r.id + '">' + tr("ship_receipt") + "</button>";
-        } else if (d.reservation && d.status === "shipped" && d.reservation.receipt_photo_url) {
-          body += '<img class="receipt-thumb" src="' + d.reservation.receipt_photo_url + '" alt="">';
         } else if (d.reservation && d.status === "received" && d.reservation.dua_text) {
           body += '<div class="info-box"><span class="dua-icon">🤲</span> ' + escapeHtml(d.reservation.dua_text) + "</div>";
         } else if (d.status === "available") {
@@ -1953,9 +1950,6 @@
         app.innerHTML = tabsHtml + listHtml;
         wireCardGalleries();
         wireCardActions();
-        app.querySelectorAll(".receipt-thumb").forEach(function (img) {
-          img.addEventListener("click", function () { openImageLightbox(img.src); });
-        });
         list.forEach(function (d) {
           if (d.status !== "reserved") return;
           var el = app.querySelector('[data-donation-id="' + d.id + '"]');
@@ -2350,7 +2344,7 @@
             '<span class="card-header-avatar">' + escapeHtml(labelParts[0]) + "</span>" +
             '<span class="card-header-name">' + escapeHtml(labelParts.slice(1).join(" ")) + "</span>" +
             "</div>" +
-            (r.receipt_photo_url ? '<img class="receipt-thumb" src="' + r.receipt_photo_url + '" alt="">' : "") +
+            (r.donation.photo_url ? '<img src="' + r.donation.photo_url + '" alt="">' : "") +
             '<div class="card-body">' +
             '<span class="pill pill-shipped"><span class="truck-road">🚚<span class="road-track"></span></span> ' +
             escapeHtml(courier) + "</span>" +
@@ -2367,9 +2361,6 @@
           btn.addEventListener("click", function () {
             goto("needy_dua_form", { reservationId: parseInt(btn.getAttribute("data-confirm"), 10) });
           });
-        });
-        app.querySelectorAll(".receipt-thumb").forEach(function (img) {
-          img.addEventListener("click", function () { openImageLightbox(img.src); });
         });
         hideMainButton();
         setBackButton();
