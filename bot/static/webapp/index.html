@@ -177,7 +177,7 @@
     color: #fff; border: none; border-radius: 10px; padding: 12px; font-size: 14.5px; font-weight: 600;
   }
   .card-btn-blue { background: linear-gradient(135deg, #6EC6FF, #4EA4F5); }
-  .card img.receipt-card-img { aspect-ratio: auto; object-fit: contain; background: var(--section-bg); cursor: pointer; }
+  .receipt-card-img { cursor: pointer; }
   .card-btn-outline {
     margin-top: 8px; width: 100%; background: none; color: #C0392B;
     border: 1.5px solid #C0392B; border-radius: 10px; padding: 11px; font-size: 14px; font-weight: 600;
@@ -1069,6 +1069,22 @@
     overlay.querySelector(".toast-text").textContent = msg;
     document.body.appendChild(overlay);
     return overlay;
+  }
+
+  // Faylni telefonga saqlaydi. Oddiy <a download> Telegram'ning ichki
+  // WebView'ida ishlamaydi, shuning uchun Telegram'ning o'z
+  // downloadFile API'sidan foydalanamiz (u mavjud bo'lsa); bo'lmasa
+  // havolani tashqi brauzerda ochamiz — u yerda odatdagidek saqlash
+  // mumkin.
+  function downloadFile(url, filename) {
+    var absoluteUrl = new URL(url, location.href).href;
+    if (tg && typeof tg.downloadFile === "function") {
+      tg.downloadFile({ url: absoluteUrl, file_name: filename }, function () {});
+    } else if (tg && typeof tg.openLink === "function") {
+      tg.openLink(absoluteUrl);
+    } else {
+      window.open(absoluteUrl, "_blank");
+    }
   }
 
   // Rasmni to'liq ekranda ochadi — chek kabi kichik eskizni tekshirib
@@ -2256,8 +2272,9 @@
           '<div class="card-body">' +
           '<span class="pill pill-' + r.donation.status + '">' + statusEmojiHtml(r.donation.status, statusEmoji) + " " + escapeHtml(statusText) + "</span>" +
           (r.donation.created_at ? '<div class="card-date">' + formatRelativeDate(r.donation.created_at) + "</div>" : "") +
-          '<a class="card-btn card-btn-blue" href="' + r.receipt_photo_url + '" download="chek-' + r.reservation_id + '.jpg">' +
-          tr("download_receipt") + "</a>" +
+          '<button class="card-btn card-btn-blue" data-download-receipt="' + r.receipt_photo_url +
+          '" data-download-name="chek-' + r.reservation_id + '.jpg">' +
+          tr("download_receipt") + "</button>" +
           "</div></div>"
         );
       }
@@ -2306,6 +2323,11 @@
         });
         app.querySelectorAll("[data-receipt-view]").forEach(function (img) {
           img.addEventListener("click", function () { openImageLightbox(img.src); });
+        });
+        app.querySelectorAll("[data-download-receipt]").forEach(function (btn) {
+          btn.addEventListener("click", function () {
+            downloadFile(btn.getAttribute("data-download-receipt"), btn.getAttribute("data-download-name"));
+          });
         });
         app.querySelectorAll("[data-confirm]").forEach(function (btn) {
           btn.addEventListener("click", function () {
