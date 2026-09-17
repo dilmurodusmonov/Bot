@@ -65,7 +65,7 @@ TEXTS = {
         "role_needy": "🤲 Muhtoj",
         "open_app_hint": "📱 Barcha amallar (ehson qo'shish, ko'rish, kabinet) pastdagi menyu tugmasi — Ehson App orqali ochiladigan ilova ichida bajariladi.\n\nBu yerda esa faqat muhim yangiliklar va bildirishnomalar yuboriladi.",
         "open_app_button": "Ehson App",
-        "upload_receipt_button": "🧾 Chekni yuklang",
+        "upload_receipt_button": "🧾 Pochta chekini yuklash",
         "new_reservation_for_donor": (
             "🔔 Ehsoningizga yangi so'rov!\n\n"
             "Bo'lim: <b>{category}</b>\n"
