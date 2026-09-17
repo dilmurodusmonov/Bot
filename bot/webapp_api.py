@@ -436,6 +436,9 @@ async def api_my_requests(request: web.Request) -> web.Response:
                     if donation else None
                 ),
                 "receipt_note": r["receipt_note"],
+                "receipt_photo_url": (
+                    f"/api/photo/{r['receipt_photo_file_id']}" if r["receipt_photo_file_id"] else None
+                ),
                 "dua_text": r["dua_text"],
             }
         )
