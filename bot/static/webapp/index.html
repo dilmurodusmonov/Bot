@@ -2263,11 +2263,20 @@
         : (groups.shipped.length ? "shipped" : (groups.reserved.length ? "reserved" : "received"));
 
       function receiptCardHtmlFor(r) {
+        var labelParts = r.donation.category_label.split(" ");
+        var catEmoji = labelParts[0];
+        var catName = labelParts.slice(1).join(" ");
+        var headerHtml =
+          '<div class="card-header">' +
+          '<span class="card-header-avatar">' + escapeHtml(catEmoji) + "</span>" +
+          '<span class="card-header-name">' + escapeHtml(catName) + "</span>" +
+          "</div>";
         var statusParts = r.donation.status_label.split(" ");
         var statusEmoji = statusParts[0];
         var statusText = r.status === "received" ? tr("accepted") : statusParts.slice(1).join(" ");
         return (
-          '<div class="card" data-donation-id="' + r.donation.id + '">' +
+          '<div class="card" data-donation-id="' + r.donation.id + '" data-reservation-id="' + r.reservation_id + '">' +
+          headerHtml +
           '<img class="receipt-card-img" src="' + r.receipt_photo_url + '" alt="" data-receipt-view>' +
           '<div class="card-body">' +
           '<span class="pill pill-' + r.donation.status + '">' + statusEmojiHtml(r.donation.status, statusEmoji) + " " + escapeHtml(statusText) + "</span>" +
@@ -2313,6 +2322,16 @@
           var el = app.querySelector('[data-donation-id="' + r.donation.id + '"]');
           if (el) el.classList.add("card-reserved-glow");
         });
+        var highlightReservationId = state.params && state.params.highlightReservationId;
+        if (highlightReservationId) {
+          var targetCard = app.querySelector('[data-reservation-id="' + highlightReservationId + '"]');
+          if (targetCard) {
+            targetCard.scrollIntoView({ behavior: "smooth", block: "center" });
+            targetCard.classList.add("card-highlight");
+            setTimeout(function () { targetCard.classList.remove("card-highlight"); }, 2000);
+          }
+          delete state.params.highlightReservationId;
+        }
         app.querySelectorAll(".status-tab").forEach(function (btn) {
           btn.addEventListener("click", function () {
             activeTab = btn.getAttribute("data-tab");
@@ -2812,7 +2831,7 @@
   function openReceiptDeepLink(link) {
     try { sessionStorage.setItem(RECEIPT_DEEPLINK_KEY, deepLinkSessionKey(link.reservationId)); } catch (e) {}
     navStack = [{ screen: "home", params: {} }];
-    goto(link.screen, { activeTab: link.activeTab }, false);
+    goto(link.screen, { activeTab: link.activeTab, highlightReservationId: link.reservationId }, false);
   }
 
   api("GET", "/api/me")
