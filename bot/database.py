@@ -474,6 +474,7 @@ async def get_category_stats() -> dict[str, dict[str, int]]:
         """SELECT category,
                   COUNT(*) AS total,
                   COUNT(*) FILTER (WHERE status = 'received') AS delivered,
+                  COUNT(*) FILTER (WHERE status = 'available') AS available,
                   COUNT(*) FILTER (WHERE created_at > now() - interval '24 hours') AS new_last_24h
            FROM donations
            GROUP BY category"""
@@ -482,6 +483,7 @@ async def get_category_stats() -> dict[str, dict[str, int]]:
         row["category"]: {
             "total": row["total"],
             "delivered": row["delivered"],
+            "available": row["available"],
             "new_last_24h": row["new_last_24h"],
         }
         for row in rows

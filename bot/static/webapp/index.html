@@ -394,14 +394,19 @@
     background: rgba(120,140,160,0.15); display: flex; align-items: center; justify-content: center;
     font-size: 22px;
   }
-  .cat-row-icon-new { position: relative; z-index: 0; background: none; }
-  .cat-row-icon-new::before {
+  .cat-row-icon-glow { position: relative; z-index: 0; background: none; }
+  .cat-row-icon-glow::before {
     content: ""; position: absolute; inset: -7px; border-radius: 50%; z-index: -2;
     background: conic-gradient(from 0deg, #FFD23F, #FF6B4A, #E5484D, #8B0000, #FF3B30, #FFD23F);
+    animation: catRingGlow 2.6s ease-in-out infinite;
   }
-  .cat-row-icon-new::after {
+  .cat-row-icon-glow::after {
     content: ""; position: absolute; inset: -4px; border-radius: 50%; z-index: -1;
     background: #FFFFFF; box-shadow: inset 0 0 0 1px rgba(0,0,0,0.08);
+  }
+  @keyframes catRingGlow {
+    0%, 100% { opacity: 0.55; box-shadow: 0 0 0 rgba(255,59,48,0); }
+    50% { opacity: 1; box-shadow: 0 0 10px 2px rgba(255,107,74,0.55); }
   }
   .cat-row-icon-fill {
     width: 100%; height: 100%; border-radius: 50%; background: var(--bg);
@@ -1531,13 +1536,15 @@
           "</div>";
 
         var catsHtml = '<div class="cat-list">' + categories.map(function (c) {
-          var cs = (stats.by_category && stats.by_category[c.key]) || { total: 0, delivered: 0, new_last_24h: 0 };
+          var cs = (stats.by_category && stats.by_category[c.key]) || { total: 0, delivered: 0, available: 0, new_last_24h: 0 };
           var labelParts = c.label.split(" ");
           var emoji = labelParts[0];
           var name = labelParts.slice(1).join(" ");
-          var isNew = cs.new_last_24h > 0;
-          var iconClass = "cat-row-icon" + (isNew ? " cat-row-icon-new" : "");
-          var iconInner = isNew
+          // Bo'limda hozir olish mumkin bo'lgan ehson bor bo'lsa, ikonka
+          // atrofida sekin porlab turadigan qizil halqa chiqadi.
+          var hasAvailable = cs.available > 0;
+          var iconClass = "cat-row-icon" + (hasAvailable ? " cat-row-icon-glow" : "");
+          var iconInner = hasAvailable
             ? '<span class="cat-row-icon-fill">' + escapeHtml(emoji) + "</span>"
             : escapeHtml(emoji);
           return '<button class="cat-row" data-cat="' + c.key + '">' +
