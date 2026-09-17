@@ -63,7 +63,7 @@ TEXTS = {
         "choose_role": "Assalomu alaykum! Ehson ulashish botiga xush kelibsiz.\n\nIltimos, o'z statusingizni tanlang:",
         "role_donor": "🫴 Saxiy",
         "role_needy": "🤲 Muhtoj",
-        "open_app_hint": "📱 Barcha amallar (ehson qo'shish, ko'rish, kabinet) pastdagi menyu tugmasi — \"Kabinet\" orqali ochiladigan ilova ichida bajariladi.\n\nBu yerda esa faqat muhim yangiliklar va bildirishnomalar yuboriladi.",
+        "open_app_hint": "📱 Barcha amallar (ehson qo'shish, ko'rish, kabinet) pastdagi menyu tugmasi — Ehson App orqali ochiladigan ilova ichida bajariladi.\n\nBu yerda esa faqat muhim yangiliklar va bildirishnomalar yuboriladi.",
         "open_app_button": "📱 Ilovani ochish",
         "upload_receipt_button": "🧾 Chekni yuklang",
         "new_reservation_for_donor": (
@@ -79,13 +79,13 @@ TEXTS = {
         "shipped_saved_donor": "✅ Rahmat! Ehson yo'lga chiqqanligi tasdiqlandi va Muhtojga xabar berildi. Muhtoj tasdiqlaganda sizga xabar beramiz.",
         "shipped_notify_needy": (
             "📦 Xushxabar! Sizning ehsoningiz yo'lga chiqdi.\n\n"
-            "Pochta cheki quyida biriktirilgan. Ehson qo'lingizga tegishi bilan \"Kabinet\" ilovasida qabul qilganingizni tasdiqlang."
+            "Pochta cheki quyida biriktirilgan. Ehson qo'lingizga tegishi bilan Ehson App orqali qabul qilganingizni tasdiqlang."
         ),
         "received_notify_donor": (
             "🎉 Ehsoningiz muvaffaqiyatli yetib bordi!\n\n"
             "Muhtojning duosi/minnatdorchiligi:\n<b>\"{dua_text}\"</b>"
         ),
-        "unknown_command": "Iltimos, \"Kabinet\" ilovasidan foydalaning.",
+        "unknown_command": "Iltimos, Ehson App'dan foydalaning.",
         "reservation_cancelled_notify_donor": (
             "ℹ️ Muhtoj <b>\"{description}\"</b> ehsoningizga bo'lgan so'rovini bekor qildi.\n\n"
             "Ehson yana \"mavjud\" holatiga qaytarildi."
@@ -93,11 +93,11 @@ TEXTS = {
         "view_receipt_button": "🧾 Chekni ko'rish",
         "ship_reminder": (
             "⏰ Eslatma! <b>{description}</b> ehsoningizni hali yo'lga chiqarmadingiz. "
-            "Iltimos, tezroq yuboring va \"Kabinet\" ilovasida chekni yuklang."
+            "Iltimos, tezroq yuboring va Ehson App orqali chekni yuklang."
         ),
         "receive_reminder": (
             "⏰ Eslatma! Ehsoningiz yo'lda, lekin hali qabul qilganingizni tasdiqlamadingiz. "
-            "Iltimos, \"Kabinet\" ilovasida tasdiqlang."
+            "Iltimos, Ehson App orqali tasdiqlang."
         ),
     },
     "ru": {
@@ -112,7 +112,7 @@ TEXTS = {
         "choose_role": "Здравствуйте! Добро пожаловать в бот пожертвований.\n\nПожалуйста, выберите свой статус:",
         "role_donor": "🫴 Благотворитель",
         "role_needy": "🤲 Нуждающийся",
-        "open_app_hint": "📱 Все действия (добавление, просмотр, кабинет) выполняются внутри приложения, которое открывается кнопкой меню — \"Kabinet\".\n\nЗдесь же вы будете получать только важные уведомления.",
+        "open_app_hint": "📱 Все действия (добавление, просмотр, кабинет) выполняются внутри приложения, которое открывается кнопкой меню — Ehson App.\n\nЗдесь же вы будете получать только важные уведомления.",
         "open_app_button": "📱 Открыть приложение",
         "upload_receipt_button": "🧾 Загрузить чек",
         "new_reservation_for_donor": (
@@ -128,13 +128,13 @@ TEXTS = {
         "shipped_saved_donor": "✅ Спасибо! Подтверждена отправка пожертвования, нуждающийся уведомлён. Как только он подтвердит получение, мы сообщим вам.",
         "shipped_notify_needy": (
             "📦 Хорошая новость! Ваше пожертвование в пути.\n\n"
-            "Почтовый чек прикреплён ниже. Когда получите посылку, подтвердите получение в приложении \"Kabinet\"."
+            "Почтовый чек прикреплён ниже. Когда получите посылку, подтвердите получение через Ehson App."
         ),
         "received_notify_donor": (
             "🎉 Ваше пожертвование успешно доставлено!\n\n"
             "Слова благодарности от нуждающегося:\n<b>\"{dua_text}\"</b>"
         ),
-        "unknown_command": "Пожалуйста, используйте приложение \"Kabinet\".",
+        "unknown_command": "Пожалуйста, используйте Ehson App.",
         "reservation_cancelled_notify_donor": (
             "ℹ️ Нуждающийся отменил заявку на пожертвование <b>\"{description}\"</b>.\n\n"
             "Пожертвование снова доступно."
@@ -142,11 +142,11 @@ TEXTS = {
         "view_receipt_button": "🧾 Посмотреть чек",
         "ship_reminder": (
             "⏰ Напоминание! Вы ещё не отправили пожертвование «<b>{description}</b>». "
-            "Пожалуйста, отправьте его как можно скорее и загрузите чек в приложении \"Kabinet\"."
+            "Пожалуйста, отправьте его как можно скорее и загрузите чек через Ehson App."
         ),
         "receive_reminder": (
             "⏰ Напоминание! Ваше пожертвование в пути, но вы ещё не подтвердили получение. "
-            "Пожалуйста, подтвердите в приложении \"Kabinet\"."
+            "Пожалуйста, подтвердите через Ehson App."
         ),
     },
     "en": {
@@ -161,7 +161,7 @@ TEXTS = {
         "choose_role": "Hello! Welcome to the Charity Sharing bot.\n\nPlease choose your status:",
         "role_donor": "🫴 Donor",
         "role_needy": "🤲 In need",
-        "open_app_hint": "📱 All actions (adding, browsing, your cabinet) happen inside the app opened via the \"Kabinet\" menu button.\n\nHere in chat you'll only receive important notifications.",
+        "open_app_hint": "📱 All actions (adding, browsing, your cabinet) happen inside the app opened via the Ehson App menu button.\n\nHere in chat you'll only receive important notifications.",
         "open_app_button": "📱 Open the app",
         "upload_receipt_button": "🧾 Upload receipt",
         "new_reservation_for_donor": (
@@ -177,13 +177,13 @@ TEXTS = {
         "shipped_saved_donor": "✅ Thank you! Shipment confirmed and the recipient has been notified. We'll let you know once they confirm receipt.",
         "shipped_notify_needy": (
             "📦 Good news! Your donation is on the way.\n\n"
-            "The shipping receipt is attached below. Confirm receipt in the \"Kabinet\" app once you get the package."
+            "The shipping receipt is attached below. Confirm receipt via Ehson App once you get the package."
         ),
         "received_notify_donor": (
             "🎉 Your donation was successfully delivered!\n\n"
             "Words of thanks from the recipient:\n<b>\"{dua_text}\"</b>"
         ),
-        "unknown_command": "Please use the \"Kabinet\" app.",
+        "unknown_command": "Please use Ehson App.",
         "reservation_cancelled_notify_donor": (
             "ℹ️ The recipient cancelled their request for <b>\"{description}\"</b>.\n\n"
             "The donation is available again."
@@ -191,11 +191,11 @@ TEXTS = {
         "view_receipt_button": "🧾 View receipt",
         "ship_reminder": (
             "⏰ Reminder! You haven't shipped your donation \"<b>{description}</b>\" yet. "
-            "Please ship it soon and upload the receipt in the \"Kabinet\" app."
+            "Please ship it soon and upload the receipt via Ehson App."
         ),
         "receive_reminder": (
             "⏰ Reminder! Your donation is on the way, but you haven't confirmed receipt yet. "
-            "Please confirm in the \"Kabinet\" app."
+            "Please confirm via Ehson App."
         ),
     },
     "kk": {
@@ -210,7 +210,7 @@ TEXTS = {
         "choose_role": "Ассалаумағалейкум! Қайыр үлестіру ботына қош келдіңіз.\n\nМәртебеңізді таңдаңыз:",
         "role_donor": "🫴 Қайырымды",
         "role_needy": "🤲 Мұқтаж",
-        "open_app_hint": "📱 Барлық әрекеттер (қайыр қосу, көру, кабинет) төмендегі мәзір түймесі — \"Kabinet\" арқылы ашылатын қосымша ішінде орындалады.\n\nМұнда тек маңызды жаңалықтар мен хабарландырулар жіберіледі.",
+        "open_app_hint": "📱 Барлық әрекеттер (қайыр қосу, көру, кабинет) төмендегі мәзір түймесі — Ehson App арқылы ашылатын қосымша ішінде орындалады.\n\nМұнда тек маңызды жаңалықтар мен хабарландырулар жіберіледі.",
         "open_app_button": "📱 Қосымшаны ашу",
         "upload_receipt_button": "🧾 Чекті жүктеңіз",
         "new_reservation_for_donor": (
@@ -226,13 +226,13 @@ TEXTS = {
         "shipped_saved_donor": "✅ Рахмет! Қайырдың жолға шыққаны расталды және мұқтажға хабарланды. Мұқтаж растаған кезде сізге хабарлаймыз.",
         "shipped_notify_needy": (
             "📦 Қуанышты хабар! Сіздің қайырыңыз жолға шықты.\n\n"
-            "Пошта чегі төменде тіркелген. Қайыр қолыңызға тигенде \"Kabinet\" қосымшасында қабылдағаныңызды растаңыз."
+            "Пошта чегі төменде тіркелген. Қайыр қолыңызға тигенде Ehson App арқылы қабылдағаныңызды растаңыз."
         ),
         "received_notify_donor": (
             "🎉 Қайырыңыз сәтті жетті!\n\n"
             "Мұқтаждың алғысы/тілегі:\n<b>\"{dua_text}\"</b>"
         ),
-        "unknown_command": "Өтінемін, \"Kabinet\" қосымшасын пайдаланыңыз.",
+        "unknown_command": "Өтінемін, Ehson App'ты пайдаланыңыз.",
         "reservation_cancelled_notify_donor": (
             "ℹ️ Мұқтаж <b>\"{description}\"</b> қайырыңызға деген сұрауын бас тартты.\n\n"
             "Қайыр қайтадан \"қолжетімді\" күйіне қайтарылды."
@@ -240,11 +240,11 @@ TEXTS = {
         "view_receipt_button": "🧾 Чекті көру",
         "ship_reminder": (
             "⏰ Еске салу! Сіз әлі <b>«{description}»</b> қайырыңызды жолға шығармадыңыз. "
-            "Өтінемін, жақын арада жіберіп, \"Kabinet\" қосымшасында чекті жүктеңіз."
+            "Өтінемін, жақын арада жіберіп, Ehson App арқылы чекті жүктеңіз."
         ),
         "receive_reminder": (
             "⏰ Еске салу! Қайырыңыз жолда, бірақ сіз әлі қабылдағаныңызды растамадыңыз. "
-            "Өтінемін, \"Kabinet\" қосымшасында растаңыз."
+            "Өтінемін, Ehson App арқылы растаңыз."
         ),
     },
     "tg": {
@@ -259,7 +259,7 @@ TEXTS = {
         "choose_role": "Ассалому алайкум! Ба боти тақсими хайрия хуш омадед.\n\nЛутфан, мақоми худро интихоб намоед:",
         "role_donor": "🫴 Саховатманд",
         "role_needy": "🤲 Ниёзманд",
-        "open_app_hint": "📱 Ҳамаи амалҳо (илова кардани хайрия, дидан, кабинет) дар дохили барномае, ки бо тугмаи меню — \"Kabinet\" кушода мешавад, иҷро мешаванд.\n\nДар ин ҷо бошад, танҳо огоҳиномаҳои муҳим фиристода мешаванд.",
+        "open_app_hint": "📱 Ҳамаи амалҳо (илова кардани хайрия, дидан, кабинет) дар дохили барномае, ки бо тугмаи меню — Ehson App кушода мешавад, иҷро мешаванд.\n\nДар ин ҷо бошад, танҳо огоҳиномаҳои муҳим фиристода мешаванд.",
         "open_app_button": "📱 Кушодани барнома",
         "upload_receipt_button": "🧾 Чекро бор кунед",
         "new_reservation_for_donor": (
@@ -275,13 +275,13 @@ TEXTS = {
         "shipped_saved_donor": "✅ Ташаккур! Фиристодани хайрия тасдиқ шуд ва ба ниёзманд хабар дода шуд. Ҳангоми тасдиқи қабули ниёзманд ба шумо хабар медиҳем.",
         "shipped_notify_needy": (
             "📦 Хушхабар! Хайрияи шумо дар роҳ аст.\n\n"
-            "Чеки почта дар поён замима шудааст. Ҳамин ки хайрия ба дастатон расид, дар барномаи \"Kabinet\" қабул карданатонро тасдиқ кунед."
+            "Чеки почта дар поён замима шудааст. Ҳамин ки хайрия ба дастатон расид, тавассути Ehson App қабул карданатонро тасдиқ кунед."
         ),
         "received_notify_donor": (
             "🎉 Хайрияи шумо бомуваффақият расид!\n\n"
             "Дуо/суханони миннатдории ниёзманд:\n<b>\"{dua_text}\"</b>"
         ),
-        "unknown_command": "Лутфан, аз барномаи \"Kabinet\" истифода баред.",
+        "unknown_command": "Лутфан, аз Ehson App истифода баред.",
         "reservation_cancelled_notify_donor": (
             "ℹ️ Ниёзманд дархости худро нисбат ба хайрияи <b>\"{description}\"</b> бекор кард.\n\n"
             "Хайрия дубора ба ҳолати \"дастрас\" баргашт."
@@ -289,11 +289,11 @@ TEXTS = {
         "view_receipt_button": "🧾 Дидани чек",
         "ship_reminder": (
             "⏰ Ёдоварӣ! Шумо ҳанӯз хайрияи <b>«{description}»</b>-ро нафиристодаед. "
-            "Лутфан, наздиктар фиристед ва дар барномаи \"Kabinet\" чекро бор кунед."
+            "Лутфан, наздиктар фиристед ва тавассути Ehson App чекро бор кунед."
         ),
         "receive_reminder": (
             "⏰ Ёдоварӣ! Хайрияи шумо дар роҳ аст, аммо шумо ҳанӯз қабул карданатонро тасдиқ накардаед. "
-            "Лутфан, дар барномаи \"Kabinet\" тасдиқ кунед."
+            "Лутфан, тавассути Ehson App тасдиқ кунед."
         ),
     },
     "ky": {
@@ -308,7 +308,7 @@ TEXTS = {
         "choose_role": "Ассалому алейкум! Садага үлүштүрүү ботуна кош келиңиз.\n\nСтатусуңузду тандаңыз:",
         "role_donor": "🫴 Кайрымдуу",
         "role_needy": "🤲 Мукташ",
-        "open_app_hint": "📱 Бардык аракеттер (садага кошуу, көрүү, кабинет) төмөнкү меню баскычы — \"Kabinet\" аркылуу ачылуучу колдонмонун ичинде аткарылат.\n\nБул жерде болсо, тек гана маанилүү жаңылыктар жана билдирүүлөр жөнөтүлөт.",
+        "open_app_hint": "📱 Бардык аракеттер (садага кошуу, көрүү, кабинет) төмөнкү меню баскычы — Ehson App аркылуу ачылуучу колдонмонун ичинде аткарылат.\n\nБул жерде болсо, тек гана маанилүү жаңылыктар жана билдирүүлөр жөнөтүлөт.",
         "open_app_button": "📱 Колдонмону ачуу",
         "upload_receipt_button": "🧾 Чекти жүктөңүз",
         "new_reservation_for_donor": (
@@ -324,13 +324,13 @@ TEXTS = {
         "shipped_saved_donor": "✅ Рахмат! Садаганын жолго чыкканы тастыкталды жана мукташка билдирилди. Мукташ тастыктаганда сизге билдиребиз.",
         "shipped_notify_needy": (
             "📦 Кубанычтуу кабар! Сиздин садагаңыз жолдо.\n\n"
-            "Почта чеги төмөндө тиркелген. Садага колуңузга тийери менен \"Kabinet\" колдонмосунда кабыл алганыңызды тастыктаңыз."
+            "Почта чеги төмөндө тиркелген. Садага колуңузга тийери менен Ehson App аркылуу кабыл алганыңызды тастыктаңыз."
         ),
         "received_notify_donor": (
             "🎉 Садагаңыз ийгиликтүү жетти!\n\n"
             "Мукташтын дубасы/ыраазычылыгы:\n<b>\"{dua_text}\"</b>"
         ),
-        "unknown_command": "Сураныч, \"Kabinet\" колдонмосун колдонуңуз.",
+        "unknown_command": "Сураныч, Ehson App колдонуңуз.",
         "reservation_cancelled_notify_donor": (
             "ℹ️ Мукташ <b>\"{description}\"</b> садагаңызга болгон суранычын жокко чыгарды.\n\n"
             "Садага кайра \"жеткиликтүү\" абалына кайтарылды."
@@ -338,11 +338,11 @@ TEXTS = {
         "view_receipt_button": "🧾 Чекти көрүү",
         "ship_reminder": (
             "⏰ Эскертүү! Сиз әли <b>«{description}»</b> садагаңызды жолго чыгарган жоксуз. "
-            "Сураныч, жакын арада жөнөтүп, \"Kabinet\" колдонмосунда чекти жүктөңүз."
+            "Сураныч, жакын арада жөнөтүп, Ehson App аркылуу чекти жүктөңүз."
         ),
         "receive_reminder": (
             "⏰ Эскертүү! Садагаңыз жолдо, бирок сиз әли кабыл алганыңызды тастыктаган жоксуз. "
-            "Сураныч, \"Kabinet\" колдонмосунда тастыктаңыз."
+            "Сураныч, Ehson App аркылуу тастыктаңыз."
         ),
     },
     "tk": {
@@ -357,7 +357,7 @@ TEXTS = {
         "choose_role": "Salam! Sadaka paýlaşyk botuna hoş geldiňiz.\n\nÝagdaýyňyzy saýlaň:",
         "role_donor": "🫴 Sahawatly",
         "role_needy": "🤲 Mätäç",
-        "open_app_hint": "📱 Ähli hereketler (sadaka goşmak, görmek, kabinet) aşakdaky menýu düwmesi — \"Kabinet\" arkaly açylýan programmanyň içinde ýerine ýetirilýär.\n\nBu ýerde bolsa diňe möhüm täzelikler we bildirişler iberilýär.",
+        "open_app_hint": "📱 Ähli hereketler (sadaka goşmak, görmek, kabinet) aşakdaky menýu düwmesi — Ehson App arkaly açylýan programmanyň içinde ýerine ýetirilýär.\n\nBu ýerde bolsa diňe möhüm täzelikler we bildirişler iberilýär.",
         "open_app_button": "📱 Programmany açmak",
         "upload_receipt_button": "🧾 Çeki ýükläň",
         "new_reservation_for_donor": (
@@ -373,13 +373,13 @@ TEXTS = {
         "shipped_saved_donor": "✅ Sag boluň! Sadakanyň ýola çykandygy tassyklandy we mätäje habar berildi. Mätäç tassyklanda size habar bereris.",
         "shipped_notify_needy": (
             "📦 Guwandyryjy habar! Siziň sadakaňyz ýolda.\n\n"
-            "Poçta çeki aşakda goşulan. Sadaka eliňize gowşanda \"Kabinet\" programmasynda kabul edendigiňizi tassyklaň."
+            "Poçta çeki aşakda goşulan. Sadaka eliňize gowşanda Ehson App arkaly kabul edendigiňizi tassyklaň."
         ),
         "received_notify_donor": (
             "🎉 Sadakaňyz üstünlikli gowuşdy!\n\n"
             "Mätäjiň dogasy/minnetdarlygy:\n<b>\"{dua_text}\"</b>"
         ),
-        "unknown_command": "Haýyş, \"Kabinet\" programmasyny ulanyň.",
+        "unknown_command": "Haýyş, Ehson App ulanyň.",
         "reservation_cancelled_notify_donor": (
             "ℹ️ Mätäç <b>\"{description}\"</b> sadakaňyza bolan soragyny ýatyrdy.\n\n"
             "Sadaka ýene-de \"elýeterli\" ýagdaýyna gaýtaryldy."
@@ -387,11 +387,11 @@ TEXTS = {
         "view_receipt_button": "🧾 Çeki görmek",
         "ship_reminder": (
             "⏰ Ýatlatma! Siz entäk <b>«{description}»</b> sadakaňyzy ýola çykarmadyňyz. "
-            "Haýyş, ýakyn wagtda iberiň we \"Kabinet\" programmasynda çeki ýükläň."
+            "Haýyş, ýakyn wagtda iberiň we Ehson App arkaly çeki ýükläň."
         ),
         "receive_reminder": (
             "⏰ Ýatlatma! Sadakaňyz ýolda, ýöne siz entäk kabul edendigiňizi tassyklamadyňyz. "
-            "Haýyş, \"Kabinet\" programmasynda tassyklaň."
+            "Haýyş, Ehson App arkaly tassyklaň."
         ),
     },
 }
