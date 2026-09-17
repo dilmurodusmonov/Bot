@@ -79,7 +79,7 @@ TEXTS = {
         "shipped_saved_donor": "✅ Rahmat! Ehson yo'lga chiqqanligi tasdiqlandi va Muhtojga xabar berildi. Muhtoj ehsoningizni qabul qilib olgandan so'ng sizga albatta xabar beramiz.",
         "shipped_notify_needy": (
             "📦 Xushxabar! Sizning ehsoningiz yo'lga chiqdi.\n\n"
-            "Pochta cheki quyida biriktirilgan. Ehson qo'lingizga tegishi bilan Ehson App orqali qabul qilganingizni tasdiqlang."
+            "Pochta cheki quyida biriktirilgan. Ehson qo'lingizga yetib kelishi bilan Ehson App orqali qabul qilganingizni tasdiqlang."
         ),
         "received_notify_donor": (
             "🎉 Qilingan ehsoningiz muvaffaqiyatli yetkazib berildi!\n\n"
