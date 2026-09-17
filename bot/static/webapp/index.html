@@ -177,7 +177,7 @@
     color: #fff; border: none; border-radius: 10px; padding: 12px; font-size: 14.5px; font-weight: 600;
   }
   .card-btn-blue { background: linear-gradient(135deg, #6EC6FF, #4EA4F5); }
-  .receipt-img { width: 100%; border-radius: 10px; margin-top: 10px; display: block; cursor: pointer; }
+  .card img.receipt-card-img { aspect-ratio: auto; object-fit: contain; background: var(--section-bg); cursor: pointer; }
   .card-btn-outline {
     margin-top: 8px; width: 100%; background: none; color: #C0392B;
     border: 1.5px solid #C0392B; border-radius: 10px; padding: 11px; font-size: 14px; font-weight: 600;
@@ -2236,21 +2236,34 @@
         receipt: reservations.filter(function (r) { return !!r.receipt_photo_url; }),
         received: reservations.filter(function (r) { return r.status === "received"; }),
       };
-      var tabOrder = ["reserved", "shipped", "receipt", "received"];
+      var tabOrder = ["reserved", "receipt", "shipped", "received"];
       var tabLabels = { shipped: tr("shipped"), reserved: tr("reserved"), receipt: tr("receipt_tab"), received: tr("accepted") };
       var savedTab = state.params && state.params.activeTab;
       var activeTab = (savedTab && groups.hasOwnProperty(savedTab))
         ? savedTab
         : (groups.shipped.length ? "shipped" : (groups.reserved.length ? "reserved" : "received"));
 
+      function receiptCardHtmlFor(r) {
+        var statusParts = r.donation.status_label.split(" ");
+        var statusEmoji = statusParts[0];
+        var statusText = r.status === "received" ? tr("accepted") : statusParts.slice(1).join(" ");
+        return (
+          '<div class="card" data-donation-id="' + r.donation.id + '">' +
+          '<img class="receipt-card-img" src="' + r.receipt_photo_url + '" alt="" data-receipt-view>' +
+          '<div class="card-body">' +
+          '<span class="pill pill-' + r.donation.status + '">' + escapeHtml(statusEmoji) + " " + escapeHtml(statusText) + "</span>" +
+          (r.donation.created_at ? '<div class="card-date">' + formatRelativeDate(r.donation.created_at) + "</div>" : "") +
+          '<a class="card-btn card-btn-blue" href="' + r.receipt_photo_url + '" download="chek-' + r.reservation_id + '.jpg">' +
+          tr("download_receipt") + "</a>" +
+          "</div></div>"
+        );
+      }
+
       function cardHtmlFor(r) {
         if (!r.donation) return "";
+        if (activeTab === "receipt") return receiptCardHtmlFor(r);
         var body = donationCardHtml(r.donation, r.status === "received" ? tr("accepted") : null);
-        if (activeTab === "receipt") {
-          body += '<img class="receipt-img" src="' + r.receipt_photo_url + '" alt="" data-receipt-view>';
-          body += '<a class="card-btn card-btn-blue" href="' + r.receipt_photo_url + '" download="chek-' + r.reservation_id + '.jpg">' +
-            tr("download_receipt") + "</a>";
-        } else if (r.status === "reserved") {
+        if (r.status === "reserved") {
           body += '<button class="card-btn" data-cancel="' + r.reservation_id + '">' + tr("cancel_reservation") + "</button>";
         } else if (r.status === "shipped") {
           body += '<button class="card-btn card-btn-blue" data-confirm="' + r.reservation_id + '">' + tr("confirm_received") + "</button>";
