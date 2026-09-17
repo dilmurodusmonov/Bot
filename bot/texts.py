@@ -76,7 +76,7 @@ TEXTS = {
             "📞 <b>{phone}</b>\n\n"
             "Iltimos, ehsonni ko'rsatilgan manzilga yaqin kuryerlik orqali yuboring va Ehson App orqali pochta chekini yuklang."
         ),
-        "shipped_saved_donor": "✅ Rahmat! Ehson yo'lga chiqqanligi tasdiqlandi va Muhtojga xabar berildi. Muhtoj tasdiqlaganda sizga xabar beramiz.",
+        "shipped_saved_donor": "✅ Rahmat! Ehson yo'lga chiqqanligi tasdiqlandi va Muhtojga xabar berildi. Muhtoj ehsoningizni qabul qilib olgandan so'ng sizga albatta xabar beramiz.",
         "shipped_notify_needy": (
             "📦 Xushxabar! Sizning ehsoningiz yo'lga chiqdi.\n\n"
             "Pochta cheki quyida biriktirilgan. Ehson qo'lingizga tegishi bilan Ehson App orqali qabul qilganingizni tasdiqlang."
