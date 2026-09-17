@@ -178,6 +178,7 @@
   }
   .card-btn-blue { background: linear-gradient(135deg, #6EC6FF, #4EA4F5); }
   .receipt-card-img { cursor: pointer; }
+  .receipt-donation-name { font-size: 13px; font-weight: 700; color: var(--text); }
   .card-btn-outline {
     margin-top: 8px; width: 100%; background: none; color: #C0392B;
     border: 1.5px solid #C0392B; border-radius: 10px; padding: 11px; font-size: 14px; font-weight: 600;
@@ -2280,6 +2281,7 @@
           '<img class="receipt-card-img" src="' + r.receipt_photo_url + '" alt="" data-receipt-view>' +
           '<div class="card-body">' +
           '<span class="pill pill-' + r.donation.status + '">' + statusEmojiHtml(r.donation.status, statusEmoji) + " " + escapeHtml(statusText) + "</span>" +
+          ' <span class="receipt-donation-name">' + escapeHtml(r.donation.description) + "</span>" +
           (r.donation.created_at ? '<div class="card-date">' + formatRelativeDate(r.donation.created_at) + "</div>" : "") +
           '<button class="card-btn card-btn-blue" data-download-receipt="' + r.receipt_photo_url +
           '" data-download-name="chek-' + r.reservation_id + '.jpg">' +
