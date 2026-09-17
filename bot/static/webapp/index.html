@@ -2103,7 +2103,9 @@
 
   function renderNeedyList() {
     var category = state.params.category;
-    var canAdd = state.me.role === "donor";
+    // Kanal havolasi orqali kelgan odam ehson olish niyatida — bu holatda
+    // "Ehson joylash" FAB tugmasi chalg'ituvchi, shuning uchun ko'rsatilmaydi.
+    var canAdd = state.me.role === "donor" && !state.params.fromChannel;
     var fabHtml = canAdd ? '<button class="fab" id="add-donation-fab">' + ICONS.plus + "</button>" : "";
     api("GET", "/api/donations?category=" + encodeURIComponent(category)).then(function (donations) {
       if (!donations.length) {
