@@ -172,10 +172,12 @@
   .info-box { background: rgba(0,0,0,0.04); border-radius: 10px; padding: 10px 12px; font-size: 13.5px; line-height: 1.6; margin-top: 8px; }
   .info-box .row { display: flex; gap: 6px; }
   .card-btn {
+    display: block; box-sizing: border-box; text-align: center; text-decoration: none; cursor: pointer;
     margin-top: 10px; width: 100%; background: linear-gradient(135deg, var(--accent1), var(--accent2));
     color: #fff; border: none; border-radius: 10px; padding: 12px; font-size: 14.5px; font-weight: 600;
   }
   .card-btn-blue { background: linear-gradient(135deg, #6EC6FF, #4EA4F5); }
+  .receipt-img { width: 100%; border-radius: 10px; margin-top: 10px; display: block; cursor: pointer; }
   .card-btn-outline {
     margin-top: 8px; width: 100%; background: none; color: #C0392B;
     border: 1.5px solid #C0392B; border-radius: 10px; padding: 11px; font-size: 14px; font-weight: 600;
@@ -589,6 +591,7 @@
       receipt_photo_label: "Chekni yuklang",
       receipt_note_label: "Pochta nomini kiriting",
       receipt_note_placeholder: "Qaysi kuryerlik orqali yuborildi",
+      receipt_tab: "Chek", download_receipt: "Chekni yuklab olish",
       donation_saved: "Ehsoningiz muvaffaqiyatli joylandi!",
       donation_deleted: "Joylangan ehsoningiz o'chirildi",
       shipment_saved: "Chek yuklandi, Muhtojga xabar berildi!",
@@ -645,6 +648,7 @@
       receipt_photo_label: "Загрузите чек",
       receipt_note_label: "Введите название почты",
       receipt_note_placeholder: "Через какую службу отправлено",
+      receipt_tab: "Чек", download_receipt: "Скачать чек",
       donation_saved: "Ваше пожертвование добавлено!",
       donation_deleted: "Ваше пожертвование удалено",
       shipment_saved: "Чек загружен, нуждающийся уведомлён!",
@@ -701,6 +705,7 @@
       receipt_photo_label: "Upload the receipt",
       receipt_note_label: "Enter the courier name",
       receipt_note_placeholder: "Which courier service",
+      receipt_tab: "Receipt", download_receipt: "Download receipt",
       donation_saved: "Your donation has been posted!",
       donation_deleted: "Your donation has been deleted",
       shipment_saved: "Receipt uploaded, the recipient was notified!",
@@ -757,6 +762,7 @@
       receipt_photo_label: "Чекті жүктеңіз",
       receipt_note_label: "Пошта атауын енгізіңіз",
       receipt_note_placeholder: "Қай жеткізу қызметі арқылы жіберілді",
+      receipt_tab: "Чек", download_receipt: "Чекті жүктеп алу",
       donation_saved: "Қайырыңыз жарияланды!",
       donation_deleted: "Қайырыңыз жойылды",
       shipment_saved: "Чек жүктелді, мұқтажға хабарланды!",
@@ -805,6 +811,7 @@
       receipt_photo_label: "Чекро бор кунед",
       receipt_note_label: "Номи почтаро ворид кунед",
       receipt_note_placeholder: "Тавассути кадом хидмати расонӣ фиристода шуд",
+      receipt_tab: "Чек", download_receipt: "Боргирии чек",
       donation_saved: "Хайрияи шумо ҷойгир карда шуд!",
       donation_deleted: "Хайрияи шумо нест карда шуд",
       shipment_saved: "Чек боркунӣ шуд, ба ниёзманд хабар дода шуд!",
@@ -853,6 +860,7 @@
       receipt_photo_label: "Чекти жүктөңүз",
       receipt_note_label: "Почтанын атын киргизиңиз",
       receipt_note_placeholder: "Кайсы жеткирүү кызматы аркылуу жөнөтүлдү",
+      receipt_tab: "Чек", download_receipt: "Чекти жүктөп алуу",
       donation_saved: "Садагаңыз жайгаштырылды!",
       donation_deleted: "Садагаңыз өчүрүлдү",
       shipment_saved: "Чек жүктөлдү, мукташка билдирилди!",
@@ -901,6 +909,7 @@
       receipt_photo_label: "Çeki ýükläň",
       receipt_note_label: "Poçtanyň adyny giriziň",
       receipt_note_placeholder: "Haýsy eltip beriş gullugy arkaly iberildi",
+      receipt_tab: "Çek", download_receipt: "Çeki ýükläp almak",
       donation_saved: "Sadakaňyz ýerleşdirildi!",
       donation_deleted: "Sadakaňyz pozuldy",
       shipment_saved: "Çek ýüklendi, mätäje habar berildi!",
@@ -2224,10 +2233,11 @@
       var groups = {
         shipped: reservations.filter(function (r) { return r.status === "shipped"; }),
         reserved: reservations.filter(function (r) { return r.status === "reserved"; }),
+        receipt: reservations.filter(function (r) { return !!r.receipt_photo_url; }),
         received: reservations.filter(function (r) { return r.status === "received"; }),
       };
-      var tabOrder = ["reserved", "shipped", "received"];
-      var tabLabels = { shipped: tr("shipped"), reserved: tr("reserved"), received: tr("accepted") };
+      var tabOrder = ["reserved", "shipped", "receipt", "received"];
+      var tabLabels = { shipped: tr("shipped"), reserved: tr("reserved"), receipt: tr("receipt_tab"), received: tr("accepted") };
       var savedTab = state.params && state.params.activeTab;
       var activeTab = (savedTab && groups.hasOwnProperty(savedTab))
         ? savedTab
@@ -2236,7 +2246,11 @@
       function cardHtmlFor(r) {
         if (!r.donation) return "";
         var body = donationCardHtml(r.donation, r.status === "received" ? tr("accepted") : null);
-        if (r.status === "reserved") {
+        if (activeTab === "receipt") {
+          body += '<img class="receipt-img" src="' + r.receipt_photo_url + '" alt="" data-receipt-view>';
+          body += '<a class="card-btn card-btn-blue" href="' + r.receipt_photo_url + '" download="chek-' + r.reservation_id + '.jpg">' +
+            tr("download_receipt") + "</a>";
+        } else if (r.status === "reserved") {
           body += '<button class="card-btn" data-cancel="' + r.reservation_id + '">' + tr("cancel_reservation") + "</button>";
         } else if (r.status === "shipped") {
           body += '<button class="card-btn card-btn-blue" data-confirm="' + r.reservation_id + '">' + tr("confirm_received") + "</button>";
@@ -2273,6 +2287,9 @@
             saveNavState();
             renderTab();
           });
+        });
+        app.querySelectorAll("[data-receipt-view]").forEach(function (img) {
+          img.addEventListener("click", function () { openImageLightbox(img.src); });
         });
         app.querySelectorAll("[data-confirm]").forEach(function (btn) {
           btn.addEventListener("click", function () {
