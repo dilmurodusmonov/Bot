@@ -91,6 +91,7 @@ TEXTS = {
             "Ehson yana \"mavjud\" holatiga qaytarildi."
         ),
         "view_receipt_button": "🧾 Chekni ko'rish",
+        "view_donation_button": "🧾 Ehsonni ko'rish",
         "ship_reminder": (
             "⏰ Eslatma! <b>{description}</b> ehsoningizni hali yo'lga chiqarmadingiz. "
             "Iltimos, tezroq yuboring va Ehson App orqali chekni yuklang."
@@ -140,6 +141,7 @@ TEXTS = {
             "Пожертвование снова доступно."
         ),
         "view_receipt_button": "🧾 Посмотреть чек",
+        "view_donation_button": "🧾 Посмотреть пожертвование",
         "ship_reminder": (
             "⏰ Напоминание! Вы ещё не отправили пожертвование «<b>{description}</b>». "
             "Пожалуйста, отправьте его как можно скорее и загрузите чек через Ehson App."
@@ -189,6 +191,7 @@ TEXTS = {
             "The donation is available again."
         ),
         "view_receipt_button": "🧾 View receipt",
+        "view_donation_button": "🧾 View donation",
         "ship_reminder": (
             "⏰ Reminder! You haven't shipped your donation \"<b>{description}</b>\" yet. "
             "Please ship it soon and upload the receipt via Ehson App."
@@ -238,6 +241,7 @@ TEXTS = {
             "Қайыр қайтадан \"қолжетімді\" күйіне қайтарылды."
         ),
         "view_receipt_button": "🧾 Чекті көру",
+        "view_donation_button": "🧾 Қайырды көру",
         "ship_reminder": (
             "⏰ Еске салу! Сіз әлі <b>«{description}»</b> қайырыңызды жолға шығармадыңыз. "
             "Өтінемін, жақын арада жіберіп, Ehson App арқылы чекті жүктеңіз."
@@ -287,6 +291,7 @@ TEXTS = {
             "Хайрия дубора ба ҳолати \"дастрас\" баргашт."
         ),
         "view_receipt_button": "🧾 Дидани чек",
+        "view_donation_button": "🧾 Дидани хайрия",
         "ship_reminder": (
             "⏰ Ёдоварӣ! Шумо ҳанӯз хайрияи <b>«{description}»</b>-ро нафиристодаед. "
             "Лутфан, наздиктар фиристед ва тавассути Ehson App чекро бор кунед."
@@ -336,6 +341,7 @@ TEXTS = {
             "Садага кайра \"жеткиликтүү\" абалына кайтарылды."
         ),
         "view_receipt_button": "🧾 Чекти көрүү",
+        "view_donation_button": "🧾 Садаганы көрүү",
         "ship_reminder": (
             "⏰ Эскертүү! Сиз әли <b>«{description}»</b> садагаңызды жолго чыгарган жоксуз. "
             "Сураныч, жакын арада жөнөтүп, Ehson App аркылуу чекти жүктөңүз."
@@ -385,6 +391,7 @@ TEXTS = {
             "Sadaka ýene-de \"elýeterli\" ýagdaýyna gaýtaryldy."
         ),
         "view_receipt_button": "🧾 Çeki görmek",
+        "view_donation_button": "🧾 Sadakany görmek",
         "ship_reminder": (
             "⏰ Ýatlatma! Siz entäk <b>«{description}»</b> sadakaňyzy ýola çykarmadyňyz. "
             "Haýyş, ýakyn wagtda iberiň we Ehson App arkaly çeki ýükläň."
