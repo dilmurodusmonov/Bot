@@ -102,7 +102,11 @@ def _channel_caption(
 
 
 def _receipt_keyboard(
-    lang: str, reservation_id: int, screen: str, active_tab: str = "shipped"
+    lang: str,
+    reservation_id: int,
+    screen: str,
+    active_tab: str = "shipped",
+    button_text_key: str = "view_receipt_button",
 ) -> Optional[InlineKeyboardMarkup]:
     """Bot chatida chek rasmini katta holda ko'rsatish o'rniga, qisqa
     matnli xabar ostiga tugma qo'yiladi — bosilganda Mini App aynan
@@ -112,7 +116,7 @@ def _receipt_keyboard(
         return None
     url = f"{WEBAPP_URL}&screen={screen}&activeTab={active_tab}&r={reservation_id}"
     return InlineKeyboardMarkup(inline_keyboard=[[
-        InlineKeyboardButton(text=t(lang, "view_receipt_button"), web_app=WebAppInfo(url=url))
+        InlineKeyboardButton(text=t(lang, button_text_key), web_app=WebAppInfo(url=url))
     ]])
 
 
@@ -744,7 +748,9 @@ async def api_ship_reservation(request: web.Request) -> web.Response:
         telegram_id,
         reservation["donor_notify_message_id"],
         t(lang, "shipped_saved_donor"),
-        reply_markup=_receipt_keyboard(lang, reservation_id, "donor_cabinet"),
+        reply_markup=_receipt_keyboard(
+            lang, reservation_id, "donor_cabinet", button_text_key="view_donation_button"
+        ),
     )
     await set_donor_notify_message(reservation_id, donor_message_id)
 
