@@ -789,6 +789,35 @@ _SHARE_ICON_PATH = (
     "M20.1 7.5 L16.5 17.8 Q15 22 13.2 17.9 L11 13 L6.1 10.8 Q2 9 6.2 7.5 "
     "L16.5 3.9 Q22 2 20.1 7.5 Z"
 )
+# Ilovadagi "Qabul qilingan" holatida ishlatiladigan xuddi shu ko'k
+# rozetka — /d/{id} ulashish sahifasi ham ilovaning o'zi kabi haqiqiy
+# HTML/CSS bo'lgani uchun (Telegram xabar matnidan farqli o'laroq) bu
+# yerda aynan bir xil SVG va animatsiyani ishlatish mumkin.
+_VERIFIED_BADGE_SVG = (
+    '<svg viewBox="0 0 24 24" width="16" height="16" fill="#4EA4F5">'
+    '<path fill-rule="evenodd" clip-rule="evenodd" d="M8.603 3.799A4.49 4.49 0 0112 2.25c1.357 0 2.573.6 '
+    '3.397 1.549a4.49 4.49 0 013.498 1.307 4.491 4.491 0 011.307 3.497A4.49 4.49 0 0121.75 12a4.49 4.49 0 '
+    '01-1.549 3.397 4.491 4.491 0 01-1.307 3.497 4.491 4.491 0 01-3.497 1.307A4.49 4.49 0 0112 21.75a4.49 '
+    '4.49 0 01-3.397-1.549 4.49 4.49 0 01-3.498-1.306 4.491 4.491 0 01-1.307-3.498A4.49 4.49 0 012.25 12c0'
+    '-1.357.6-2.573 1.549-3.397a4.49 4.49 0 011.307-3.497 4.49 4.49 0 013.497-1.307zm7.007 6.387a.75.75 0 '
+    '10-1.22-.872l-3.236 4.53L9.53 12.22a.75.75 0 00-1.06 1.06l2.25 2.25a.75.75 0 001.14-.094l3.75-5.25z">'
+    "</path></svg>"
+)
+
+
+def _status_emoji_html(status: str, emoji: str) -> str:
+    """statusEmojiHtml() (webapp/index.html) bilan bir xil — /d/{id}
+    ulashish sahifasidagi holat belgisi ilovadagidan farq qilmasligi
+    uchun."""
+    if status == "available":
+        return '<span class="hourglass-swap"><span class="a">⏳</span><span class="b">⌛</span></span>'
+    if status == "shipped":
+        return f'<span class="truck-road">{escape(emoji)}<span class="road-track"></span></span>'
+    if status == "received":
+        return f'<span class="check-pop">{_VERIFIED_BADGE_SVG}</span>'
+    if status == "reserved":
+        return f'<span class="handshake-shake">{escape(emoji)}</span>'
+    return escape(emoji)
 
 
 async def donation_share_page(request: web.Request) -> web.Response:
@@ -886,6 +915,33 @@ async def donation_share_page(request: web.Request) -> web.Response:
   .card-body {{ padding: 12px 14px; }}
   .card-desc {{ font-size: 13.5px; font-weight: 700; line-height: 1.4; margin-bottom: 8px; }}
   .pill {{ display: inline-block; padding: 3px 10px; border-radius: 20px; font-size: 12px; background: rgba(0,0,0,0.06); margin-bottom: 8px; }}
+  .pill-available {{ color: #9AA7B3; }}
+  .pill-reserved {{ color: #FFB454; }}
+  .pill-shipped {{ color: #4EA4F5; }}
+  .pill-received {{ color: #4EA4F5; }}
+  .hourglass-swap {{ position: relative; display: inline-block; width: 1em; height: 1em; vertical-align: -0.15em; }}
+  .hourglass-swap span {{ position: absolute; left: 0; top: 0; }}
+  .hourglass-swap .a {{ animation: hourglassA 3.2s infinite; }}
+  .hourglass-swap .b {{ animation: hourglassB 3.2s infinite; }}
+  @keyframes hourglassA {{ 0%, 45% {{ opacity: 1; }} 50%, 95% {{ opacity: 0; }} 100% {{ opacity: 1; }} }}
+  @keyframes hourglassB {{ 0%, 45% {{ opacity: 0; }} 50%, 95% {{ opacity: 1; }} 100% {{ opacity: 0; }} }}
+  .truck-road {{ position: relative; display: inline-block; vertical-align: -0.15em; padding-bottom: 1px; }}
+  .truck-road .road-track {{
+    position: absolute; left: 0; right: 0; bottom: 0; height: 2px; border-radius: 1px; overflow: hidden;
+    background-image: repeating-linear-gradient(90deg, currentColor 0 3px, transparent 3px 6px);
+    background-size: 12px 2px; animation: roadScroll 0.6s linear infinite; opacity: 0.55;
+  }}
+  @keyframes roadScroll {{ from {{ background-position: -12px 0; }} to {{ background-position: 0 0; }} }}
+  .check-pop {{ display: inline-block; vertical-align: -0.28em; animation: checkOpen 4s ease-in-out infinite; }}
+  @keyframes checkOpen {{ 0% {{ transform: scale(0); opacity: 0; }} 25% {{ transform: scale(1); opacity: 1; }} 100% {{ transform: scale(1); opacity: 1; }} }}
+  .handshake-shake {{ display: inline-block; transform-origin: 70% 70%; animation: handshakeShake 3s ease-in-out infinite; }}
+  @keyframes handshakeShake {{
+    0%, 60%, 100% {{ transform: rotate(0deg); }}
+    65% {{ transform: rotate(-12deg); }}
+    75% {{ transform: rotate(10deg); }}
+    85% {{ transform: rotate(-6deg); }}
+    92% {{ transform: rotate(0deg); }}
+  }}
   .card-date {{ font-size: 11px; color: var(--hint); letter-spacing: 0.3px; margin-top: 2px; }}
   a.btn {{ display:block; text-align:center; margin-top: 16px; background:#2AABEE; color:#fff; text-decoration:none; padding: 13px 28px; border-radius: 24px; font-weight:600; }}
 </style>
@@ -910,7 +966,7 @@ async def donation_share_page(request: web.Request) -> web.Response:
       </div>
       <div class="card-body">
         <div class="card-desc">{escape(description)}</div>
-        <span class="pill">{escape(status_emoji)} {escape(status_text)}</span>
+        <span class="pill pill-{donation["status"]}">{_status_emoji_html(donation["status"], status_emoji)} {escape(status_text)}</span>
         <div class="card-date">{escape(_format_date_uz(donation["created_at"]))}</div>
       </div>
     </div>
