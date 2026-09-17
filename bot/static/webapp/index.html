@@ -2139,7 +2139,7 @@
       if (!donations.length) {
         app.innerHTML = '<div class="empty-state">' + tr("empty_donations") + "</div>" + fabHtml;
       } else {
-        // Kanaldagi "Ehsonni olish" havolasi orqali kelgan odam ham ehsonni
+        // Kanaldagi "Ehsonni ko'rish" havolasi orqali kelgan odam ham ehsonni
         // ola bilishi kerak — u hali "Muhtoj" rolini tanlamagan bo'lishi
         // mumkin.
         var canReserve = state.me.role === "needy" || !!state.params.fromChannel;
