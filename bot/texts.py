@@ -83,7 +83,7 @@ TEXTS = {
         ),
         "received_notify_donor": (
             "🎉 Qilingan ehsoningiz muvaffaqiyatli yetkazib berildi!\n\n"
-            "Muhtojning duosi/minnatdorchiligi:\n<b>\"{dua_text}\"</b>"
+            "Muhtojning sizga bildirgan duosi va minnatdorchilik so'zlari quyida keltirilgan:\n<b>\"{dua_text}\"</b>"
         ),
         "unknown_command": "Iltimos, Ehson App'dan foydalaning.",
         "reservation_cancelled_notify_donor": (
