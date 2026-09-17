@@ -426,5 +426,5 @@ def status_label(status: str, lang: str) -> str:
 # Kanalning auditoriyasi aralash, shuning uchun e'lon matni foydalanuvchi
 # tiliga bog'lanmaydi — bitta o'zbekcha shablon ishlatiladi.
 
-CHANNEL_OPEN_BUTTON = "🤲 Ehsonni olish"
+CHANNEL_OPEN_BUTTON = "🤲 Ehsonni ko'rish"
 
