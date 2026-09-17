@@ -102,7 +102,7 @@ def _channel_caption(
 
 
 def _receipt_keyboard(
-    lang: str, reservation_id: int, screen: str
+    lang: str, reservation_id: int, screen: str, active_tab: str = "shipped"
 ) -> Optional[InlineKeyboardMarkup]:
     """Bot chatida chek rasmini katta holda ko'rsatish o'rniga, qisqa
     matnli xabar ostiga tugma qo'yiladi — bosilganda Mini App aynan
@@ -110,7 +110,7 @@ def _receipt_keyboard(
     kodidagi "r" parametri orqali)."""
     if not WEBAPP_URL:
         return None
-    url = f"{WEBAPP_URL}&screen={screen}&activeTab=shipped&r={reservation_id}"
+    url = f"{WEBAPP_URL}&screen={screen}&activeTab={active_tab}&r={reservation_id}"
     return InlineKeyboardMarkup(inline_keyboard=[[
         InlineKeyboardButton(text=t(lang, "view_receipt_button"), web_app=WebAppInfo(url=url))
     ]])
@@ -754,7 +754,7 @@ async def api_ship_reservation(request: web.Request) -> web.Response:
         reservation["needy_id"],
         reservation["needy_notify_message_id"],
         t(needy_lang, "shipped_notify_needy"),
-        reply_markup=_receipt_keyboard(needy_lang, reservation_id, "needy_cabinet"),
+        reply_markup=_receipt_keyboard(needy_lang, reservation_id, "needy_cabinet", "receipt"),
     )
     await set_needy_notify_message(reservation_id, needy_message_id)
     return web.json_response({"ok": True})
