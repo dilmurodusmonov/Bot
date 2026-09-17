@@ -1788,6 +1788,18 @@
     }).catch(function () { showError(); });
   }
 
+  function statusEmojiHtml(status, emoji) {
+    return status === "available"
+      ? '<span class="hourglass-swap"><span class="a">⏳</span><span class="b">⌛</span></span>'
+      : status === "shipped"
+      ? '<span class="truck-road">' + escapeHtml(emoji) + '<span class="road-track"></span></span>'
+      : status === "received"
+      ? '<span class="check-pop">' + ICONS.verifiedBadge + "</span>"
+      : status === "reserved"
+      ? '<span class="handshake-shake">' + escapeHtml(emoji) + "</span>"
+      : escapeHtml(emoji);
+  }
+
   function donationCardHtml(d, statusTextOverride) {
     var labelParts = d.category_label.split(" ");
     var catEmoji = labelParts[0];
@@ -1818,15 +1830,6 @@
     var statusParts = d.status_label.split(" ");
     var statusEmoji = statusParts[0];
     var statusText = statusTextOverride || statusParts.slice(1).join(" ");
-    var statusEmojiHtml = d.status === "available"
-      ? '<span class="hourglass-swap"><span class="a">⏳</span><span class="b">⌛</span></span>'
-      : d.status === "shipped"
-      ? '<span class="truck-road">' + escapeHtml(statusEmoji) + '<span class="road-track"></span></span>'
-      : d.status === "received"
-      ? '<span class="check-pop">' + ICONS.verifiedBadge + "</span>"
-      : d.status === "reserved"
-      ? '<span class="handshake-shake">' + escapeHtml(statusEmoji) + "</span>"
-      : escapeHtml(statusEmoji);
     var likeCount = d.like_count || 0;
     var shareCount = d.share_count || 0;
     var actionsHtml =
@@ -1847,7 +1850,7 @@
       mediaHtml +
       actionsHtml +
       '<div class="card-body">' +
-      '<span class="pill pill-' + d.status + '">' + statusEmojiHtml + " " + escapeHtml(statusText) + "</span>" +
+      '<span class="pill pill-' + d.status + '">' + statusEmojiHtml(d.status, statusEmoji) + " " + escapeHtml(statusText) + "</span>" +
       (d.created_at ? '<div class="card-date">' + formatRelativeDate(d.created_at) + "</div>" : "")
     );
   }
@@ -2251,7 +2254,7 @@
           '<div class="card" data-donation-id="' + r.donation.id + '">' +
           '<img class="receipt-card-img" src="' + r.receipt_photo_url + '" alt="" data-receipt-view>' +
           '<div class="card-body">' +
-          '<span class="pill pill-' + r.donation.status + '">' + escapeHtml(statusEmoji) + " " + escapeHtml(statusText) + "</span>" +
+          '<span class="pill pill-' + r.donation.status + '">' + statusEmojiHtml(r.donation.status, statusEmoji) + " " + escapeHtml(statusText) + "</span>" +
           (r.donation.created_at ? '<div class="card-date">' + formatRelativeDate(r.donation.created_at) + "</div>" : "") +
           '<a class="card-btn card-btn-blue" href="' + r.receipt_photo_url + '" download="chek-' + r.reservation_id + '.jpg">' +
           tr("download_receipt") + "</a>" +
