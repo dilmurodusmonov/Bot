@@ -526,6 +526,17 @@ async def api_confirm_received(request: web.Request) -> web.Response:
         donation["donor_id"],
         reservation["donor_notify_message_id"],
         t(donor_lang, "received_notify_donor", dua_text=escape(dua_text, quote=False)),
+        reply_markup=(
+            InlineKeyboardMarkup(inline_keyboard=[[
+                InlineKeyboardButton(
+                    text=t(donor_lang, "open_app_button"),
+                    web_app=WebAppInfo(
+                        url=f"{WEBAPP_URL}&screen=donor_cabinet&activeTab=received&r={reservation_id}"
+                    ),
+                )
+            ]])
+            if WEBAPP_URL else None
+        ),
     )
     await set_donor_notify_message(reservation_id, donor_message_id)
 
