@@ -82,7 +82,7 @@ TEXTS = {
             "Pochta cheki quyida biriktirilgan. Ehson qo'lingizga tegishi bilan Ehson App orqali qabul qilganingizni tasdiqlang."
         ),
         "received_notify_donor": (
-            "🎉 Ehsoningiz muvaffaqiyatli yetib bordi!\n\n"
+            "🎉 Qilingan ehsoningiz muvaffaqiyatli yetkazib berildi!\n\n"
             "Muhtojning duosi/minnatdorchiligi:\n<b>\"{dua_text}\"</b>"
         ),
         "unknown_command": "Iltimos, Ehson App'dan foydalaning.",
