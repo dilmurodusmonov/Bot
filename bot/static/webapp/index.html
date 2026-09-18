@@ -366,7 +366,11 @@
     flex-direction: column; align-items: flex-start; justify-content: center;
     gap: 3px; padding: 12px 16px;
   }
-  .ad-slide-placeholder { justify-content: flex-start; font-size: 16px; font-weight: 700; letter-spacing: 1px; text-transform: uppercase; }
+  .ad-slide-placeholder {
+    flex-direction: column; align-items: flex-start; justify-content: center; gap: 5px;
+  }
+  .ad-placeholder-title { font-size: 16px; font-weight: 700; letter-spacing: 1px; text-transform: uppercase; }
+  .ad-placeholder-pitch { font-size: 11px; font-weight: 500; letter-spacing: normal; text-transform: none; line-height: 1.3; opacity: 0.92; }
   .hadith-intro { font-size: 11.5px; font-weight: 600; letter-spacing: normal; opacity: 0.9; }
   .hadith-quote { font-size: 14px; font-weight: 600; letter-spacing: normal; line-height: 1.32; }
   .hadith-source { font-size: 10.5px; font-weight: 500; letter-spacing: normal; opacity: 0.85; margin-top: 10px; }
@@ -599,6 +603,7 @@
       stats_label: "Ehsonlar", delivered_suffix: "dona ehsonlar o'z egalariga yetkazildi",
       month_names: ["Yanvar", "Fevral", "Mart", "Aprel", "May", "Iyun", "Iyul", "Avgust", "Sentyabr", "Oktyabr", "Noyabr", "Dekabr"],
       ad_placeholder: "REKLAMA",
+      ad_placeholder_pitch: "Ehsonli qo'llar ijtimoiy loyihamizni rivojlantirishda o'zingizni ijtimoiy tarmoq sahifangizni reklama qilib hissa qo'shing...",
       settings_title: "Umumiy sozlamalar", language_label: "Til", notifications_label: "Bildirishnomalar",
       add_to_home_title: "Ehsonni bir urinishda oching",
       add_to_home_desc: "Ilovani bir zumda ochish uchun Ehsonni bosh ekranga qo'shing.",
@@ -656,6 +661,7 @@
       stats_label: "Всего пожертвований", delivered_suffix: "доставлено",
       month_names: ["Января", "Февраля", "Марта", "Апреля", "Мая", "Июня", "Июля", "Августа", "Сентября", "Октября", "Ноября", "Декабря"],
       ad_placeholder: "РЕКЛАМА",
+      ad_placeholder_pitch: "Помогите развитию нашего социального проекта «Ehsonli qo'llar», разместив рекламу на своей странице в соцсетях...",
       settings_title: "Общие настройки", language_label: "Язык", notifications_label: "Уведомления",
       add_to_home_title: "Открывайте Ehson в один клик",
       add_to_home_desc: "Чтобы открывать приложение мгновенно, добавьте Ehson на главный экран.",
@@ -713,6 +719,7 @@
       stats_label: "Total donations", delivered_suffix: "delivered",
       month_names: ["January", "February", "March", "April", "May", "June", "July", "August", "September", "October", "November", "December"],
       ad_placeholder: "AD",
+      ad_placeholder_pitch: "Help grow our social project \"Ehsonli qo'llar\" by advertising it on your own social media page...",
       settings_title: "General settings", language_label: "Language", notifications_label: "Notifications",
       add_to_home_title: "Open Ehson in one tap",
       add_to_home_desc: "Add Ehson to your home screen to open the app instantly.",
@@ -770,6 +777,7 @@
       stats_label: "Қайырлар", delivered_suffix: "қайыр жеткізілді",
       month_names: ["Қаңтар", "Ақпан", "Наурыз", "Сәуір", "Мамыр", "Маусым", "Шілде", "Тамыз", "Қыркүйек", "Қазан", "Қараша", "Желтоқсан"],
       ad_placeholder: "ЖАРНАМА",
+      ad_placeholder_pitch: "«Ehsonli qo'llar» әлеуметтік жобамызды дамытуға өз әлеуметтік желі бетіңізде жарнамалап үлес қосыңыз...",
       settings_title: "Жалпы баптаулар", language_label: "Тіл", notifications_label: "Хабарландырулар",
       add_to_home_title: "Ehson-ды бір басуда ашыңыз",
       add_to_home_desc: "Қосымшаны лезде ашу үшін Ehson-ды басты экранға қосыңыз.",
@@ -819,6 +827,7 @@
       stats_label: "Хайрияҳо", delivered_suffix: "адад хайрия расонида шуд",
       month_names: ["Январ", "Феврал", "Март", "Апрел", "Май", "Июн", "Июл", "Август", "Сентябр", "Октябр", "Ноябр", "Декабр"],
       ad_placeholder: "РЕКЛАМА",
+      ad_placeholder_pitch: "Барои рушди лоиҳаи иҷтимоии «Ehsonli qo'llar» бо реклама кардани он дар саҳифаи шабакаи иҷтимоии худ саҳм гузоред...",
       settings_title: "Танзимоти умумӣ", language_label: "Забон", notifications_label: "Огоҳиномаҳо",
       add_to_home_title: "Ehson-ро бо як зарба кушоед",
       add_to_home_desc: "Барои дарҳол кушодани барнома, Ehson-ро ба экрани асосӣ илова кунед.",
@@ -868,6 +877,7 @@
       stats_label: "Садагалар", delivered_suffix: "садага жеткирилди",
       month_names: ["Январь", "Февраль", "Март", "Апрель", "Май", "Июнь", "Июль", "Август", "Сентябрь", "Октябрь", "Ноябрь", "Декабрь"],
       ad_placeholder: "ЖАРНАМА",
+      ad_placeholder_pitch: "«Ehsonli qo'llar» коомдук долбоорубуздун өнүгүшүнө өз социалдык тармак баракчаңызда жарнамалап үлүш кошуңуз...",
       settings_title: "Жалпы жөндөөлөр", language_label: "Тил", notifications_label: "Билдирүүлөр",
       add_to_home_title: "Ehson-ду бир басуу менен ачыңыз",
       add_to_home_desc: "Колдонмону дароо ачуу үчүн Ehson-ду башкы экранга кошуңуз.",
@@ -917,6 +927,7 @@
       stats_label: "Sadakalar", delivered_suffix: "sadaka gowşuryldy",
       month_names: ["Ýanwar", "Fewral", "Mart", "Aprel", "Maý", "Iýun", "Iýul", "Awgust", "Sentýabr", "Oktýabr", "Noýabr", "Dekabr"],
       ad_placeholder: "REKLAMA",
+      ad_placeholder_pitch: "«Ehsonli qo'llar» durmuş taslamamyzy ösdürmekde, öz sosial ulgam sahypaňyzda mahabatlandyryp goşant goşuň...",
       settings_title: "Umumy sazlamalar", language_label: "Dil", notifications_label: "Bildirişler",
       add_to_home_title: "Ehson-y bir basyşda açyň",
       add_to_home_desc: "Programmany haýal etmän açmak üçin Ehson-y baş ekrana goşuň.",
@@ -1590,10 +1601,10 @@
 
         var ads2Html =
           '<div class="ad-banner" id="ad-banner-2">' +
-          '<div class="ad-slide ad-1 active ad-slide-placeholder">' + tr("ad_placeholder") + "</div>" +
-          '<div class="ad-slide ad-2 ad-slide-placeholder">' + tr("ad_placeholder") + "</div>" +
-          '<div class="ad-slide ad-3 ad-slide-placeholder">' + tr("ad_placeholder") + "</div>" +
-          '<div class="ad-slide ad-4 ad-slide-placeholder">' + tr("ad_placeholder") + "</div>" +
+          '<div class="ad-slide ad-1 active ad-slide-placeholder"><div class="ad-placeholder-title">' + tr("ad_placeholder") + '</div><div class="ad-placeholder-pitch">' + tr("ad_placeholder_pitch") + "</div></div>" +
+          '<div class="ad-slide ad-2 ad-slide-placeholder"><div class="ad-placeholder-title">' + tr("ad_placeholder") + '</div><div class="ad-placeholder-pitch">' + tr("ad_placeholder_pitch") + "</div></div>" +
+          '<div class="ad-slide ad-3 ad-slide-placeholder"><div class="ad-placeholder-title">' + tr("ad_placeholder") + '</div><div class="ad-placeholder-pitch">' + tr("ad_placeholder_pitch") + "</div></div>" +
+          '<div class="ad-slide ad-4 ad-slide-placeholder"><div class="ad-placeholder-title">' + tr("ad_placeholder") + '</div><div class="ad-placeholder-pitch">' + tr("ad_placeholder_pitch") + "</div></div>" +
           '<div class="ad-dots" id="ad-dots-2">' +
           '<span class="ad-dot active" data-i="0"></span>' +
           '<span class="ad-dot" data-i="1"></span>' +
