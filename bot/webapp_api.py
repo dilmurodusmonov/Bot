@@ -27,7 +27,6 @@ from bot.database import (
     create_user_if_missing,
     count_new_donations_last_24h,
     delete_donation,
-    get_ad_bid,
     get_ad_bids_ranked,
     increment_ad_views,
     increment_donation_share,
@@ -50,7 +49,7 @@ from bot.database import (
     set_user_language,
     set_user_role,
     toggle_donation_like,
-    upsert_ad_bid,
+    insert_ad_bid,
 )
 from bot.notify import send_tracked_message as _send_tracked_message
 from bot.texts import (
@@ -623,11 +622,10 @@ async def api_ads_bid(request: web.Request) -> web.Response:
 
     if bid_amount < AD_MIN_STARTING_BID:
         raise web.HTTPConflict(text="bid_too_low")
-    existing = await get_ad_bid(telegram_id)
-    if existing and bid_amount <= existing["bid_amount"]:
-        raise web.HTTPConflict(text="bid_must_increase")
 
-    await upsert_ad_bid(telegram_id, brand_name, url, bid_amount)
+    # Har bir taklif mustaqil qator sifatida qo'shiladi — bitta foydalanuvchi
+    # bir nechta turli brend/taklif joylashtirishi mumkin.
+    await insert_ad_bid(telegram_id, brand_name, url, bid_amount)
     return web.json_response({"ok": True})
 
 

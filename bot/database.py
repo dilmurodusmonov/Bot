@@ -61,12 +61,12 @@ CREATE TABLE IF NOT EXISTS donation_likes (
 );
 
 CREATE TABLE IF NOT EXISTS ad_bids (
-    telegram_id BIGINT PRIMARY KEY REFERENCES users(telegram_id),
+    id SERIAL PRIMARY KEY,
+    telegram_id BIGINT NOT NULL REFERENCES users(telegram_id),
     brand_name TEXT NOT NULL,
     url TEXT NOT NULL,
     bid_amount BIGINT NOT NULL,
-    created_at TIMESTAMPTZ NOT NULL DEFAULT now(),
-    updated_at TIMESTAMPTZ NOT NULL DEFAULT now()
+    created_at TIMESTAMPTZ NOT NULL DEFAULT now()
 );
 """
 
@@ -89,6 +89,7 @@ async def init_db() -> None:
         await _migrate_donation_share_count(conn)
         await _migrate_donation_channel_message(conn)
         await _migrate_reservation_notify_messages(conn)
+        await _migrate_ad_bids_multi(conn)
 
 
 async def _migrate_ad_stats(conn: asyncpg.Connection) -> None:
@@ -166,6 +167,24 @@ async def _migrate_reservation_notify_messages(conn: asyncpg.Connection) -> None
                  AND channel_message_ids IS NULL"""
         )
         await conn.execute("ALTER TABLE donations DROP COLUMN channel_message_id")
+
+
+async def _migrate_ad_bids_multi(conn: asyncpg.Connection) -> None:
+    """Dastlab ad_bids'da telegram_id PRIMARY KEY edi — bitta foydalanuvchi
+    faqat bitta taklif berishi mumkin edi, yangi brend qo'shsa eskisi
+    almashtirilib ketardi. Endi bitta foydalanuvchi bir nechta mustaqil
+    brend/taklif joylashi mumkin — har biri o'z qatoriga ega bo'lishi
+    uchun avtomatik o'sadigan 'id' PRIMARY KEY'ga o'tkaziladi."""
+    has_id_column = await conn.fetchval(
+        """SELECT EXISTS (
+               SELECT 1 FROM information_schema.columns
+               WHERE table_name = 'ad_bids' AND column_name = 'id'
+           )"""
+    )
+    if not has_id_column:
+        await conn.execute("ALTER TABLE ad_bids DROP CONSTRAINT IF EXISTS ad_bids_pkey")
+        await conn.execute("ALTER TABLE ad_bids ADD COLUMN id SERIAL PRIMARY KEY")
+        await conn.execute("ALTER TABLE ad_bids DROP COLUMN IF EXISTS updated_at")
 
 
 # --- users -----------------------------------------------------------------
@@ -532,19 +551,12 @@ async def get_ad_bids_ranked() -> list[dict[str, Any]]:
     return [dict(row) for row in rows]
 
 
-async def get_ad_bid(telegram_id: int) -> Optional[dict[str, Any]]:
-    row = await _get_pool().fetchrow(
-        "SELECT * FROM ad_bids WHERE telegram_id = $1", telegram_id
-    )
-    return dict(row) if row else None
-
-
-async def upsert_ad_bid(telegram_id: int, brand_name: str, url: str, bid_amount: int) -> None:
+async def insert_ad_bid(telegram_id: int, brand_name: str, url: str, bid_amount: int) -> None:
+    """Har bir taklif alohida qator sifatida qo'shiladi — bitta foydalanuvchi
+    bir nechta mustaqil brend/taklif joylashtirishi mumkin."""
     await _get_pool().execute(
-        """INSERT INTO ad_bids (telegram_id, brand_name, url, bid_amount, updated_at)
-           VALUES ($1, $2, $3, $4, now())
-           ON CONFLICT (telegram_id) DO UPDATE
-           SET brand_name = $2, url = $3, bid_amount = $4, updated_at = now()""",
+        """INSERT INTO ad_bids (telegram_id, brand_name, url, bid_amount)
+           VALUES ($1, $2, $3, $4)""",
         telegram_id, brand_name, url, bid_amount,
     )
 
