@@ -1,6 +1,7 @@
 import asyncio
 import json
 import logging
+import re
 from html import escape
 from typing import Optional
 
@@ -26,6 +27,8 @@ from bot.database import (
     create_user_if_missing,
     count_new_donations_last_24h,
     delete_donation,
+    get_ad_bid,
+    get_ad_bids_ranked,
     increment_ad_views,
     increment_donation_share,
     get_active_reservation_for_donation,
@@ -47,6 +50,7 @@ from bot.database import (
     set_user_language,
     set_user_role,
     toggle_donation_like,
+    upsert_ad_bid,
 )
 from bot.notify import send_tracked_message as _send_tracked_message
 from bot.texts import (
@@ -571,6 +575,62 @@ async def api_ad_view(request: web.Request) -> web.Response:
     return web.json_response({"slide": slide, "views": views})
 
 
+# --- "Reklama berish" reyting/taklif tizimi ----------------------------------
+# ESLATMA: hozircha Click/Payme kabi haqiqiy to'lov integratsiyasi ulanmagan —
+# taklif shu yerda "test rejimida" darhol tasdiqlangan deb qabul qilinadi.
+# Haqiqiy to'lov ulanganda, upsert_ad_bid() chaqirilishidan oldin to'lov
+# tasdiqlanishini kutish kerak bo'ladi.
+AD_MIN_STARTING_BID = 50_000
+AD_MIN_INCREMENT = 10_000
+
+
+async def api_ads_leaderboard(request: web.Request) -> web.Response:
+    telegram_id = await _require_user_id(request)
+    bids = await get_ad_bids_ranked()
+    top_amount = bids[0]["bid_amount"] if bids else 0
+    result = [
+        {
+            "rank": i + 1,
+            "brand_name": b["brand_name"],
+            "url": b["url"],
+            "bid_amount": b["bid_amount"],
+            "is_me": b["telegram_id"] == telegram_id,
+        }
+        for i, b in enumerate(bids)
+    ]
+    return web.json_response({
+        "bids": result,
+        "min_starting_bid": AD_MIN_STARTING_BID,
+        "min_increment": AD_MIN_INCREMENT,
+        "next_top_bid": top_amount + AD_MIN_INCREMENT if bids else AD_MIN_STARTING_BID,
+    })
+
+
+async def api_ads_bid(request: web.Request) -> web.Response:
+    telegram_id = await _require_user_id(request)
+    body = await request.json()
+    brand_name = (body.get("brand_name") or "").strip()
+    url = (body.get("url") or "").strip()
+    bid_amount = body.get("bid_amount")
+
+    if not brand_name or not url:
+        raise web.HTTPBadRequest(text="missing fields")
+    if not re.match(r"^https?://", url):
+        url = "https://" + url
+    if not isinstance(bid_amount, (int, float)) or bid_amount <= 0:
+        raise web.HTTPBadRequest(text="invalid bid_amount")
+    bid_amount = int(bid_amount)
+
+    if bid_amount < AD_MIN_STARTING_BID:
+        raise web.HTTPConflict(text="bid_too_low")
+    existing = await get_ad_bid(telegram_id)
+    if existing and bid_amount <= existing["bid_amount"]:
+        raise web.HTTPConflict(text="bid_must_increase")
+
+    await upsert_ad_bid(telegram_id, brand_name, url, bid_amount)
+    return web.json_response({"ok": True})
+
+
 async def api_badges(request: web.Request) -> web.Response:
     telegram_id = await _require_user_id(request)
     donor_pending = await count_pending_ship(telegram_id)
@@ -1009,6 +1069,8 @@ def setup_api_routes(app: web.Application) -> None:
     app.router.add_get("/api/stats", api_stats)
     app.router.add_get("/api/badges", api_badges)
     app.router.add_post("/api/ad-view", api_ad_view)
+    app.router.add_get("/api/ads/leaderboard", api_ads_leaderboard)
+    app.router.add_post("/api/ads/bid", api_ads_bid)
     app.router.add_get("/api/categories", api_categories)
     app.router.add_get("/api/donations", api_donations)
     app.router.add_get("/api/donation/{id}", api_donation)
