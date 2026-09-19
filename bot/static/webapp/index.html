@@ -414,6 +414,24 @@
     display: block; width: 100%; background: none; border: 1.5px solid #1C93F3; color: #1C93F3;
     border-radius: 10px; padding: 11px; font-size: 14px; font-weight: 600; margin-top: 4px; margin-bottom: 10px;
   }
+  .advertise-preview-card {
+    display: flex; align-items: flex-start; gap: 10px; background: var(--bg);
+    border: 1px solid var(--border); border-radius: 12px; padding: 10px; margin-top: 10px;
+  }
+  .advertise-preview-thumb {
+    flex-shrink: 0; width: 44px; height: 44px; border-radius: 10px; object-fit: cover;
+  }
+  .advertise-preview-thumb-emoji {
+    display: flex; align-items: center; justify-content: center; font-size: 20px;
+    background: rgba(0,0,0,0.05);
+  }
+  .advertise-preview-info { min-width: 0; flex: 1 1 auto; }
+  .advertise-preview-platform { font-size: 11.5px; color: #FF9A1F; font-weight: 700; margin-bottom: 2px; }
+  .advertise-preview-title { font-size: 14px; font-weight: 700; color: var(--text); line-height: 1.3; }
+  .advertise-preview-desc {
+    font-size: 12.5px; color: var(--hint); line-height: 1.3; margin-top: 2px;
+    display: -webkit-box; -webkit-line-clamp: 2; -webkit-box-orient: vertical; overflow: hidden;
+  }
   .cat-list { display: flex; flex-direction: column; }
   .cat-row {
     display: flex; align-items: center; gap: 12px; width: 100%; text-align: left;
@@ -633,7 +651,7 @@
       advertise_url_placeholder: "Brendingiz URL manzili", advertise_brand_placeholder: "Brend nomi",
       advertise_bid_placeholder: "Taklif summasi (so'm)", advertise_submit: "Reytingni sindirish",
       advertise_empty: "Hozircha takliflar yo'q. Birinchi bo'ling!", advertise_you_badge: "Sizniki",
-      advertise_show_all: "Barchasini ko'rsatish ({count})",
+      advertise_show_all: "Barchasini ko'rsatish ({count})", advertise_website_label: "Veb-sayt",
       advertise_bid_too_low: "Taklif juda past. Kamida {amount} kiriting.",
       advertise_success: "Taklifingiz qabul qilindi!",
       settings_title: "Umumiy sozlamalar", language_label: "Til", notifications_label: "Bildirishnomalar",
@@ -699,7 +717,7 @@
       advertise_url_placeholder: "URL вашего бренда", advertise_brand_placeholder: "Название бренда",
       advertise_bid_placeholder: "Сумма ставки (сум)", advertise_submit: "Побороться за рейтинг",
       advertise_empty: "Пока нет ставок. Будьте первым!", advertise_you_badge: "Ваша",
-      advertise_show_all: "Показать все ({count})",
+      advertise_show_all: "Показать все ({count})", advertise_website_label: "Веб-сайт",
       advertise_bid_too_low: "Ставка слишком мала. Введите минимум {amount}.",
       advertise_success: "Ваша ставка принята!",
       settings_title: "Общие настройки", language_label: "Язык", notifications_label: "Уведомления",
@@ -765,7 +783,7 @@
       advertise_url_placeholder: "Your brand's URL", advertise_brand_placeholder: "Brand name",
       advertise_bid_placeholder: "Bid amount (so'm)", advertise_submit: "Break the rating",
       advertise_empty: "No bids yet. Be the first!", advertise_you_badge: "Yours",
-      advertise_show_all: "Show all ({count})",
+      advertise_show_all: "Show all ({count})", advertise_website_label: "Website",
       advertise_bid_too_low: "Bid is too low. Enter at least {amount}.",
       advertise_success: "Your bid was accepted!",
       settings_title: "General settings", language_label: "Language", notifications_label: "Notifications",
@@ -831,7 +849,7 @@
       advertise_url_placeholder: "Брендіңіздің URL мекенжайы", advertise_brand_placeholder: "Бренд атауы",
       advertise_bid_placeholder: "Ұсыныс сомасы (сўм)", advertise_submit: "Рейтинг үшін күресу",
       advertise_empty: "Әзірге ұсыныстар жоқ. Бірінші болыңыз!", advertise_you_badge: "Сіздікі",
-      advertise_show_all: "Барлығын көрсету ({count})",
+      advertise_show_all: "Барлығын көрсету ({count})", advertise_website_label: "Веб-сайт",
       advertise_bid_too_low: "Ұсыныс тым төмен. Кемінде {amount} енгізіңіз.",
       advertise_success: "Ұсынысыңыз қабылданды!",
       settings_title: "Жалпы баптаулар", language_label: "Тіл", notifications_label: "Хабарландырулар",
@@ -889,7 +907,7 @@
       advertise_url_placeholder: "Суроғаи URL-и бренди шумо", advertise_brand_placeholder: "Номи бренд",
       advertise_bid_placeholder: "Маблағи пешниҳод (сўм)", advertise_submit: "Барои рейтинг мубориза бурдан",
       advertise_empty: "Ҳанӯз пешниҳод нест. Аввалин шавед!", advertise_you_badge: "Аз шумо",
-      advertise_show_all: "Ҳамаро нишон додан ({count})",
+      advertise_show_all: "Ҳамаро нишон додан ({count})", advertise_website_label: "Сомона",
       advertise_bid_too_low: "Пешниҳод хеле паст. Ҳадди ақал {amount} ворид кунед.",
       advertise_success: "Пешниҳоди шумо қабул шуд!",
       settings_title: "Танзимоти умумӣ", language_label: "Забон", notifications_label: "Огоҳиномаҳо",
@@ -947,7 +965,7 @@
       advertise_url_placeholder: "Брендиңиздин URL дареги", advertise_brand_placeholder: "Бренддин аты",
       advertise_bid_placeholder: "Сунуш суммасы (сом)", advertise_submit: "Рейтинг үчүн күрөшүү",
       advertise_empty: "Азырынча сунуштар жок. Биринчи болуңуз!", advertise_you_badge: "Сиздики",
-      advertise_show_all: "Баарын көрсөтүү ({count})",
+      advertise_show_all: "Баарын көрсөтүү ({count})", advertise_website_label: "Веб-сайт",
       advertise_bid_too_low: "Сунуш өтө төмөн. Кеминде {amount} киргизиңиз.",
       advertise_success: "Сунушуңуз кабыл алынды!",
       settings_title: "Жалпы жөндөөлөр", language_label: "Тил", notifications_label: "Билдирүүлөр",
@@ -1005,7 +1023,7 @@
       advertise_url_placeholder: "Brendiňiziň URL salgysy", advertise_brand_placeholder: "Brend ady",
       advertise_bid_placeholder: "Teklip mukdary (som)", advertise_submit: "Reýting üçin göreşmek",
       advertise_empty: "Heniz teklip ýok. Birinji boluň!", advertise_you_badge: "Siziňki",
-      advertise_show_all: "Ählisini görkezmek ({count})",
+      advertise_show_all: "Ählisini görkezmek ({count})", advertise_website_label: "Websahypa",
       advertise_bid_too_low: "Teklip gaty pes. Iň az {amount} giriziň.",
       advertise_success: "Teklibiňiz kabul edildi!",
       settings_title: "Umumy sazlamalar", language_label: "Dil", notifications_label: "Bildirişler",
@@ -2648,6 +2666,7 @@
         '<div class="advertise-top-amount">' + formatSom(data.next_top_bid) + "</div>" +
         '<div class="hint">' + rulesHtml + "</div>" +
         '<input id="advertise-url-input" type="text" placeholder="' + escapeHtml(tr("advertise_url_placeholder")) + '">' +
+        '<div id="advertise-preview"></div>' +
         '<input id="advertise-brand-input" type="text" placeholder="' + escapeHtml(tr("advertise_brand_placeholder")) + '" style="margin-top:10px;">' +
         '<input id="advertise-bid-input" type="number" inputmode="numeric" placeholder="' + escapeHtml(tr("advertise_bid_placeholder")) + '" value="' + data.next_top_bid + '" style="margin-top:10px;">' +
         '<button class="card-btn" id="advertise-submit-btn" style="margin-top:14px;">' + tr("advertise_submit") + "</button>" +
@@ -2655,6 +2674,52 @@
         '<div id="advertise-list"></div>';
 
       renderList();
+
+      var ADVERTISE_PLATFORM_EMOJI = {
+        telegram: "✈️", instagram: "📷", youtube: "▶️",
+        appstore: "🍎", googleplay: "🤖", website: "🌐",
+      };
+      var ADVERTISE_PLATFORM_LABEL = {
+        telegram: "Telegram", instagram: "Instagram", youtube: "YouTube",
+        appstore: "App Store", googleplay: "Google Play", website: tr("advertise_website_label"),
+      };
+
+      function renderAdvertisePreview(preview) {
+        var previewEl = document.getElementById("advertise-preview");
+        if (!previewEl) return;
+        if (!preview || (!preview.title && !preview.description)) { previewEl.innerHTML = ""; return; }
+        var emoji = ADVERTISE_PLATFORM_EMOJI[preview.platform] || ADVERTISE_PLATFORM_EMOJI.website;
+        var label = ADVERTISE_PLATFORM_LABEL[preview.platform] || ADVERTISE_PLATFORM_LABEL.website;
+        var thumbHtml = preview.photo_url
+          ? '<img class="advertise-preview-thumb" src="' + escapeHtml(preview.photo_url) + '" alt="">'
+          : '<span class="advertise-preview-thumb advertise-preview-thumb-emoji">' + emoji + "</span>";
+        previewEl.innerHTML =
+          '<div class="advertise-preview-card">' +
+          thumbHtml +
+          '<div class="advertise-preview-info">' +
+          '<div class="advertise-preview-platform">' + escapeHtml(emoji + " " + label) + "</div>" +
+          (preview.title ? '<div class="advertise-preview-title">' + escapeHtml(preview.title) + "</div>" : "") +
+          (preview.description ? '<div class="advertise-preview-desc">' + escapeHtml(preview.description) + "</div>" : "") +
+          "</div></div>";
+      }
+
+      var advertisePreviewTimer = null;
+      document.getElementById("advertise-url-input").addEventListener("input", function () {
+        if (advertisePreviewTimer) clearTimeout(advertisePreviewTimer);
+        var urlInput = document.getElementById("advertise-url-input");
+        var value = urlInput.value.trim();
+        if (!value) { renderAdvertisePreview(null); return; }
+        advertisePreviewTimer = setTimeout(function () {
+          api("GET", "/api/ads/preview?url=" + encodeURIComponent(value))
+            .then(function (preview) {
+              if (urlInput.value.trim() !== value) return;
+              renderAdvertisePreview(preview);
+              var brandInput = document.getElementById("advertise-brand-input");
+              if (brandInput && !brandInput.value.trim() && preview.title) brandInput.value = preview.title;
+            })
+            .catch(function () { renderAdvertisePreview(null); });
+        }, 600);
+      });
 
       document.getElementById("advertise-submit-btn").addEventListener("click", function () {
         var url = document.getElementById("advertise-url-input").value.trim();

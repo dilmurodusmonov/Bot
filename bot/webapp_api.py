@@ -1,10 +1,13 @@
 import asyncio
+import ipaddress
 import json
 import logging
 import re
-from html import escape
+from html import escape, unescape
 from typing import Optional
+from urllib.parse import urlparse
 
+import aiohttp
 from aiogram import Bot
 from aiogram.exceptions import TelegramAPIError
 from aiogram.types import (
@@ -582,6 +585,111 @@ async def api_ad_view(request: web.Request) -> web.Response:
 AD_MIN_STARTING_BID = 50_000
 AD_MIN_INCREMENT = 10_000
 
+_AD_PLATFORM_HOSTS = {
+    "t.me": "telegram", "telegram.me": "telegram", "telegram.dog": "telegram",
+    "instagram.com": "instagram", "www.instagram.com": "instagram",
+    "youtube.com": "youtube", "www.youtube.com": "youtube", "youtu.be": "youtube",
+    "apps.apple.com": "appstore",
+    "play.google.com": "googleplay",
+}
+
+
+async def _resolve_is_public_host(hostname: str) -> bool:
+    """SSRF himoyasi — link ichki/lokal manzilga (localhost, 169.254.x.x va h.k.)
+    ishora qilmasligini tekshiradi, faqat ochiq internet manzillariga so'rov
+    yuborilishiga ruxsat beradi."""
+    try:
+        infos = await asyncio.get_running_loop().getaddrinfo(hostname, None)
+    except OSError:
+        return False
+    for info in infos:
+        try:
+            ip = ipaddress.ip_address(info[4][0])
+        except ValueError:
+            continue
+        if ip.is_private or ip.is_loopback or ip.is_link_local or ip.is_reserved or ip.is_multicast or ip.is_unspecified:
+            return False
+    return True
+
+
+def _extract_meta(html_text: str, *props: str) -> str:
+    for prop in props:
+        escaped = re.escape(prop)
+        m = re.search(
+            r'<meta[^>]+(?:property|name)=["\']' + escaped + r'["\'][^>]+content=["\']([^"\']*)["\']',
+            html_text, re.I,
+        )
+        if not m:
+            m = re.search(
+                r'<meta[^>]+content=["\']([^"\']*)["\'][^>]+(?:property|name)=["\']' + escaped + r'["\']',
+                html_text, re.I,
+            )
+        if m:
+            return unescape(m.group(1)).strip()
+    return ""
+
+
+async def api_ads_preview(request: web.Request) -> web.Response:
+    """URL kiritilganda brend nomi/tavsifi/rasmini avtomatik aniqlab beradi
+    (sindr.uz'dagi kabi). Telegram havolalari uchun bot.get_chat() orqali,
+    boshqa saytlar uchun Open Graph meta teglarini o'qib."""
+    await _require_user_id(request)
+    url = (request.query.get("url") or "").strip()
+    if not url:
+        raise web.HTTPBadRequest(text="missing url")
+    if not re.match(r"^https?://", url):
+        url = "https://" + url
+
+    parsed = urlparse(url)
+    host = (parsed.hostname or "").lower()
+    if not host:
+        raise web.HTTPBadRequest(text="invalid url")
+
+    platform = _AD_PLATFORM_HOSTS.get(host, "website")
+
+    if platform == "telegram":
+        username = parsed.path.strip("/").split("/")[0]
+        if not username or username.startswith("+") or username.lower() == "joinchat":
+            raise web.HTTPBadRequest(text="invalid telegram link")
+        bot: Bot = request.app["bot"]
+        try:
+            chat = await bot.get_chat("@" + username)
+        except TelegramAPIError:
+            raise web.HTTPNotFound(text="chat_not_found")
+        title = chat.title or " ".join(filter(None, [chat.first_name, chat.last_name])) or username
+        description = chat.description or chat.bio or ""
+        photo_url = f"/api/photo/{chat.photo.small_file_id}" if chat.photo else None
+        return web.json_response({
+            "platform": "telegram", "title": title, "description": description, "photo_url": photo_url,
+        })
+
+    if not await _resolve_is_public_host(host):
+        raise web.HTTPBadRequest(text="host_not_allowed")
+
+    try:
+        async with aiohttp.ClientSession() as session:
+            async with session.get(
+                url, timeout=aiohttp.ClientTimeout(total=6),
+                headers={"User-Agent": "Mozilla/5.0 (compatible; EhsonAppBot/1.0)"},
+            ) as resp:
+                html_text = await resp.text(errors="ignore")
+    except Exception:
+        return web.json_response({"platform": platform, "title": "", "description": "", "photo_url": None})
+
+    title = _extract_meta(html_text, "og:title", "twitter:title")
+    if not title:
+        m = re.search(r"<title[^>]*>([^<]*)</title>", html_text, re.I)
+        title = unescape(m.group(1)).strip() if m else ""
+    description = _extract_meta(html_text, "og:description", "twitter:description", "description")
+    image = _extract_meta(html_text, "og:image", "twitter:image")
+
+    return web.json_response({
+        "platform": platform,
+        "title": title[:120],
+        "description": description[:200],
+        "photo_url": image or None,
+    })
+
 
 async def api_ads_leaderboard(request: web.Request) -> web.Response:
     telegram_id = await _require_user_id(request)
@@ -1067,6 +1175,7 @@ def setup_api_routes(app: web.Application) -> None:
     app.router.add_get("/api/stats", api_stats)
     app.router.add_get("/api/badges", api_badges)
     app.router.add_post("/api/ad-view", api_ad_view)
+    app.router.add_get("/api/ads/preview", api_ads_preview)
     app.router.add_get("/api/ads/leaderboard", api_ads_leaderboard)
     app.router.add_post("/api/ads/bid", api_ads_bid)
     app.router.add_get("/api/categories", api_categories)
