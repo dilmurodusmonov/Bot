@@ -2627,9 +2627,23 @@
       });
       var visibleCount = Math.min(ADVERTISE_PAGE_SIZE, data.bids.length);
 
+      var ADVERTISE_PLATFORM_EMOJI = {
+        telegram: "✈️", instagram: "📷", youtube: "▶️",
+        appstore: "🍎", googleplay: "🤖", website: "🌐",
+      };
+      var ADVERTISE_PLATFORM_LABEL = {
+        telegram: "Telegram", instagram: "Instagram", youtube: "YouTube",
+        appstore: "App Store", googleplay: "Google Play", website: tr("advertise_website_label"),
+      };
+
       function bidRowHtml(b) {
+        var emoji = ADVERTISE_PLATFORM_EMOJI[b.platform] || ADVERTISE_PLATFORM_EMOJI.website;
+        var thumbHtml = b.photo_url
+          ? '<img class="advertise-preview-thumb" src="' + escapeHtml(b.photo_url) + '" alt="">'
+          : '<span class="advertise-preview-thumb advertise-preview-thumb-emoji">' + emoji + "</span>";
         return '<div class="leaderboard-row' + (b.is_me ? " leaderboard-row-me" : "") + '">' +
           '<span class="leaderboard-rank">#' + b.rank + "</span>" +
+          thumbHtml +
           '<div class="leaderboard-info">' +
           '<div class="leaderboard-brand">' + escapeHtml(b.brand_name) +
           (b.is_me ? ' <span class="leaderboard-you-badge">' + tr("advertise_you_badge") + "</span>" : "") +
@@ -2675,14 +2689,8 @@
 
       renderList();
 
-      var ADVERTISE_PLATFORM_EMOJI = {
-        telegram: "✈️", instagram: "📷", youtube: "▶️",
-        appstore: "🍎", googleplay: "🤖", website: "🌐",
-      };
-      var ADVERTISE_PLATFORM_LABEL = {
-        telegram: "Telegram", instagram: "Instagram", youtube: "YouTube",
-        appstore: "App Store", googleplay: "Google Play", website: tr("advertise_website_label"),
-      };
+      var lastAdvertisePreview = null;
+      var lastAdvertisePreviewUrl = "";
 
       function renderAdvertisePreview(preview) {
         var previewEl = document.getElementById("advertise-preview");
@@ -2708,12 +2716,16 @@
         if (advertisePreviewTimer) clearTimeout(advertisePreviewTimer);
         var urlInput = document.getElementById("advertise-url-input");
         var value = urlInput.value.trim();
+        lastAdvertisePreview = null;
+        lastAdvertisePreviewUrl = "";
         if (!value) { renderAdvertisePreview(null); return; }
         advertisePreviewTimer = setTimeout(function () {
           api("GET", "/api/ads/preview?url=" + encodeURIComponent(value))
             .then(function (preview) {
               if (urlInput.value.trim() !== value) return;
               renderAdvertisePreview(preview);
+              lastAdvertisePreview = preview;
+              lastAdvertisePreviewUrl = value;
               var brandInput = document.getElementById("advertise-brand-input");
               if (brandInput && !brandInput.value.trim() && preview.title) brandInput.value = preview.title;
             })
@@ -2726,7 +2738,8 @@
         var brand = document.getElementById("advertise-brand-input").value.trim();
         var bidAmount = parseInt(document.getElementById("advertise-bid-input").value, 10);
         if (!url || !brand || !bidAmount) { showError(tr("fill_all")); return; }
-        api("POST", "/api/ads/bid", { url: url, brand_name: brand, bid_amount: bidAmount })
+        var photoUrl = lastAdvertisePreviewUrl === url && lastAdvertisePreview ? lastAdvertisePreview.photo_url : null;
+        api("POST", "/api/ads/bid", { url: url, brand_name: brand, bid_amount: bidAmount, photo_url: photoUrl })
           .then(function () {
             if (tg && tg.HapticFeedback) tg.HapticFeedback.notificationOccurred("success");
             var successOverlay = showSuccess(tr("advertise_success"), "🚀", "pop");
