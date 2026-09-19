@@ -410,6 +410,10 @@
     overflow: hidden; text-overflow: ellipsis; white-space: nowrap;
   }
   .leaderboard-amount { flex-shrink: 0; font-weight: 700; font-size: 14px; color: #FF9A1F; }
+  .advertise-show-all-btn {
+    display: block; width: 100%; background: none; border: 1.5px solid #1C93F3; color: #1C93F3;
+    border-radius: 10px; padding: 11px; font-size: 14px; font-weight: 600; margin-top: 4px; margin-bottom: 10px;
+  }
   .cat-list { display: flex; flex-direction: column; }
   .cat-row {
     display: flex; align-items: center; gap: 12px; width: 100%; text-align: left;
@@ -629,6 +633,7 @@
       advertise_url_placeholder: "Brendingiz URL manzili", advertise_brand_placeholder: "Brend nomi",
       advertise_bid_placeholder: "Taklif summasi (so'm)", advertise_submit: "Reytingni sindirish",
       advertise_empty: "Hozircha takliflar yo'q. Birinchi bo'ling!", advertise_you_badge: "Sizniki",
+      advertise_show_all: "Barchasini ko'rsatish ({count})",
       advertise_bid_too_low: "Taklif juda past. Kamida {amount} kiriting.",
       advertise_bid_must_increase: "Oldingi taklifingizdan ko'proq summa kiriting.",
       advertise_success: "Taklifingiz qabul qilindi!",
@@ -695,6 +700,7 @@
       advertise_url_placeholder: "URL вашего бренда", advertise_brand_placeholder: "Название бренда",
       advertise_bid_placeholder: "Сумма ставки (сум)", advertise_submit: "Побороться за рейтинг",
       advertise_empty: "Пока нет ставок. Будьте первым!", advertise_you_badge: "Ваша",
+      advertise_show_all: "Показать все ({count})",
       advertise_bid_too_low: "Ставка слишком мала. Введите минимум {amount}.",
       advertise_bid_must_increase: "Введите сумму больше вашей предыдущей ставки.",
       advertise_success: "Ваша ставка принята!",
@@ -761,6 +767,7 @@
       advertise_url_placeholder: "Your brand's URL", advertise_brand_placeholder: "Brand name",
       advertise_bid_placeholder: "Bid amount (so'm)", advertise_submit: "Break the rating",
       advertise_empty: "No bids yet. Be the first!", advertise_you_badge: "Yours",
+      advertise_show_all: "Show all ({count})",
       advertise_bid_too_low: "Bid is too low. Enter at least {amount}.",
       advertise_bid_must_increase: "Enter an amount higher than your previous bid.",
       advertise_success: "Your bid was accepted!",
@@ -827,6 +834,7 @@
       advertise_url_placeholder: "Брендіңіздің URL мекенжайы", advertise_brand_placeholder: "Бренд атауы",
       advertise_bid_placeholder: "Ұсыныс сомасы (сўм)", advertise_submit: "Рейтинг үшін күресу",
       advertise_empty: "Әзірге ұсыныстар жоқ. Бірінші болыңыз!", advertise_you_badge: "Сіздікі",
+      advertise_show_all: "Барлығын көрсету ({count})",
       advertise_bid_too_low: "Ұсыныс тым төмен. Кемінде {amount} енгізіңіз.",
       advertise_bid_must_increase: "Алдыңғы ұсынысыңыздан көбірек сома енгізіңіз.",
       advertise_success: "Ұсынысыңыз қабылданды!",
@@ -885,6 +893,7 @@
       advertise_url_placeholder: "Суроғаи URL-и бренди шумо", advertise_brand_placeholder: "Номи бренд",
       advertise_bid_placeholder: "Маблағи пешниҳод (сўм)", advertise_submit: "Барои рейтинг мубориза бурдан",
       advertise_empty: "Ҳанӯз пешниҳод нест. Аввалин шавед!", advertise_you_badge: "Аз шумо",
+      advertise_show_all: "Ҳамаро нишон додан ({count})",
       advertise_bid_too_low: "Пешниҳод хеле паст. Ҳадди ақал {amount} ворид кунед.",
       advertise_bid_must_increase: "Аз пешниҳоди қаблии худ бештар маблағ ворид кунед.",
       advertise_success: "Пешниҳоди шумо қабул шуд!",
@@ -943,6 +952,7 @@
       advertise_url_placeholder: "Брендиңиздин URL дареги", advertise_brand_placeholder: "Бренддин аты",
       advertise_bid_placeholder: "Сунуш суммасы (сом)", advertise_submit: "Рейтинг үчүн күрөшүү",
       advertise_empty: "Азырынча сунуштар жок. Биринчи болуңуз!", advertise_you_badge: "Сиздики",
+      advertise_show_all: "Баарын көрсөтүү ({count})",
       advertise_bid_too_low: "Сунуш өтө төмөн. Кеминде {amount} киргизиңиз.",
       advertise_bid_must_increase: "Мурунку сунушуңуздан көбүрөөк сумма киргизиңиз.",
       advertise_success: "Сунушуңуз кабыл алынды!",
@@ -1001,6 +1011,7 @@
       advertise_url_placeholder: "Brendiňiziň URL salgysy", advertise_brand_placeholder: "Brend ady",
       advertise_bid_placeholder: "Teklip mukdary (som)", advertise_submit: "Reýting üçin göreşmek",
       advertise_empty: "Heniz teklip ýok. Birinji boluň!", advertise_you_badge: "Siziňki",
+      advertise_show_all: "Ählisini görkezmek ({count})",
       advertise_bid_too_low: "Teklip gaty pes. Iň az {amount} giriziň.",
       advertise_bid_must_increase: "Öňki teklibiňizden köp mukdar giriziň.",
       advertise_success: "Teklibiňiz kabul edildi!",
@@ -2595,26 +2606,48 @@
     return s;
   }
 
+  var ADVERTISE_PAGE_SIZE = 10;
+
   function renderAdvertise() {
     api("GET", "/api/ads/leaderboard").then(function (data) {
       var rulesHtml = trf("advertise_rules", {
         min: formatSom(data.min_starting_bid),
         inc: formatSom(data.min_increment),
       });
-      var listHtml = data.bids.length
-        ? data.bids.map(function (b) {
-            return '<div class="leaderboard-row' + (b.is_me ? " leaderboard-row-me" : "") + '">' +
-              '<span class="leaderboard-rank">#' + b.rank + "</span>" +
-              '<div class="leaderboard-info">' +
-              '<div class="leaderboard-brand">' + escapeHtml(b.brand_name) +
-              (b.is_me ? ' <span class="leaderboard-you-badge">' + tr("advertise_you_badge") + "</span>" : "") +
-              "</div>" +
-              '<a class="leaderboard-url" href="' + escapeHtml(b.url) + '" target="_blank" rel="noopener">' + escapeHtml(b.url) + "</a>" +
-              "</div>" +
-              '<span class="leaderboard-amount">' + formatSom(b.bid_amount) + "</span>" +
-              "</div>";
-          }).join("")
-        : '<div class="empty-state">' + tr("advertise_empty") + "</div>";
+      var visibleCount = Math.min(ADVERTISE_PAGE_SIZE, data.bids.length);
+
+      function bidRowHtml(b) {
+        return '<div class="leaderboard-row' + (b.is_me ? " leaderboard-row-me" : "") + '">' +
+          '<span class="leaderboard-rank">#' + b.rank + "</span>" +
+          '<div class="leaderboard-info">' +
+          '<div class="leaderboard-brand">' + escapeHtml(b.brand_name) +
+          (b.is_me ? ' <span class="leaderboard-you-badge">' + tr("advertise_you_badge") + "</span>" : "") +
+          "</div>" +
+          '<a class="leaderboard-url" href="' + escapeHtml(b.url) + '" target="_blank" rel="noopener">' + escapeHtml(b.url) + "</a>" +
+          "</div>" +
+          '<span class="leaderboard-amount">' + formatSom(b.bid_amount) + "</span>" +
+          "</div>";
+      }
+
+      function renderList() {
+        var listEl = document.getElementById("advertise-list");
+        var visibleBids = data.bids.slice(0, visibleCount);
+        var rowsHtml = visibleBids.length
+          ? visibleBids.map(bidRowHtml).join("")
+          : '<div class="empty-state">' + tr("advertise_empty") + "</div>";
+        var showAllHtml = data.bids.length > visibleCount
+          ? '<button class="advertise-show-all-btn" id="advertise-show-all-btn">' +
+            trf("advertise_show_all", { count: String(data.bids.length) }) + "</button>"
+          : "";
+        listEl.innerHTML = rowsHtml + showAllHtml;
+        var showAllBtn = document.getElementById("advertise-show-all-btn");
+        if (showAllBtn) {
+          showAllBtn.addEventListener("click", function () {
+            visibleCount = data.bids.length;
+            renderList();
+          });
+        }
+      }
 
       app.innerHTML =
         '<div class="section-card">' +
@@ -2626,7 +2659,9 @@
         '<input id="advertise-bid-input" type="number" inputmode="numeric" placeholder="' + escapeHtml(tr("advertise_bid_placeholder")) + '" value="' + data.next_top_bid + '" style="margin-top:10px;">' +
         '<button class="card-btn" id="advertise-submit-btn" style="margin-top:14px;">' + tr("advertise_submit") + "</button>" +
         "</div>" +
-        listHtml;
+        '<div id="advertise-list"></div>';
+
+      renderList();
 
       document.getElementById("advertise-submit-btn").addEventListener("click", function () {
         var url = document.getElementById("advertise-url-input").value.trim();
