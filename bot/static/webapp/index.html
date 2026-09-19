@@ -393,7 +393,13 @@
   .section-title-blue { font-size: 17px; color: #1C93F3; font-weight: 700; margin: 2px 6px 10px; }
   .advertise-hero-card { background: linear-gradient(180deg, #FFF8EB 0%, #FFF2DC 100%); }
   .advertise-top-label { font-size: 14px; color: #8A5A24; font-weight: 700; margin: 0 6px 4px; }
-  .advertise-top-amount { font-size: 28px; font-weight: 800; color: #FF9A1F; margin: 0 6px 10px; }
+  .advertise-top-amount-row { display: flex; align-items: center; gap: 8px; margin: 0 6px 10px; }
+  .advertise-top-amount { font-size: 28px; font-weight: 800; color: #FF9A1F; }
+  .advertise-top-plus {
+    flex-shrink: 0; width: 26px; height: 26px; border-radius: 50%; background: #FF9A1F; color: #fff;
+    display: flex; align-items: center; justify-content: center;
+  }
+  .advertise-top-plus svg { width: 14px; height: 14px; }
   .advertise-top-divider { border-bottom: 1.5px dashed #EFC585; margin: 0 6px 12px; }
   .advertise-rules-hint { color: #A9895C; font-size: 13px; margin: 0 6px 14px; line-height: 1.4; text-align: center; }
   .advertise-input-icon-wrap { position: relative; margin-bottom: 10px; }
@@ -665,7 +671,7 @@
       ad_placeholder: "REKLAMA",
       ad_placeholder_pitch: "Ijtimoiy sahifangizni reklama qilib hissa qo'shing...",
       advertise_title: "Reklama berish",
-      advertise_top_prefix: "TOP-1 uchun", advertise_rules: "{min} so'mdan boshlang. Har bir oshirish kamida {inc}.",
+      advertise_top_prefix: "TOP-1 uchun", advertise_rules: "{min}dan boshlang. Har bir oshirish kamida {inc}.",
       advertise_url_placeholder: "Brendingiz URL manzili", advertise_brand_placeholder: "Brend nomi",
       advertise_bid_placeholder: "Taklif summasi (so'm)", advertise_submit: "Reytingni sindirish",
       advertise_empty: "Hozircha takliflar yo'q. Birinchi bo'ling!", advertise_you_badge: "Sizniki",
@@ -2661,7 +2667,15 @@
 
   function formatSom(n) {
     n = Math.round(n || 0);
-    return String(n).replace(/\B(?=(\d{3})+(?!\d))/g, " ") + " so'm";
+    if (n >= 1000000) {
+      var mln = (n / 1000000).toFixed(2).replace(/0+$/, "").replace(/\.$/, "");
+      return mln.replace(".", ",") + " mln so'm";
+    }
+    if (n >= 1000) {
+      var ming = (n / 1000).toFixed(1).replace(/\.0$/, "");
+      return ming.replace(".", ",") + " ming so'm";
+    }
+    return String(n) + " so'm";
   }
 
   function trf(key, vars) {
@@ -2747,7 +2761,10 @@
       app.innerHTML =
         '<div class="section-card advertise-hero-card">' +
         '<div class="advertise-top-label">' + escapeHtml(tr("advertise_top_prefix")) + "</div>" +
-        '<div class="advertise-top-amount">' + formatSom(data.next_top_bid) + "</div>" +
+        '<div class="advertise-top-amount-row">' +
+        '<span class="advertise-top-amount">' + formatSom(data.next_top_bid) + "</span>" +
+        '<span class="advertise-top-plus">' + ICONS.plus + "</span>" +
+        "</div>" +
         '<div class="advertise-top-divider"></div>' +
         '<div class="advertise-rules-hint">' + rulesHtml + "</div>" +
         '<div class="advertise-input-icon-wrap">' +

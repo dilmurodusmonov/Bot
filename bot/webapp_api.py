@@ -582,8 +582,8 @@ async def api_ad_view(request: web.Request) -> web.Response:
 # taklif shu yerda "test rejimida" darhol tasdiqlangan deb qabul qilinadi.
 # Haqiqiy to'lov ulanganda, upsert_ad_bid() chaqirilishidan oldin to'lov
 # tasdiqlanishini kutish kerak bo'ladi.
-AD_MIN_STARTING_BID = 50_000
-AD_MIN_INCREMENT = 10_000
+AD_MIN_STARTING_BID = 200_000
+AD_MIN_INCREMENT = 100_000
 
 _AD_PLATFORM_HOSTS = {
     "t.me": "telegram", "telegram.me": "telegram", "telegram.dog": "telegram",
