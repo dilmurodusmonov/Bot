@@ -635,7 +635,6 @@
       advertise_empty: "Hozircha takliflar yo'q. Birinchi bo'ling!", advertise_you_badge: "Sizniki",
       advertise_show_all: "Barchasini ko'rsatish ({count})",
       advertise_bid_too_low: "Taklif juda past. Kamida {amount} kiriting.",
-      advertise_bid_must_increase: "Oldingi taklifingizdan ko'proq summa kiriting.",
       advertise_success: "Taklifingiz qabul qilindi!",
       settings_title: "Umumiy sozlamalar", language_label: "Til", notifications_label: "Bildirishnomalar",
       add_to_home_title: "Ehsonni bir urinishda oching",
@@ -702,7 +701,6 @@
       advertise_empty: "Пока нет ставок. Будьте первым!", advertise_you_badge: "Ваша",
       advertise_show_all: "Показать все ({count})",
       advertise_bid_too_low: "Ставка слишком мала. Введите минимум {amount}.",
-      advertise_bid_must_increase: "Введите сумму больше вашей предыдущей ставки.",
       advertise_success: "Ваша ставка принята!",
       settings_title: "Общие настройки", language_label: "Язык", notifications_label: "Уведомления",
       add_to_home_title: "Открывайте Ehson в один клик",
@@ -769,7 +767,6 @@
       advertise_empty: "No bids yet. Be the first!", advertise_you_badge: "Yours",
       advertise_show_all: "Show all ({count})",
       advertise_bid_too_low: "Bid is too low. Enter at least {amount}.",
-      advertise_bid_must_increase: "Enter an amount higher than your previous bid.",
       advertise_success: "Your bid was accepted!",
       settings_title: "General settings", language_label: "Language", notifications_label: "Notifications",
       add_to_home_title: "Open Ehson in one tap",
@@ -836,7 +833,6 @@
       advertise_empty: "Әзірге ұсыныстар жоқ. Бірінші болыңыз!", advertise_you_badge: "Сіздікі",
       advertise_show_all: "Барлығын көрсету ({count})",
       advertise_bid_too_low: "Ұсыныс тым төмен. Кемінде {amount} енгізіңіз.",
-      advertise_bid_must_increase: "Алдыңғы ұсынысыңыздан көбірек сома енгізіңіз.",
       advertise_success: "Ұсынысыңыз қабылданды!",
       settings_title: "Жалпы баптаулар", language_label: "Тіл", notifications_label: "Хабарландырулар",
       add_to_home_title: "Ehson-ды бір басуда ашыңыз",
@@ -895,7 +891,6 @@
       advertise_empty: "Ҳанӯз пешниҳод нест. Аввалин шавед!", advertise_you_badge: "Аз шумо",
       advertise_show_all: "Ҳамаро нишон додан ({count})",
       advertise_bid_too_low: "Пешниҳод хеле паст. Ҳадди ақал {amount} ворид кунед.",
-      advertise_bid_must_increase: "Аз пешниҳоди қаблии худ бештар маблағ ворид кунед.",
       advertise_success: "Пешниҳоди шумо қабул шуд!",
       settings_title: "Танзимоти умумӣ", language_label: "Забон", notifications_label: "Огоҳиномаҳо",
       add_to_home_title: "Ehson-ро бо як зарба кушоед",
@@ -954,7 +949,6 @@
       advertise_empty: "Азырынча сунуштар жок. Биринчи болуңуз!", advertise_you_badge: "Сиздики",
       advertise_show_all: "Баарын көрсөтүү ({count})",
       advertise_bid_too_low: "Сунуш өтө төмөн. Кеминде {amount} киргизиңиз.",
-      advertise_bid_must_increase: "Мурунку сунушуңуздан көбүрөөк сумма киргизиңиз.",
       advertise_success: "Сунушуңуз кабыл алынды!",
       settings_title: "Жалпы жөндөөлөр", language_label: "Тил", notifications_label: "Билдирүүлөр",
       add_to_home_title: "Ehson-ду бир басуу менен ачыңыз",
@@ -1013,7 +1007,6 @@
       advertise_empty: "Heniz teklip ýok. Birinji boluň!", advertise_you_badge: "Siziňki",
       advertise_show_all: "Ählisini görkezmek ({count})",
       advertise_bid_too_low: "Teklip gaty pes. Iň az {amount} giriziň.",
-      advertise_bid_must_increase: "Öňki teklibiňizden köp mukdar giriziň.",
       advertise_success: "Teklibiňiz kabul edildi!",
       settings_title: "Umumy sazlamalar", language_label: "Dil", notifications_label: "Bildirişler",
       add_to_home_title: "Ehson-y bir basyşda açyň",
@@ -2680,8 +2673,6 @@
           .catch(function (err) {
             if (err.status === 409 && err.body === "bid_too_low") {
               showError(trf("advertise_bid_too_low", { amount: formatSom(data.next_top_bid) }));
-            } else if (err.status === 409 && err.body === "bid_must_increase") {
-              showError(tr("advertise_bid_must_increase"));
             } else {
               showError();
             }
