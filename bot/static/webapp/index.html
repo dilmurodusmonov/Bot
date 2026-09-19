@@ -2763,9 +2763,7 @@
         '<div id="advertise-cat-overlay" class="picker-overlay" hidden>' +
         '<div class="picker-sheet">' + catRowsHtml + "</div>" +
         "</div>" +
-        '<input id="advertise-brand-input" type="text" placeholder="' + escapeHtml(tr("advertise_brand_placeholder")) + '" style="margin-top:10px;">' +
-        '<input id="advertise-bid-input" type="number" inputmode="numeric" placeholder="' + escapeHtml(tr("advertise_bid_placeholder")) + '" value="' + data.next_top_bid + '" style="margin-top:10px;">' +
-        '<button class="card-btn" id="advertise-submit-btn" style="margin-top:14px;">' + tr("advertise_submit") + "</button>" +
+        '<button class="card-btn" id="advertise-submit-btn">' + tr("advertise_submit") + "</button>" +
         "</div>" +
         '<div id="advertise-list"></div>';
 
@@ -2793,6 +2791,15 @@
 
       var lastAdvertisePreview = null;
       var lastAdvertisePreviewUrl = "";
+
+      function deriveBrandFromUrl(u) {
+        var normalized = /^https?:\/\//i.test(u) ? u : "https://" + u;
+        try {
+          return new URL(normalized).hostname.replace(/^www\./, "") || u;
+        } catch (e) {
+          return u;
+        }
+      }
 
       function renderAdvertisePreview(preview) {
         var previewEl = document.getElementById("advertise-preview");
@@ -2828,8 +2835,6 @@
               renderAdvertisePreview(preview);
               lastAdvertisePreview = preview;
               lastAdvertisePreviewUrl = value;
-              var brandInput = document.getElementById("advertise-brand-input");
-              if (brandInput && !brandInput.value.trim() && preview.title) brandInput.value = preview.title;
             })
             .catch(function () { renderAdvertisePreview(null); });
         }, 600);
@@ -2837,10 +2842,11 @@
 
       document.getElementById("advertise-submit-btn").addEventListener("click", function () {
         var url = document.getElementById("advertise-url-input").value.trim();
-        var brand = document.getElementById("advertise-brand-input").value.trim();
-        var bidAmount = parseInt(document.getElementById("advertise-bid-input").value, 10);
-        if (!url || !brand || !bidAmount) { showError(tr("fill_all")); return; }
-        var photoUrl = lastAdvertisePreviewUrl === url && lastAdvertisePreview ? lastAdvertisePreview.photo_url : null;
+        if (!url) { showError(tr("fill_all")); return; }
+        var bidAmount = data.next_top_bid;
+        var hasFreshPreview = lastAdvertisePreviewUrl === url && lastAdvertisePreview;
+        var brand = (hasFreshPreview && lastAdvertisePreview.title) ? lastAdvertisePreview.title : deriveBrandFromUrl(url);
+        var photoUrl = hasFreshPreview ? lastAdvertisePreview.photo_url : null;
         api("POST", "/api/ads/bid", { url: url, brand_name: brand, bid_amount: bidAmount, photo_url: photoUrl, category: selectedAdvertiseCategory })
           .then(function () {
             if (tg && tg.HapticFeedback) tg.HapticFeedback.notificationOccurred("success");
