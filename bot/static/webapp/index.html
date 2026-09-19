@@ -391,8 +391,25 @@
     background: #FFFFFF; border-radius: 20px; padding: 14px 12px; margin-bottom: 20px;
   }
   .section-title-blue { font-size: 17px; color: #1C93F3; font-weight: 700; margin: 2px 6px 10px; }
-  .advertise-top-label { font-size: 13px; color: var(--hint); font-weight: 600; margin: 0 6px 2px; }
-  .advertise-top-amount { font-size: 26px; font-weight: 800; color: #FF9A1F; margin: 0 6px 10px; }
+  .advertise-hero-card { background: linear-gradient(180deg, #FFF8EB 0%, #FFF2DC 100%); }
+  .advertise-top-label { font-size: 14px; color: #8A5A24; font-weight: 700; margin: 0 6px 4px; }
+  .advertise-top-amount { font-size: 28px; font-weight: 800; color: #FF9A1F; margin: 0 6px 10px; }
+  .advertise-top-divider { border-bottom: 1.5px dashed #EFC585; margin: 0 6px 12px; }
+  .advertise-rules-hint { color: #A9895C; font-size: 13px; margin: 0 6px 14px; line-height: 1.4; text-align: center; }
+  .advertise-input-icon-wrap { position: relative; margin-bottom: 10px; }
+  .advertise-input-icon-wrap .advertise-url-input {
+    border-radius: 999px; padding: 13px 16px 13px 42px;
+  }
+  .advertise-input-icon {
+    position: absolute; left: 14px; top: 50%; transform: translateY(-50%);
+    color: var(--hint); display: flex; align-items: center; pointer-events: none;
+  }
+  .advertise-input-icon svg { width: 18px; height: 18px; }
+  .advertise-cat-trigger { border-radius: 999px; padding: 13px 16px; gap: 10px; margin-bottom: 10px; }
+  .advertise-cat-trigger-icon { display: flex; align-items: center; color: var(--hint); flex-shrink: 0; }
+  .advertise-cat-trigger-icon svg { width: 18px; height: 18px; }
+  .advertise-cat-trigger-label { flex: 1 1 auto; color: var(--hint); }
+  .advertise-cat-trigger.has-value .advertise-cat-trigger-label { color: var(--text); }
   .leaderboard-row {
     display: flex; align-items: center; gap: 10px; background: var(--section-bg);
     border: 1px solid var(--border); border-radius: 14px; padding: 12px; margin-bottom: 10px;
@@ -596,6 +613,7 @@
     bell: '<svg ' + SVG_ATTRS + '><path d="M18 8a6 6 0 0 0-12 0c0 7-3 9-3 9h18s-3-2-3-9"></path><path d="M13.73 21a2 2 0 0 1-3.46 0"></path></svg>',
     eye: '<svg ' + SVG_ATTRS + '><path d="M1 12s4-8 11-8 11 8 11 8-4 8-11 8-11-8-11-8z"></path><circle cx="12" cy="12" r="3"></circle></svg>',
     globe: '<svg ' + SVG_ATTRS + '><circle cx="12" cy="12" r="10"></circle><line x1="2" y1="12" x2="22" y2="12"></line><path d="M12 2a15.3 15.3 0 0 1 4 10 15.3 15.3 0 0 1-4 10 15.3 15.3 0 0 1-4-10 15.3 15.3 0 0 1 4-10z"></path></svg>',
+    grid: '<svg ' + SVG_ATTRS + '><rect x="3" y="3" width="7" height="7" rx="1.5"></rect><rect x="14" y="3" width="7" height="7" rx="1.5"></rect><rect x="3" y="14" width="7" height="7" rx="1.5"></rect><rect x="14" y="14" width="7" height="7" rx="1.5"></rect></svg>',
     verifiedBadge: '<svg viewBox="0 0 24 24" width="16" height="16" fill="#4EA4F5"><path fill-rule="evenodd" clip-rule="evenodd" d="M8.603 3.799A4.49 4.49 0 0112 2.25c1.357 0 2.573.6 3.397 1.549a4.49 4.49 0 013.498 1.307 4.491 4.491 0 011.307 3.497A4.49 4.49 0 0121.75 12a4.49 4.49 0 01-1.549 3.397 4.491 4.491 0 01-1.307 3.497 4.491 4.491 0 01-3.497 1.307A4.49 4.49 0 0112 21.75a4.49 4.49 0 01-3.397-1.549 4.49 4.49 0 01-3.498-1.306 4.491 4.491 0 01-1.307-3.498A4.49 4.49 0 012.25 12c0-1.357.6-2.573 1.549-3.397a4.49 4.49 0 011.307-3.497 4.49 4.49 0 013.497-1.307zm7.007 6.387a.75.75 0 10-1.22-.872l-3.236 4.53L9.53 12.22a.75.75 0 00-1.06 1.06l2.25 2.25a.75.75 0 001.14-.094l3.75-5.25z"></path></svg>',
     closeX: '<svg viewBox="0 0 24 24" width="10" height="10" fill="none" stroke="currentColor" stroke-width="3.4" stroke-linecap="round"><path d="M6 6 18 18M18 6 6 18"></path></svg>'
   };
@@ -652,6 +670,11 @@
       advertise_bid_placeholder: "Taklif summasi (so'm)", advertise_submit: "Reytingni sindirish",
       advertise_empty: "Hozircha takliflar yo'q. Birinchi bo'ling!", advertise_you_badge: "Sizniki",
       advertise_show_all: "Barchasini ko'rsatish ({count})", advertise_website_label: "Veb-sayt",
+      advertise_category_placeholder: "Kategoriyani tanlang",
+      advertise_cat_tech: "Texnologiya va startaplar", advertise_cat_trade: "Savdo va xizmatlar",
+      advertise_cat_people: "Shaxslar va media", advertise_cat_education: "Ta'lim va karyera",
+      advertise_cat_marketing: "Marketing va kreativ", advertise_cat_lifestyle: "Layfstayl va ko'ngilochar",
+      advertise_cat_other: "Boshqalar",
       advertise_bid_too_low: "Taklif juda past. Kamida {amount} kiriting.",
       advertise_success: "Taklifingiz qabul qilindi!",
       settings_title: "Umumiy sozlamalar", language_label: "Til", notifications_label: "Bildirishnomalar",
@@ -718,6 +741,11 @@
       advertise_bid_placeholder: "Сумма ставки (сум)", advertise_submit: "Побороться за рейтинг",
       advertise_empty: "Пока нет ставок. Будьте первым!", advertise_you_badge: "Ваша",
       advertise_show_all: "Показать все ({count})", advertise_website_label: "Веб-сайт",
+      advertise_category_placeholder: "Выберите категорию",
+      advertise_cat_tech: "Технологии и стартапы", advertise_cat_trade: "Торговля и услуги",
+      advertise_cat_people: "Люди и медиа", advertise_cat_education: "Образование и карьера",
+      advertise_cat_marketing: "Маркетинг и креатив", advertise_cat_lifestyle: "Лайфстайл и развлечения",
+      advertise_cat_other: "Другое",
       advertise_bid_too_low: "Ставка слишком мала. Введите минимум {amount}.",
       advertise_success: "Ваша ставка принята!",
       settings_title: "Общие настройки", language_label: "Язык", notifications_label: "Уведомления",
@@ -784,6 +812,11 @@
       advertise_bid_placeholder: "Bid amount (so'm)", advertise_submit: "Break the rating",
       advertise_empty: "No bids yet. Be the first!", advertise_you_badge: "Yours",
       advertise_show_all: "Show all ({count})", advertise_website_label: "Website",
+      advertise_category_placeholder: "Choose a category",
+      advertise_cat_tech: "Tech & startups", advertise_cat_trade: "Trade & services",
+      advertise_cat_people: "People & media", advertise_cat_education: "Education & career",
+      advertise_cat_marketing: "Marketing & creative", advertise_cat_lifestyle: "Lifestyle & entertainment",
+      advertise_cat_other: "Other",
       advertise_bid_too_low: "Bid is too low. Enter at least {amount}.",
       advertise_success: "Your bid was accepted!",
       settings_title: "General settings", language_label: "Language", notifications_label: "Notifications",
@@ -850,6 +883,11 @@
       advertise_bid_placeholder: "Ұсыныс сомасы (сўм)", advertise_submit: "Рейтинг үшін күресу",
       advertise_empty: "Әзірге ұсыныстар жоқ. Бірінші болыңыз!", advertise_you_badge: "Сіздікі",
       advertise_show_all: "Барлығын көрсету ({count})", advertise_website_label: "Веб-сайт",
+      advertise_category_placeholder: "Санатты таңдаңыз",
+      advertise_cat_tech: "Технология және стартаптар", advertise_cat_trade: "Сауда және қызметтер",
+      advertise_cat_people: "Адамдар және медиа", advertise_cat_education: "Білім және мансап",
+      advertise_cat_marketing: "Маркетинг және креатив", advertise_cat_lifestyle: "Лайфстайл және көңіл ашу",
+      advertise_cat_other: "Басқалар",
       advertise_bid_too_low: "Ұсыныс тым төмен. Кемінде {amount} енгізіңіз.",
       advertise_success: "Ұсынысыңыз қабылданды!",
       settings_title: "Жалпы баптаулар", language_label: "Тіл", notifications_label: "Хабарландырулар",
@@ -908,6 +946,11 @@
       advertise_bid_placeholder: "Маблағи пешниҳод (сўм)", advertise_submit: "Барои рейтинг мубориза бурдан",
       advertise_empty: "Ҳанӯз пешниҳод нест. Аввалин шавед!", advertise_you_badge: "Аз шумо",
       advertise_show_all: "Ҳамаро нишон додан ({count})", advertise_website_label: "Сомона",
+      advertise_category_placeholder: "Категорияро интихоб кунед",
+      advertise_cat_tech: "Технология ва старташҳо", advertise_cat_trade: "Савдо ва хидматҳо",
+      advertise_cat_people: "Одамон ва медиа", advertise_cat_education: "Таҳсил ва касб",
+      advertise_cat_marketing: "Маркетинг ва креатив", advertise_cat_lifestyle: "Лайфстайл ва фароғат",
+      advertise_cat_other: "Дигар",
       advertise_bid_too_low: "Пешниҳод хеле паст. Ҳадди ақал {amount} ворид кунед.",
       advertise_success: "Пешниҳоди шумо қабул шуд!",
       settings_title: "Танзимоти умумӣ", language_label: "Забон", notifications_label: "Огоҳиномаҳо",
@@ -966,6 +1009,11 @@
       advertise_bid_placeholder: "Сунуш суммасы (сом)", advertise_submit: "Рейтинг үчүн күрөшүү",
       advertise_empty: "Азырынча сунуштар жок. Биринчи болуңуз!", advertise_you_badge: "Сиздики",
       advertise_show_all: "Баарын көрсөтүү ({count})", advertise_website_label: "Веб-сайт",
+      advertise_category_placeholder: "Категорияны тандаңыз",
+      advertise_cat_tech: "Технология жана стартаптар", advertise_cat_trade: "Соода жана кызматтар",
+      advertise_cat_people: "Адамдар жана медиа", advertise_cat_education: "Билим жана кесип",
+      advertise_cat_marketing: "Маркетинг жана креатив", advertise_cat_lifestyle: "Лайфстайл жана көңүл ачуу",
+      advertise_cat_other: "Башкалар",
       advertise_bid_too_low: "Сунуш өтө төмөн. Кеминде {amount} киргизиңиз.",
       advertise_success: "Сунушуңуз кабыл алынды!",
       settings_title: "Жалпы жөндөөлөр", language_label: "Тил", notifications_label: "Билдирүүлөр",
@@ -1024,6 +1072,11 @@
       advertise_bid_placeholder: "Teklip mukdary (som)", advertise_submit: "Reýting üçin göreşmek",
       advertise_empty: "Heniz teklip ýok. Birinji boluň!", advertise_you_badge: "Siziňki",
       advertise_show_all: "Ählisini görkezmek ({count})", advertise_website_label: "Websahypa",
+      advertise_category_placeholder: "Kategoriýany saýlaň",
+      advertise_cat_tech: "Tehnologiýa we başlangyçlar", advertise_cat_trade: "Söwda we hyzmatlar",
+      advertise_cat_people: "Adamlar we media", advertise_cat_education: "Bilim we karýera",
+      advertise_cat_marketing: "Marketing we dörediji", advertise_cat_lifestyle: "Durmuş ýörelgesi we güýmenje",
+      advertise_cat_other: "Beýlekiler",
       advertise_bid_too_low: "Teklip gaty pes. Iň az {amount} giriziň.",
       advertise_success: "Teklibiňiz kabul edildi!",
       settings_title: "Umumy sazlamalar", language_label: "Dil", notifications_label: "Bildirişler",
@@ -2674,13 +2727,42 @@
         }
       }
 
+      var ADVERTISE_CATEGORIES = [
+        { key: "tech", label: tr("advertise_cat_tech") },
+        { key: "trade", label: tr("advertise_cat_trade") },
+        { key: "people", label: tr("advertise_cat_people") },
+        { key: "education", label: tr("advertise_cat_education") },
+        { key: "marketing", label: tr("advertise_cat_marketing") },
+        { key: "lifestyle", label: tr("advertise_cat_lifestyle") },
+        { key: "other", label: tr("advertise_cat_other") },
+      ];
+      var selectedAdvertiseCategory = null;
+      var catRowsHtml = ADVERTISE_CATEGORIES.map(function (c) {
+        return '<button type="button" class="picker-row" data-advertise-cat-option="' + c.key + '">' +
+          "<span>" + escapeHtml(c.label) + "</span>" +
+          '<span class="picker-radio"></span>' +
+          "</button>";
+      }).join("");
+
       app.innerHTML =
-        '<div class="section-card">' +
+        '<div class="section-card advertise-hero-card">' +
         '<div class="advertise-top-label">' + escapeHtml(tr("advertise_top_prefix")) + "</div>" +
         '<div class="advertise-top-amount">' + formatSom(data.next_top_bid) + "</div>" +
-        '<div class="hint">' + rulesHtml + "</div>" +
-        '<input id="advertise-url-input" type="text" placeholder="' + escapeHtml(tr("advertise_url_placeholder")) + '">' +
+        '<div class="advertise-top-divider"></div>' +
+        '<div class="advertise-rules-hint">' + rulesHtml + "</div>" +
+        '<div class="advertise-input-icon-wrap">' +
+        '<span class="advertise-input-icon">' + ICONS.globe + "</span>" +
+        '<input id="advertise-url-input" class="advertise-url-input" type="text" placeholder="' + escapeHtml(tr("advertise_url_placeholder")) + '">' +
+        "</div>" +
         '<div id="advertise-preview"></div>' +
+        '<button type="button" id="advertise-cat-trigger" class="picker-trigger advertise-cat-trigger">' +
+        '<span class="advertise-cat-trigger-icon">' + ICONS.grid + "</span>" +
+        '<span id="advertise-cat-trigger-label" class="advertise-cat-trigger-label">' + escapeHtml(tr("advertise_category_placeholder")) + "</span>" +
+        '<span class="picker-trigger-chevron">▾</span>' +
+        "</button>" +
+        '<div id="advertise-cat-overlay" class="picker-overlay" hidden>' +
+        '<div class="picker-sheet">' + catRowsHtml + "</div>" +
+        "</div>" +
         '<input id="advertise-brand-input" type="text" placeholder="' + escapeHtml(tr("advertise_brand_placeholder")) + '" style="margin-top:10px;">' +
         '<input id="advertise-bid-input" type="number" inputmode="numeric" placeholder="' + escapeHtml(tr("advertise_bid_placeholder")) + '" value="' + data.next_top_bid + '" style="margin-top:10px;">' +
         '<button class="card-btn" id="advertise-submit-btn" style="margin-top:14px;">' + tr("advertise_submit") + "</button>" +
@@ -2688,6 +2770,26 @@
         '<div id="advertise-list"></div>';
 
       renderList();
+
+      var advertiseCatTrigger = document.getElementById("advertise-cat-trigger");
+      var advertiseCatTriggerLabel = document.getElementById("advertise-cat-trigger-label");
+      var advertiseCatOverlay = document.getElementById("advertise-cat-overlay");
+      advertiseCatTrigger.addEventListener("click", function () { advertiseCatOverlay.hidden = false; });
+      advertiseCatOverlay.addEventListener("click", function (e) {
+        if (e.target === advertiseCatOverlay) advertiseCatOverlay.hidden = true;
+      });
+      advertiseCatOverlay.querySelectorAll("[data-advertise-cat-option]").forEach(function (row) {
+        row.addEventListener("click", function () {
+          selectedAdvertiseCategory = row.getAttribute("data-advertise-cat-option");
+          advertiseCatOverlay.querySelectorAll(".picker-row").forEach(function (r) {
+            r.classList.toggle("selected", r === row);
+          });
+          var chosen = ADVERTISE_CATEGORIES.filter(function (c) { return c.key === selectedAdvertiseCategory; })[0];
+          advertiseCatTriggerLabel.textContent = chosen ? chosen.label : tr("advertise_category_placeholder");
+          advertiseCatTrigger.classList.toggle("has-value", !!chosen);
+          advertiseCatOverlay.hidden = true;
+        });
+      });
 
       var lastAdvertisePreview = null;
       var lastAdvertisePreviewUrl = "";
@@ -2739,7 +2841,7 @@
         var bidAmount = parseInt(document.getElementById("advertise-bid-input").value, 10);
         if (!url || !brand || !bidAmount) { showError(tr("fill_all")); return; }
         var photoUrl = lastAdvertisePreviewUrl === url && lastAdvertisePreview ? lastAdvertisePreview.photo_url : null;
-        api("POST", "/api/ads/bid", { url: url, brand_name: brand, bid_amount: bidAmount, photo_url: photoUrl })
+        api("POST", "/api/ads/bid", { url: url, brand_name: brand, bid_amount: bidAmount, photo_url: photoUrl, category: selectedAdvertiseCategory })
           .then(function () {
             if (tg && tg.HapticFeedback) tg.HapticFeedback.notificationOccurred("success");
             var successOverlay = showSuccess(tr("advertise_success"), "🚀", "pop");

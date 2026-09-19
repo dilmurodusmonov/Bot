@@ -593,6 +593,8 @@ _AD_PLATFORM_HOSTS = {
     "play.google.com": "googleplay",
 }
 
+_AD_CATEGORY_KEYS = {"tech", "trade", "people", "education", "marketing", "lifestyle", "other"}
+
 
 async def _resolve_is_public_host(hostname: str) -> bool:
     """SSRF himoyasi — link ichki/lokal manzilga (localhost, 169.254.x.x va h.k.)
@@ -717,6 +719,7 @@ async def api_ads_leaderboard(request: web.Request) -> web.Response:
             "bid_amount": b["bid_amount"],
             "platform": b["platform"],
             "photo_url": b["photo_url"],
+            "category": b["category"],
             "is_me": b["telegram_id"] == telegram_id,
         }
         for i, b in enumerate(bids)
@@ -752,7 +755,9 @@ async def api_ads_bid(request: web.Request) -> web.Response:
     # olinadi — top 10 reytingda ham preview kartadagi kabi rasm chiqishi uchun.
     platform = _derive_ad_platform(url)
     photo_url = _sanitize_ad_photo_url(body.get("photo_url"))
-    await insert_ad_bid(telegram_id, brand_name, url, bid_amount, platform, photo_url)
+    category = body.get("category")
+    category = category if category in _AD_CATEGORY_KEYS else None
+    await insert_ad_bid(telegram_id, brand_name, url, bid_amount, platform, photo_url, category)
     return web.json_response({"ok": True})
 
 

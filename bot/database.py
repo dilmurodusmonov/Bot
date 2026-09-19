@@ -68,6 +68,7 @@ CREATE TABLE IF NOT EXISTS ad_bids (
     bid_amount BIGINT NOT NULL,
     platform TEXT,
     photo_url TEXT,
+    category TEXT,
     created_at TIMESTAMPTZ NOT NULL DEFAULT now()
 );
 """
@@ -93,6 +94,7 @@ async def init_db() -> None:
         await _migrate_reservation_notify_messages(conn)
         await _migrate_ad_bids_multi(conn)
         await _migrate_ad_bids_platform(conn)
+        await _migrate_ad_bids_category(conn)
 
 
 async def _migrate_ad_stats(conn: asyncpg.Connection) -> None:
@@ -196,6 +198,12 @@ async def _migrate_ad_bids_platform(conn: asyncpg.Connection) -> None:
     saqlanadi."""
     await conn.execute("ALTER TABLE ad_bids ADD COLUMN IF NOT EXISTS platform TEXT")
     await conn.execute("ALTER TABLE ad_bids ADD COLUMN IF NOT EXISTS photo_url TEXT")
+
+
+async def _migrate_ad_bids_category(conn: asyncpg.Connection) -> None:
+    """Taklif yuborishda foydalanuvchi brend kategoriyasini (masalan
+    'Texnologiya va startaplar') tanlashi mumkin — buning uchun ustun."""
+    await conn.execute("ALTER TABLE ad_bids ADD COLUMN IF NOT EXISTS category TEXT")
 
 
 # --- users -----------------------------------------------------------------
@@ -565,13 +573,14 @@ async def get_ad_bids_ranked() -> list[dict[str, Any]]:
 async def insert_ad_bid(
     telegram_id: int, brand_name: str, url: str, bid_amount: int,
     platform: Optional[str] = None, photo_url: Optional[str] = None,
+    category: Optional[str] = None,
 ) -> None:
     """Har bir taklif alohida qator sifatida qo'shiladi — bitta foydalanuvchi
     bir nechta mustaqil brend/taklif joylashtirishi mumkin."""
     await _get_pool().execute(
-        """INSERT INTO ad_bids (telegram_id, brand_name, url, bid_amount, platform, photo_url)
-           VALUES ($1, $2, $3, $4, $5, $6)""",
-        telegram_id, brand_name, url, bid_amount, platform, photo_url,
+        """INSERT INTO ad_bids (telegram_id, brand_name, url, bid_amount, platform, photo_url, category)
+           VALUES ($1, $2, $3, $4, $5, $6, $7)""",
+        telegram_id, brand_name, url, bid_amount, platform, photo_url, category,
     )
 
 
