@@ -66,6 +66,8 @@ CREATE TABLE IF NOT EXISTS ad_bids (
     brand_name TEXT NOT NULL,
     url TEXT NOT NULL,
     bid_amount BIGINT NOT NULL,
+    platform TEXT,
+    photo_url TEXT,
     created_at TIMESTAMPTZ NOT NULL DEFAULT now()
 );
 """
@@ -90,6 +92,7 @@ async def init_db() -> None:
         await _migrate_donation_channel_message(conn)
         await _migrate_reservation_notify_messages(conn)
         await _migrate_ad_bids_multi(conn)
+        await _migrate_ad_bids_platform(conn)
 
 
 async def _migrate_ad_stats(conn: asyncpg.Connection) -> None:
@@ -185,6 +188,14 @@ async def _migrate_ad_bids_multi(conn: asyncpg.Connection) -> None:
         await conn.execute("ALTER TABLE ad_bids DROP CONSTRAINT IF EXISTS ad_bids_pkey")
         await conn.execute("ALTER TABLE ad_bids ADD COLUMN id SERIAL PRIMARY KEY")
         await conn.execute("ALTER TABLE ad_bids DROP COLUMN IF EXISTS updated_at")
+
+
+async def _migrate_ad_bids_platform(conn: asyncpg.Connection) -> None:
+    """Top 10 reytingda ham brend rasmi/platforma belgisi chiqishi uchun,
+    preview'da aniqlangan platforma va rasm URL'i endi taklif bilan birga
+    saqlanadi."""
+    await conn.execute("ALTER TABLE ad_bids ADD COLUMN IF NOT EXISTS platform TEXT")
+    await conn.execute("ALTER TABLE ad_bids ADD COLUMN IF NOT EXISTS photo_url TEXT")
 
 
 # --- users -----------------------------------------------------------------
@@ -551,13 +562,16 @@ async def get_ad_bids_ranked() -> list[dict[str, Any]]:
     return [dict(row) for row in rows]
 
 
-async def insert_ad_bid(telegram_id: int, brand_name: str, url: str, bid_amount: int) -> None:
+async def insert_ad_bid(
+    telegram_id: int, brand_name: str, url: str, bid_amount: int,
+    platform: Optional[str] = None, photo_url: Optional[str] = None,
+) -> None:
     """Har bir taklif alohida qator sifatida qo'shiladi — bitta foydalanuvchi
     bir nechta mustaqil brend/taklif joylashtirishi mumkin."""
     await _get_pool().execute(
-        """INSERT INTO ad_bids (telegram_id, brand_name, url, bid_amount)
-           VALUES ($1, $2, $3, $4)""",
-        telegram_id, brand_name, url, bid_amount,
+        """INSERT INTO ad_bids (telegram_id, brand_name, url, bid_amount, platform, photo_url)
+           VALUES ($1, $2, $3, $4, $5, $6)""",
+        telegram_id, brand_name, url, bid_amount, platform, photo_url,
     )
 
 

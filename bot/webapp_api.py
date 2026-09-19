@@ -4,7 +4,7 @@ import json
 import logging
 import re
 from html import escape, unescape
-from typing import Optional
+from typing import Any, Optional
 from urllib.parse import urlparse
 
 import aiohttp
@@ -612,6 +612,20 @@ async def _resolve_is_public_host(hostname: str) -> bool:
     return True
 
 
+def _derive_ad_platform(url: str) -> str:
+    host = (urlparse(url).hostname or "").lower()
+    return _AD_PLATFORM_HOSTS.get(host, "website")
+
+
+def _sanitize_ad_photo_url(photo_url: Any) -> Optional[str]:
+    if not isinstance(photo_url, str):
+        return None
+    photo_url = photo_url.strip()
+    if photo_url.startswith("/api/photo/") or photo_url.startswith("http://") or photo_url.startswith("https://"):
+        return photo_url[:500]
+    return None
+
+
 def _extract_meta(html_text: str, *props: str) -> str:
     for prop in props:
         escaped = re.escape(prop)
@@ -645,7 +659,7 @@ async def api_ads_preview(request: web.Request) -> web.Response:
     if not host:
         raise web.HTTPBadRequest(text="invalid url")
 
-    platform = _AD_PLATFORM_HOSTS.get(host, "website")
+    platform = _derive_ad_platform(url)
 
     if platform == "telegram":
         username = parsed.path.strip("/").split("/")[0]
@@ -701,6 +715,8 @@ async def api_ads_leaderboard(request: web.Request) -> web.Response:
             "brand_name": b["brand_name"],
             "url": b["url"],
             "bid_amount": b["bid_amount"],
+            "platform": b["platform"],
+            "photo_url": b["photo_url"],
             "is_me": b["telegram_id"] == telegram_id,
         }
         for i, b in enumerate(bids)
@@ -731,9 +747,12 @@ async def api_ads_bid(request: web.Request) -> web.Response:
     if bid_amount < AD_MIN_STARTING_BID:
         raise web.HTTPConflict(text="bid_too_low")
 
-    # Har bir taklif mustaqil qator sifatida qo'shiladi — bitta foydalanuvchi
-    # bir nechta turli brend/taklif joylashtirishi mumkin.
-    await insert_ad_bid(telegram_id, brand_name, url, bid_amount)
+    # Platforma URL manzilidan serverda aniqlanadi (klientga ishonilmaydi),
+    # rasm URL'i esa /api/ads/preview orqali oldindan olingan bo'lsa shundan
+    # olinadi — top 10 reytingda ham preview kartadagi kabi rasm chiqishi uchun.
+    platform = _derive_ad_platform(url)
+    photo_url = _sanitize_ad_photo_url(body.get("photo_url"))
+    await insert_ad_bid(telegram_id, brand_name, url, bid_amount, platform, photo_url)
     return web.json_response({"ok": True})
 
 
