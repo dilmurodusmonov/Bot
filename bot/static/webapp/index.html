@@ -391,6 +391,25 @@
     background: #FFFFFF; border-radius: 20px; padding: 14px 12px; margin-bottom: 20px;
   }
   .section-title-blue { font-size: 17px; color: #1C93F3; font-weight: 700; margin: 2px 6px 10px; }
+  .advertise-top-label { font-size: 13px; color: var(--hint); font-weight: 600; margin: 0 6px 2px; }
+  .advertise-top-amount { font-size: 26px; font-weight: 800; color: #FF9A1F; margin: 0 6px 10px; }
+  .leaderboard-row {
+    display: flex; align-items: center; gap: 10px; background: var(--section-bg);
+    border: 1px solid var(--border); border-radius: 14px; padding: 12px; margin-bottom: 10px;
+  }
+  .leaderboard-row-me { border-color: #1C93F3; box-shadow: 0 0 0 1px #1C93F3; }
+  .leaderboard-rank {
+    flex-shrink: 0; background: #FF9A1F; color: #fff; font-weight: 700; font-size: 13px;
+    padding: 4px 10px; border-radius: 999px;
+  }
+  .leaderboard-info { flex: 1 1 auto; min-width: 0; }
+  .leaderboard-brand { font-weight: 700; font-size: 14px; color: var(--text); }
+  .leaderboard-you-badge { font-size: 11px; font-weight: 600; color: #1C93F3; }
+  .leaderboard-url {
+    display: block; font-size: 12px; color: var(--hint); text-decoration: none;
+    overflow: hidden; text-overflow: ellipsis; white-space: nowrap;
+  }
+  .leaderboard-amount { flex-shrink: 0; font-weight: 700; font-size: 14px; color: #FF9A1F; }
   .cat-list { display: flex; flex-direction: column; }
   .cat-row {
     display: flex; align-items: center; gap: 12px; width: 100%; text-align: left;
@@ -605,7 +624,14 @@
       month_names: ["Yanvar", "Fevral", "Mart", "Aprel", "May", "Iyun", "Iyul", "Avgust", "Sentyabr", "Oktyabr", "Noyabr", "Dekabr"],
       ad_placeholder: "REKLAMA",
       ad_placeholder_pitch: "Ijtimoiy sahifangizni reklama qilib hissa qo'shing...",
-      advertise_title: "Reklama berish", advertise_placeholder: "Tez orada bu yerda reklama joylashtirish imkoniyati qo'shiladi.",
+      advertise_title: "Reklama berish",
+      advertise_top_prefix: "TOP-1 uchun", advertise_rules: "{min} so'mdan boshlang. Har bir oshirish kamida {inc}.",
+      advertise_url_placeholder: "Brendingiz URL manzili", advertise_brand_placeholder: "Brend nomi",
+      advertise_bid_placeholder: "Taklif summasi (so'm)", advertise_submit: "Reytingni sindirish",
+      advertise_empty: "Hozircha takliflar yo'q. Birinchi bo'ling!", advertise_you_badge: "Sizniki",
+      advertise_bid_too_low: "Taklif juda past. Kamida {amount} kiriting.",
+      advertise_bid_must_increase: "Oldingi taklifingizdan ko'proq summa kiriting.",
+      advertise_success: "Taklifingiz qabul qilindi!",
       settings_title: "Umumiy sozlamalar", language_label: "Til", notifications_label: "Bildirishnomalar",
       add_to_home_title: "Ehsonni bir urinishda oching",
       add_to_home_desc: "Ilovani bir zumda ochish uchun Ehsonni bosh ekranga qo'shing.",
@@ -664,7 +690,14 @@
       month_names: ["Января", "Февраля", "Марта", "Апреля", "Мая", "Июня", "Июля", "Августа", "Сентября", "Октября", "Ноября", "Декабря"],
       ad_placeholder: "РЕКЛАМА",
       ad_placeholder_pitch: "Помогите развитию нашего социального проекта «Ehsonli qo'llar», разместив рекламу на своей странице в соцсетях...",
-      advertise_title: "Разместить рекламу", advertise_placeholder: "Скоро здесь появится возможность разместить рекламу.",
+      advertise_title: "Разместить рекламу",
+      advertise_top_prefix: "За ТОП-1", advertise_rules: "Начните от {min}. Каждое повышение минимум {inc}.",
+      advertise_url_placeholder: "URL вашего бренда", advertise_brand_placeholder: "Название бренда",
+      advertise_bid_placeholder: "Сумма ставки (сум)", advertise_submit: "Побороться за рейтинг",
+      advertise_empty: "Пока нет ставок. Будьте первым!", advertise_you_badge: "Ваша",
+      advertise_bid_too_low: "Ставка слишком мала. Введите минимум {amount}.",
+      advertise_bid_must_increase: "Введите сумму больше вашей предыдущей ставки.",
+      advertise_success: "Ваша ставка принята!",
       settings_title: "Общие настройки", language_label: "Язык", notifications_label: "Уведомления",
       add_to_home_title: "Открывайте Ehson в один клик",
       add_to_home_desc: "Чтобы открывать приложение мгновенно, добавьте Ehson на главный экран.",
@@ -723,7 +756,14 @@
       month_names: ["January", "February", "March", "April", "May", "June", "July", "August", "September", "October", "November", "December"],
       ad_placeholder: "AD",
       ad_placeholder_pitch: "Help grow our social project \"Ehsonli qo'llar\" by advertising it on your own social media page...",
-      advertise_title: "Place an ad", advertise_placeholder: "The ability to place ads here is coming soon.",
+      advertise_title: "Place an ad",
+      advertise_top_prefix: "For TOP-1", advertise_rules: "Start from {min}. Each raise is at least {inc}.",
+      advertise_url_placeholder: "Your brand's URL", advertise_brand_placeholder: "Brand name",
+      advertise_bid_placeholder: "Bid amount (so'm)", advertise_submit: "Break the rating",
+      advertise_empty: "No bids yet. Be the first!", advertise_you_badge: "Yours",
+      advertise_bid_too_low: "Bid is too low. Enter at least {amount}.",
+      advertise_bid_must_increase: "Enter an amount higher than your previous bid.",
+      advertise_success: "Your bid was accepted!",
       settings_title: "General settings", language_label: "Language", notifications_label: "Notifications",
       add_to_home_title: "Open Ehson in one tap",
       add_to_home_desc: "Add Ehson to your home screen to open the app instantly.",
@@ -782,7 +822,14 @@
       month_names: ["Қаңтар", "Ақпан", "Наурыз", "Сәуір", "Мамыр", "Маусым", "Шілде", "Тамыз", "Қыркүйек", "Қазан", "Қараша", "Желтоқсан"],
       ad_placeholder: "ЖАРНАМА",
       ad_placeholder_pitch: "«Ehsonli qo'llar» әлеуметтік жобамызды дамытуға өз әлеуметтік желі бетіңізде жарнамалап үлес қосыңыз...",
-      advertise_title: "Жарнама беру", advertise_placeholder: "Жақында бұл жерде жарнама орналастыру мүмкіндігі қосылады.",
+      advertise_title: "Жарнама беру",
+      advertise_top_prefix: "TOP-1 үшін", advertise_rules: "{min} бастаңыз. Әр өсіру кемінде {inc}.",
+      advertise_url_placeholder: "Брендіңіздің URL мекенжайы", advertise_brand_placeholder: "Бренд атауы",
+      advertise_bid_placeholder: "Ұсыныс сомасы (сўм)", advertise_submit: "Рейтинг үшін күресу",
+      advertise_empty: "Әзірге ұсыныстар жоқ. Бірінші болыңыз!", advertise_you_badge: "Сіздікі",
+      advertise_bid_too_low: "Ұсыныс тым төмен. Кемінде {amount} енгізіңіз.",
+      advertise_bid_must_increase: "Алдыңғы ұсынысыңыздан көбірек сома енгізіңіз.",
+      advertise_success: "Ұсынысыңыз қабылданды!",
       settings_title: "Жалпы баптаулар", language_label: "Тіл", notifications_label: "Хабарландырулар",
       add_to_home_title: "Ehson-ды бір басуда ашыңыз",
       add_to_home_desc: "Қосымшаны лезде ашу үшін Ehson-ды басты экранға қосыңыз.",
@@ -833,7 +880,14 @@
       month_names: ["Январ", "Феврал", "Март", "Апрел", "Май", "Июн", "Июл", "Август", "Сентябр", "Октябр", "Ноябр", "Декабр"],
       ad_placeholder: "РЕКЛАМА",
       ad_placeholder_pitch: "Барои рушди лоиҳаи иҷтимоии «Ehsonli qo'llar» бо реклама кардани он дар саҳифаи шабакаи иҷтимоии худ саҳм гузоред...",
-      advertise_title: "Реклама додан", advertise_placeholder: "Ба зудӣ дар ин ҷо имконияти ҷойгир кардани реклама илова мешавад.",
+      advertise_title: "Реклама додан",
+      advertise_top_prefix: "Барои TOP-1", advertise_rules: "Аз {min} сар кунед. Ҳар боло баровардан ҳадди ақал {inc}.",
+      advertise_url_placeholder: "Суроғаи URL-и бренди шумо", advertise_brand_placeholder: "Номи бренд",
+      advertise_bid_placeholder: "Маблағи пешниҳод (сўм)", advertise_submit: "Барои рейтинг мубориза бурдан",
+      advertise_empty: "Ҳанӯз пешниҳод нест. Аввалин шавед!", advertise_you_badge: "Аз шумо",
+      advertise_bid_too_low: "Пешниҳод хеле паст. Ҳадди ақал {amount} ворид кунед.",
+      advertise_bid_must_increase: "Аз пешниҳоди қаблии худ бештар маблағ ворид кунед.",
+      advertise_success: "Пешниҳоди шумо қабул шуд!",
       settings_title: "Танзимоти умумӣ", language_label: "Забон", notifications_label: "Огоҳиномаҳо",
       add_to_home_title: "Ehson-ро бо як зарба кушоед",
       add_to_home_desc: "Барои дарҳол кушодани барнома, Ehson-ро ба экрани асосӣ илова кунед.",
@@ -884,7 +938,14 @@
       month_names: ["Январь", "Февраль", "Март", "Апрель", "Май", "Июнь", "Июль", "Август", "Сентябрь", "Октябрь", "Ноябрь", "Декабрь"],
       ad_placeholder: "ЖАРНАМА",
       ad_placeholder_pitch: "«Ehsonli qo'llar» коомдук долбоорубуздун өнүгүшүнө өз социалдык тармак баракчаңызда жарнамалап үлүш кошуңуз...",
-      advertise_title: "Жарнама берүү", advertise_placeholder: "Жакында бул жерде жарнама жайгаштыруу мүмкүнчүлүгү кошулат.",
+      advertise_title: "Жарнама берүү",
+      advertise_top_prefix: "TOP-1 үчүн", advertise_rules: "{min} баштаңыз. Ар бир көтөрүү кеминде {inc}.",
+      advertise_url_placeholder: "Брендиңиздин URL дареги", advertise_brand_placeholder: "Бренддин аты",
+      advertise_bid_placeholder: "Сунуш суммасы (сом)", advertise_submit: "Рейтинг үчүн күрөшүү",
+      advertise_empty: "Азырынча сунуштар жок. Биринчи болуңуз!", advertise_you_badge: "Сиздики",
+      advertise_bid_too_low: "Сунуш өтө төмөн. Кеминде {amount} киргизиңиз.",
+      advertise_bid_must_increase: "Мурунку сунушуңуздан көбүрөөк сумма киргизиңиз.",
+      advertise_success: "Сунушуңуз кабыл алынды!",
       settings_title: "Жалпы жөндөөлөр", language_label: "Тил", notifications_label: "Билдирүүлөр",
       add_to_home_title: "Ehson-ду бир басуу менен ачыңыз",
       add_to_home_desc: "Колдонмону дароо ачуу үчүн Ehson-ду башкы экранга кошуңуз.",
@@ -935,7 +996,14 @@
       month_names: ["Ýanwar", "Fewral", "Mart", "Aprel", "Maý", "Iýun", "Iýul", "Awgust", "Sentýabr", "Oktýabr", "Noýabr", "Dekabr"],
       ad_placeholder: "REKLAMA",
       ad_placeholder_pitch: "«Ehsonli qo'llar» durmuş taslamamyzy ösdürmekde, öz sosial ulgam sahypaňyzda mahabatlandyryp goşant goşuň...",
-      advertise_title: "Mahabat bermek", advertise_placeholder: "Ýakynda bu ýerde mahabat ýerleşdirmek mümkinçiligi goşular.",
+      advertise_title: "Mahabat bermek",
+      advertise_top_prefix: "TOP-1 üçin", advertise_rules: "{min} başlaň. Her ýokarlandyrma iň az {inc}.",
+      advertise_url_placeholder: "Brendiňiziň URL salgysy", advertise_brand_placeholder: "Brend ady",
+      advertise_bid_placeholder: "Teklip mukdary (som)", advertise_submit: "Reýting üçin göreşmek",
+      advertise_empty: "Heniz teklip ýok. Birinji boluň!", advertise_you_badge: "Siziňki",
+      advertise_bid_too_low: "Teklip gaty pes. Iň az {amount} giriziň.",
+      advertise_bid_must_increase: "Öňki teklibiňizden köp mukdar giriziň.",
+      advertise_success: "Teklibiňiz kabul edildi!",
       settings_title: "Umumy sazlamalar", language_label: "Dil", notifications_label: "Bildirişler",
       add_to_home_title: "Ehson-y bir basyşda açyň",
       add_to_home_desc: "Programmany haýal etmän açmak üçin Ehson-y baş ekrana goşuň.",
@@ -972,9 +1040,10 @@
       body: payload,
     }).then(function (res) {
       if (!res.ok) {
-        return res.text().then(function () {
+        return res.text().then(function (text) {
           var err = new Error("http_" + res.status);
           err.status = res.status;
+          err.body = text;
           throw err;
         });
       }
@@ -2515,14 +2584,78 @@
     setBackButton();
   }
 
+  function formatSom(n) {
+    n = Math.round(n || 0);
+    return String(n).replace(/\B(?=(\d{3})+(?!\d))/g, " ") + " so'm";
+  }
+
+  function trf(key, vars) {
+    var s = tr(key);
+    for (var k in vars) { s = s.split("{" + k + "}").join(vars[k]); }
+    return s;
+  }
+
   function renderAdvertise() {
-    app.innerHTML =
-      '<div class="section-card">' +
-      '<div class="section-title-blue">' + tr("advertise_title") + "</div>" +
-      '<div class="hint">' + tr("advertise_placeholder") + "</div>" +
-      "</div>";
-    hideMainButton();
-    setBackButton();
+    api("GET", "/api/ads/leaderboard").then(function (data) {
+      var rulesHtml = trf("advertise_rules", {
+        min: formatSom(data.min_starting_bid),
+        inc: formatSom(data.min_increment),
+      });
+      var listHtml = data.bids.length
+        ? data.bids.map(function (b) {
+            return '<div class="leaderboard-row' + (b.is_me ? " leaderboard-row-me" : "") + '">' +
+              '<span class="leaderboard-rank">#' + b.rank + "</span>" +
+              '<div class="leaderboard-info">' +
+              '<div class="leaderboard-brand">' + escapeHtml(b.brand_name) +
+              (b.is_me ? ' <span class="leaderboard-you-badge">' + tr("advertise_you_badge") + "</span>" : "") +
+              "</div>" +
+              '<a class="leaderboard-url" href="' + escapeHtml(b.url) + '" target="_blank" rel="noopener">' + escapeHtml(b.url) + "</a>" +
+              "</div>" +
+              '<span class="leaderboard-amount">' + formatSom(b.bid_amount) + "</span>" +
+              "</div>";
+          }).join("")
+        : '<div class="empty-state">' + tr("advertise_empty") + "</div>";
+
+      app.innerHTML =
+        '<div class="section-card">' +
+        '<div class="advertise-top-label">' + escapeHtml(tr("advertise_top_prefix")) + "</div>" +
+        '<div class="advertise-top-amount">' + formatSom(data.next_top_bid) + "</div>" +
+        '<div class="hint">' + rulesHtml + "</div>" +
+        '<input id="advertise-url-input" type="text" placeholder="' + escapeHtml(tr("advertise_url_placeholder")) + '">' +
+        '<input id="advertise-brand-input" type="text" placeholder="' + escapeHtml(tr("advertise_brand_placeholder")) + '" style="margin-top:10px;">' +
+        '<input id="advertise-bid-input" type="number" inputmode="numeric" placeholder="' + escapeHtml(tr("advertise_bid_placeholder")) + '" value="' + data.next_top_bid + '" style="margin-top:10px;">' +
+        '<button class="card-btn" id="advertise-submit-btn" style="margin-top:14px;">' + tr("advertise_submit") + "</button>" +
+        "</div>" +
+        listHtml;
+
+      document.getElementById("advertise-submit-btn").addEventListener("click", function () {
+        var url = document.getElementById("advertise-url-input").value.trim();
+        var brand = document.getElementById("advertise-brand-input").value.trim();
+        var bidAmount = parseInt(document.getElementById("advertise-bid-input").value, 10);
+        if (!url || !brand || !bidAmount) { showError(tr("fill_all")); return; }
+        api("POST", "/api/ads/bid", { url: url, brand_name: brand, bid_amount: bidAmount })
+          .then(function () {
+            if (tg && tg.HapticFeedback) tg.HapticFeedback.notificationOccurred("success");
+            var successOverlay = showSuccess(tr("advertise_success"), "🚀", "pop");
+            setTimeout(function () {
+              if (successOverlay.parentNode) successOverlay.parentNode.removeChild(successOverlay);
+              renderAdvertise();
+            }, 2500);
+          })
+          .catch(function (err) {
+            if (err.status === 409 && err.body === "bid_too_low") {
+              showError(trf("advertise_bid_too_low", { amount: formatSom(data.next_top_bid) }));
+            } else if (err.status === 409 && err.body === "bid_must_increase") {
+              showError(tr("advertise_bid_must_increase"));
+            } else {
+              showError();
+            }
+          });
+      });
+
+      hideMainButton();
+      setBackButton();
+    }).catch(function () { showError(); });
   }
 
   function renderProfile() {

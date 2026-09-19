@@ -59,6 +59,15 @@ CREATE TABLE IF NOT EXISTS donation_likes (
     created_at TIMESTAMPTZ NOT NULL DEFAULT now(),
     PRIMARY KEY (donation_id, telegram_id)
 );
+
+CREATE TABLE IF NOT EXISTS ad_bids (
+    telegram_id BIGINT PRIMARY KEY REFERENCES users(telegram_id),
+    brand_name TEXT NOT NULL,
+    url TEXT NOT NULL,
+    bid_amount BIGINT NOT NULL,
+    created_at TIMESTAMPTZ NOT NULL DEFAULT now(),
+    updated_at TIMESTAMPTZ NOT NULL DEFAULT now()
+);
 """
 
 _pool: Optional[asyncpg.Pool] = None
@@ -511,6 +520,32 @@ async def increment_ad_views(slide: int) -> int:
 async def count_new_donations_last_24h() -> int:
     return await _get_pool().fetchval(
         "SELECT COUNT(*) FROM donations WHERE created_at > now() - interval '24 hours'"
+    )
+
+
+# --- "Reklama berish" reyting/taklif tizimi ----------------------------------
+
+async def get_ad_bids_ranked() -> list[dict[str, Any]]:
+    rows = await _get_pool().fetch(
+        "SELECT * FROM ad_bids ORDER BY bid_amount DESC, created_at ASC"
+    )
+    return [dict(row) for row in rows]
+
+
+async def get_ad_bid(telegram_id: int) -> Optional[dict[str, Any]]:
+    row = await _get_pool().fetchrow(
+        "SELECT * FROM ad_bids WHERE telegram_id = $1", telegram_id
+    )
+    return dict(row) if row else None
+
+
+async def upsert_ad_bid(telegram_id: int, brand_name: str, url: str, bid_amount: int) -> None:
+    await _get_pool().execute(
+        """INSERT INTO ad_bids (telegram_id, brand_name, url, bid_amount, updated_at)
+           VALUES ($1, $2, $3, $4, now())
+           ON CONFLICT (telegram_id) DO UPDATE
+           SET brand_name = $2, url = $3, bid_amount = $4, updated_at = now()""",
+        telegram_id, brand_name, url, bid_amount,
     )
 
 
