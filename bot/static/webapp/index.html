@@ -395,14 +395,16 @@
   .advertise-hero-card { background: none; border-radius: 0; padding: 14px 6px; }
   .advertise-top-row { margin: 0 6px 10px; line-height: 1.35; }
   .advertise-top-label { font-size: 23px; color: #1C1C1E; font-weight: 600; }
-  .advertise-top-amount { font-size: 23px; font-weight: 600; color: #D2551F; margin-left: 6px; }
+  .advertise-top-amount {
+    font-size: 23px; font-weight: 600; color: #D2551F; margin-left: 6px;
+    border-bottom: 1.5px dashed #D2551F; padding-bottom: 3px;
+  }
   .advertise-top-amount-unit { font-size: 15px; font-weight: 600; color: #D2551F; margin-left: 3px; }
   .advertise-top-plus {
     display: inline-flex; width: 22px; height: 22px; border-radius: 50%; background: #D2551F; color: #fff;
     align-items: center; justify-content: center; vertical-align: middle; margin-left: 6px;
   }
   .advertise-top-plus svg { width: 12px; height: 12px; }
-  .advertise-top-divider { border-bottom: 1.5px dashed #EFC585; margin: 0 6px 12px; }
   .advertise-rules-hint { color: #A9895C; font-size: 11px; margin: 0 6px 14px; line-height: 1.4; text-align: center; }
   .advertise-input-icon-wrap { position: relative; margin-bottom: 10px; }
   .advertise-input-icon-wrap .advertise-url-input {
@@ -2785,7 +2787,6 @@
         (topAmountParts.unit ? '<span class="advertise-top-amount-unit">' + escapeHtml(topAmountParts.unit) + "</span>" : "") +
         '<span class="advertise-top-plus">' + ICONS.plus + "</span>" +
         "</div>" +
-        '<div class="advertise-top-divider"></div>' +
         '<div class="advertise-rules-hint">' + rulesHtml + "</div>" +
         '<div class="advertise-input-icon-wrap">' +
         '<span class="advertise-input-icon">' + ICONS.globe + "</span>" +
