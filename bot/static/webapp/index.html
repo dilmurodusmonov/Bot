@@ -392,14 +392,14 @@
   }
   .section-title-blue { font-size: 17px; color: #1C93F3; font-weight: 700; margin: 2px 6px 10px; }
   .advertise-hero-card { background: none; border-radius: 0; }
-  .advertise-top-label { font-size: 14px; color: #8A5A24; font-weight: 700; margin: 0 6px 4px; }
-  .advertise-top-amount-row { display: flex; align-items: center; gap: 8px; margin: 0 6px 10px; }
-  .advertise-top-amount { font-size: 28px; font-weight: 800; color: #FF9A1F; }
+  .advertise-top-row { display: flex; align-items: center; flex-wrap: wrap; gap: 8px; margin: 0 6px 10px; }
+  .advertise-top-label { font-size: 22px; color: #1C1C1E; font-weight: 800; }
+  .advertise-top-amount { font-size: 22px; font-weight: 800; color: #D2551F; }
   .advertise-top-plus {
-    flex-shrink: 0; width: 26px; height: 26px; border-radius: 50%; background: #FF9A1F; color: #fff;
+    flex-shrink: 0; width: 24px; height: 24px; border-radius: 50%; background: #D2551F; color: #fff;
     display: flex; align-items: center; justify-content: center;
   }
-  .advertise-top-plus svg { width: 14px; height: 14px; }
+  .advertise-top-plus svg { width: 13px; height: 13px; }
   .advertise-top-divider { border-bottom: 1.5px dashed #EFC585; margin: 0 6px 12px; }
   .advertise-rules-hint { color: #A9895C; font-size: 13px; margin: 0 6px 14px; line-height: 1.4; text-align: center; }
   .advertise-input-icon-wrap { position: relative; margin-bottom: 10px; }
@@ -2768,8 +2768,8 @@
 
       app.innerHTML =
         '<div class="section-card advertise-hero-card">' +
-        '<div class="advertise-top-label">' + escapeHtml(tr("advertise_top_prefix")) + "</div>" +
-        '<div class="advertise-top-amount-row">' +
+        '<div class="advertise-top-row">' +
+        '<span class="advertise-top-label">' + escapeHtml(tr("advertise_top_prefix")) + "</span>" +
         '<span class="advertise-top-amount">' + formatSom(data.next_top_bid) + "</span>" +
         '<span class="advertise-top-plus">' + ICONS.plus + "</span>" +
         "</div>" +
