@@ -392,14 +392,15 @@
   }
   .section-title-blue { font-size: 17px; color: #1C93F3; font-weight: 700; margin: 2px 6px 10px; }
   .advertise-hero-card { background: none; border-radius: 0; }
-  .advertise-top-row { display: flex; align-items: center; flex-wrap: wrap; gap: 8px; margin: 0 6px 10px; }
-  .advertise-top-label { font-size: 22px; color: #1C1C1E; font-weight: 800; }
-  .advertise-top-amount { font-size: 22px; font-weight: 800; color: #D2551F; }
+  .advertise-top-row { margin: 0 6px 10px; line-height: 1.35; }
+  .advertise-top-label { font-size: 23px; color: #1C1C1E; font-weight: 600; }
+  .advertise-top-amount { font-size: 23px; font-weight: 600; color: #D2551F; margin-left: 6px; }
+  .advertise-top-amount-unit { font-size: 15px; font-weight: 600; color: #D2551F; margin-left: 3px; }
   .advertise-top-plus {
-    flex-shrink: 0; width: 24px; height: 24px; border-radius: 50%; background: #D2551F; color: #fff;
-    display: flex; align-items: center; justify-content: center;
+    display: inline-flex; width: 22px; height: 22px; border-radius: 50%; background: #D2551F; color: #fff;
+    align-items: center; justify-content: center; vertical-align: middle; margin-left: 6px;
   }
-  .advertise-top-plus svg { width: 13px; height: 13px; }
+  .advertise-top-plus svg { width: 12px; height: 12px; }
   .advertise-top-divider { border-bottom: 1.5px dashed #EFC585; margin: 0 6px 12px; }
   .advertise-rules-hint { color: #A9895C; font-size: 13px; margin: 0 6px 14px; line-height: 1.4; text-align: center; }
   .advertise-input-icon-wrap { position: relative; margin-bottom: 10px; }
@@ -2686,6 +2687,12 @@
     return String(n) + " so'm";
   }
 
+  function splitSomUnit(formatted) {
+    var idx = formatted.lastIndexOf(" so'm");
+    if (idx === -1) return { value: formatted, unit: "" };
+    return { value: formatted.substring(0, idx), unit: formatted.substring(idx + 1) };
+  }
+
   function trf(key, vars) {
     var s = tr(key);
     for (var k in vars) { s = s.split("{" + k + "}").join(vars[k]); }
@@ -2766,11 +2773,14 @@
           "</button>";
       }).join("");
 
+      var topAmountParts = splitSomUnit(formatSom(data.next_top_bid));
+
       app.innerHTML =
         '<div class="section-card advertise-hero-card">' +
         '<div class="advertise-top-row">' +
         '<span class="advertise-top-label">' + escapeHtml(tr("advertise_top_prefix")) + "</span>" +
-        '<span class="advertise-top-amount">' + formatSom(data.next_top_bid) + "</span>" +
+        '<span class="advertise-top-amount">' + escapeHtml(topAmountParts.value) + "</span>" +
+        (topAmountParts.unit ? '<span class="advertise-top-amount-unit">' + escapeHtml(topAmountParts.unit) + "</span>" : "") +
         '<span class="advertise-top-plus">' + ICONS.plus + "</span>" +
         "</div>" +
         '<div class="advertise-top-divider"></div>' +
