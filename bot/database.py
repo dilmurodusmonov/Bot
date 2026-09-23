@@ -605,11 +605,17 @@ async def insert_ad_bid(
     )
 
 
-async def raise_ad_bid(bid_id: int, increment: int) -> Optional[int]:
-    """Taklifni atomik ravishda oshiradi va yangi summani qaytaradi."""
+async def get_ad_bid_owner(bid_id: int) -> Optional[int]:
+    return await _get_pool().fetchval("SELECT telegram_id FROM ad_bids WHERE id = $1", bid_id)
+
+
+async def raise_ad_bid(bid_id: int, telegram_id: int, increment: int) -> Optional[int]:
+    """Taklifni atomik ravishda oshiradi va yangi summani qaytaradi. Faqat
+    taklif egasi oshira oladi — boshqa foydalanuvchi uchun None qaytadi."""
     return await _get_pool().fetchval(
-        "UPDATE ad_bids SET bid_amount = bid_amount + $2 WHERE id = $1 RETURNING bid_amount",
-        bid_id, increment,
+        """UPDATE ad_bids SET bid_amount = bid_amount + $3
+           WHERE id = $1 AND telegram_id = $2 RETURNING bid_amount""",
+        bid_id, telegram_id, increment,
     )
 
 

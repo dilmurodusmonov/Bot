@@ -2865,7 +2865,8 @@
           '<span class="leaderboard-amount">' + formatSom(b.bid_amount) + "</span>" +
           '<button type="button" class="leaderboard-take-btn" data-take-rank="' + b.rank + '" data-take-amount="' + (b.bid_amount + data.min_increment) + '">' +
           escapeHtml(trf("advertise_take_rank", { n: String(b.rank) })) + "</button>" +
-          '<button type="button" class="leaderboard-raise-btn" data-raise-id="' + b.id + '">' + escapeHtml(tr("advertise_raise")) + "</button>" +
+          // "Taklifni oshirish" faqat taklif egasiga ko'rinadi.
+          (b.is_me ? '<button type="button" class="leaderboard-raise-btn" data-raise-id="' + b.id + '">' + escapeHtml(tr("advertise_raise")) + "</button>" : "") +
           "</div>" +
           "</div>";
       }

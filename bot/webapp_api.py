@@ -34,6 +34,7 @@ from bot.database import (
     fill_ad_bid_preview,
     get_ad_bids_ranked,
     increment_ad_bid_clicks,
+    get_ad_bid_owner,
     raise_ad_bid,
     increment_ad_views,
     increment_donation_share,
@@ -823,11 +824,15 @@ async def api_ads_click(request: web.Request) -> web.Response:
 
 
 async def api_ads_raise(request: web.Request) -> web.Response:
-    """sindr.uz'dagi "Taklifni oshirish": taklif eng kam qadamga oshiriladi."""
-    await _require_user_id(request)
-    bid_amount = await raise_ad_bid(int(request.match_info["id"]), AD_MIN_INCREMENT)
+    """sindr.uz'dagi "Taklifni oshirish": taklif eng kam qadamga oshiriladi.
+    Faqat taklif egasi oshira oladi."""
+    telegram_id = await _require_user_id(request)
+    bid_id = int(request.match_info["id"])
+    bid_amount = await raise_ad_bid(bid_id, telegram_id, AD_MIN_INCREMENT)
     if bid_amount is None:
-        raise web.HTTPNotFound()
+        if await get_ad_bid_owner(bid_id) is None:
+            raise web.HTTPNotFound()
+        raise web.HTTPForbidden(text="not_owner")
     return web.json_response({"bid_amount": bid_amount})
 
 
