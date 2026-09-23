@@ -458,10 +458,15 @@
     font-size: 12px; color: var(--hint); line-height: 1.3; margin-top: 1px;
     display: -webkit-box; -webkit-line-clamp: 2; -webkit-box-orient: vertical; overflow: hidden;
   }
-  .leaderboard-url {
-    display: block; font-size: 13px; color: var(--hint); text-decoration: none;
-    overflow: hidden; text-overflow: ellipsis; white-space: nowrap;
+  .leaderboard-clicks {
+    display: flex; align-items: center; gap: 5px; margin-top: 3px;
+    font-size: 11px; color: var(--hint); white-space: nowrap;
   }
+  .leaderboard-clicks::before {
+    content: ""; width: 6px; height: 6px; border-radius: 50%; background: #FF6B4A; flex-shrink: 0;
+  }
+  .leaderboard-row[data-bid-url] { cursor: pointer; -webkit-tap-highlight-color: transparent; }
+  .leaderboard-row[data-bid-url]:active { opacity: 0.7; }
   .leaderboard-amount { flex-shrink: 0; font-weight: 800; font-size: 18px; color: #FF9A1F; }
   .leaderboard-row-top3 { padding: 23px; }
   .leaderboard-row-rank1 { background: #FFF3F1; border: 1.5px solid #F0A99C; }
@@ -475,7 +480,6 @@
   .leaderboard-row-top3 .advertise-preview-thumb-emoji { font-size: 20px; }
   .leaderboard-row-top3 .leaderboard-brand { font-size: 13px; }
   .leaderboard-row-top3 .leaderboard-desc { font-size: 11px; }
-  .leaderboard-row-top3 .leaderboard-url { font-size: 11px; }
   .leaderboard-row-top3 .leaderboard-amount { font-size: 15px; }
   .leaderboard-row-flat {
     background: none; border: none; border-radius: 0; box-shadow: none;
@@ -486,7 +490,7 @@
   .leaderboard-row-flat .advertise-preview-thumb { width: 36px; height: 36px; border-radius: 8px; }
   .leaderboard-row-flat .advertise-preview-thumb-emoji { font-size: 16px; }
   .leaderboard-row-flat .leaderboard-brand { font-size: 14px; }
-  .leaderboard-row-flat .leaderboard-url { font-size: 12px; }
+  .leaderboard-row-flat .leaderboard-desc { -webkit-line-clamp: 1; }
   .leaderboard-row-flat .leaderboard-amount { font-size: 15px; }
   .leaderboard-row-flat .leaderboard-rank { font-size: 10px; padding: 2px 7px; }
   .advertise-rank-divider {
@@ -746,7 +750,7 @@
       advertise_url_placeholder: "Brendingiz URL manzili",
       advertise_url_hint: "Veb-sayt, Telegram, Instagram, YouTube, App Store yoki Google Play URL",
       advertise_filter_all: "Barchasi", advertise_top3_label: "TOP 3", advertise_submit: "Reytingni sindirish",
-      advertise_empty: "Hozircha takliflar yo'q. Birinchi bo'ling!", advertise_you_badge: "Sizniki",
+      advertise_empty: "Hozircha takliflar yo'q. Birinchi bo'ling!", advertise_you_badge: "Sizniki", advertise_clicks: "{count} klik",
       advertise_show_all: "Barchasini ko'rsatish ({count})", advertise_website_label: "Veb-sayt",
       advertise_category_placeholder: "Kategoriyani tanlang",
       advertise_cat_tech: "Texnologiya va startaplar", advertise_cat_trade: "Savdo va xizmatlar",
@@ -816,7 +820,7 @@
       advertise_url_placeholder: "URL вашего бренда",
       advertise_url_hint: "Сайт, Telegram, Instagram, YouTube, App Store или Google Play ссылка",
       advertise_filter_all: "Все", advertise_top3_label: "ТОП 3", advertise_submit: "Побороться за рейтинг",
-      advertise_empty: "Пока нет ставок. Будьте первым!", advertise_you_badge: "Ваша",
+      advertise_empty: "Пока нет ставок. Будьте первым!", advertise_you_badge: "Ваша", advertise_clicks: "{count} кликов",
       advertise_show_all: "Показать все ({count})", advertise_website_label: "Веб-сайт",
       advertise_category_placeholder: "Выберите категорию",
       advertise_cat_tech: "Технологии и стартапы", advertise_cat_trade: "Торговля и услуги",
@@ -886,7 +890,7 @@
       advertise_url_placeholder: "Your brand's URL",
       advertise_url_hint: "Website, Telegram, Instagram, YouTube, App Store or Google Play URL",
       advertise_filter_all: "All", advertise_top3_label: "TOP 3", advertise_submit: "Break the rating",
-      advertise_empty: "No bids yet. Be the first!", advertise_you_badge: "Yours",
+      advertise_empty: "No bids yet. Be the first!", advertise_you_badge: "Yours", advertise_clicks: "{count} clicks",
       advertise_show_all: "Show all ({count})", advertise_website_label: "Website",
       advertise_category_placeholder: "Choose a category",
       advertise_cat_tech: "Tech & startups", advertise_cat_trade: "Trade & services",
@@ -956,7 +960,7 @@
       advertise_url_placeholder: "Брендіңіздің URL мекенжайы",
       advertise_url_hint: "Веб-сайт, Telegram, Instagram, YouTube, App Store немесе Google Play сілтемесі",
       advertise_filter_all: "Барлығы", advertise_top3_label: "ТОП 3", advertise_submit: "Рейтинг үшін күресу",
-      advertise_empty: "Әзірге ұсыныстар жоқ. Бірінші болыңыз!", advertise_you_badge: "Сіздікі",
+      advertise_empty: "Әзірге ұсыныстар жоқ. Бірінші болыңыз!", advertise_you_badge: "Сіздікі", advertise_clicks: "{count} басу",
       advertise_show_all: "Барлығын көрсету ({count})", advertise_website_label: "Веб-сайт",
       advertise_category_placeholder: "Санатты таңдаңыз",
       advertise_cat_tech: "Технология және стартаптар", advertise_cat_trade: "Сауда және қызметтер",
@@ -1018,7 +1022,7 @@
       advertise_url_placeholder: "Суроғаи URL-и бренди шумо",
       advertise_url_hint: "Сомона, Telegram, Instagram, YouTube, App Store ё Google Play пайванд",
       advertise_filter_all: "Ҳама", advertise_top3_label: "ТОП 3", advertise_submit: "Барои рейтинг мубориза бурдан",
-      advertise_empty: "Ҳанӯз пешниҳод нест. Аввалин шавед!", advertise_you_badge: "Аз шумо",
+      advertise_empty: "Ҳанӯз пешниҳод нест. Аввалин шавед!", advertise_you_badge: "Аз шумо", advertise_clicks: "{count} клик",
       advertise_show_all: "Ҳамаро нишон додан ({count})", advertise_website_label: "Сомона",
       advertise_category_placeholder: "Категорияро интихоб кунед",
       advertise_cat_tech: "Технология ва старташҳо", advertise_cat_trade: "Савдо ва хидматҳо",
@@ -1080,7 +1084,7 @@
       advertise_url_placeholder: "Брендиңиздин URL дареги",
       advertise_url_hint: "Веб-сайт, Telegram, Instagram, YouTube, App Store же Google Play шилтемеси",
       advertise_filter_all: "Баары", advertise_top3_label: "ТОП 3", advertise_submit: "Рейтинг үчүн күрөшүү",
-      advertise_empty: "Азырынча сунуштар жок. Биринчи болуңуз!", advertise_you_badge: "Сиздики",
+      advertise_empty: "Азырынча сунуштар жок. Биринчи болуңуз!", advertise_you_badge: "Сиздики", advertise_clicks: "{count} басуу",
       advertise_show_all: "Баарын көрсөтүү ({count})", advertise_website_label: "Веб-сайт",
       advertise_category_placeholder: "Категорияны тандаңыз",
       advertise_cat_tech: "Технология жана стартаптар", advertise_cat_trade: "Соода жана кызматтар",
@@ -1142,7 +1146,7 @@
       advertise_url_placeholder: "Brendiňiziň URL salgysy",
       advertise_url_hint: "Websahypa, Telegram, Instagram, YouTube, App Store ýa-da Google Play salgysy",
       advertise_filter_all: "Ählisi", advertise_top3_label: "TOP 3", advertise_submit: "Reýting üçin göreşmek",
-      advertise_empty: "Heniz teklip ýok. Birinji boluň!", advertise_you_badge: "Siziňki",
+      advertise_empty: "Heniz teklip ýok. Birinji boluň!", advertise_you_badge: "Siziňki", advertise_clicks: "{count} basyş",
       advertise_show_all: "Ählisini görkezmek ({count})", advertise_website_label: "Websahypa",
       advertise_category_placeholder: "Kategoriýany saýlaň",
       advertise_cat_tech: "Tehnologiýa we başlangyçlar", advertise_cat_trade: "Söwda we hyzmatlar",
@@ -2776,6 +2780,23 @@
         appstore: "App Store", googleplay: "Google Play", website: tr("advertise_website_label"),
       };
 
+      function clicksText(n) {
+        return escapeHtml(trf("advertise_clicks", { count: (n || 0).toLocaleString("ru-RU") }));
+      }
+
+      // Brend sahifasini ochadi: Telegram havolalari Telegram ichida,
+      // qolganlari tashqi brauzerda.
+      function openBrandUrl(url) {
+        var tgMatch = /^(?:https?:\/\/)?(?:t|telegram)\.me\/(.+)$/i.exec(url);
+        if (tgMatch && tg && typeof tg.openTelegramLink === "function") {
+          tg.openTelegramLink("https://t.me/" + tgMatch[1]);
+        } else if (tg && typeof tg.openLink === "function") {
+          tg.openLink(url);
+        } else {
+          window.open(url, "_blank");
+        }
+      }
+
       function bidRowHtml(b, isTop3) {
         var emoji = ADVERTISE_PLATFORM_EMOJI[b.platform] || ADVERTISE_PLATFORM_EMOJI.website;
         var thumbHtml = b.photo_url
@@ -2783,15 +2804,15 @@
           : '<span class="advertise-preview-thumb advertise-preview-thumb-emoji">' + emoji + "</span>";
         var rowClass = "leaderboard-row " + (isTop3 ? "leaderboard-row-top3 leaderboard-row-rank" + b.rank : "leaderboard-row-flat") +
           (b.is_me ? " leaderboard-row-me" : "");
-        return '<div class="' + rowClass + '">' +
+        return '<div class="' + rowClass + '" data-bid-id="' + b.id + '" data-bid-url="' + escapeHtml(b.url) + '">' +
           '<span class="leaderboard-rank">#' + b.rank + "</span>" +
           thumbHtml +
           '<div class="leaderboard-info">' +
           '<div class="leaderboard-brand">' + escapeHtml(b.brand_name) +
           (b.is_me ? ' <span class="leaderboard-you-badge">' + tr("advertise_you_badge") + "</span>" : "") +
           "</div>" +
-          (isTop3 && b.description ? '<div class="leaderboard-desc">' + escapeHtml(b.description) + "</div>" : "") +
-          '<a class="leaderboard-url" href="' + escapeHtml(b.url) + '" target="_blank" rel="noopener">' + escapeHtml(b.url) + "</a>" +
+          (b.description ? '<div class="leaderboard-desc">' + escapeHtml(b.description) + "</div>" : "") +
+          '<div class="leaderboard-clicks">' + clicksText(b.clicks) + "</div>" +
           "</div>" +
           '<span class="leaderboard-amount">' + formatSom(b.bid_amount) + "</span>" +
           "</div>";
@@ -2826,6 +2847,20 @@
             trf("advertise_show_all", { count: String(filteredBids.length) }) + "</button>"
           : "";
         listEl.innerHTML = rowsHtml + showAllHtml;
+        Array.prototype.forEach.call(listEl.querySelectorAll(".leaderboard-row[data-bid-url]"), function (row) {
+          row.addEventListener("click", function () {
+            var id = Number(row.getAttribute("data-bid-id"));
+            var url = row.getAttribute("data-bid-url");
+            var bid = data.bids.filter(function (x) { return x.id === id; })[0];
+            if (bid) {
+              bid.clicks = (bid.clicks || 0) + 1;
+              var clicksEl = row.querySelector(".leaderboard-clicks");
+              if (clicksEl) clicksEl.innerHTML = clicksText(bid.clicks);
+            }
+            api("POST", "/api/ads/" + id + "/click").catch(function () {});
+            openBrandUrl(url);
+          });
+        });
         var showAllBtn = document.getElementById("advertise-show-all-btn");
         if (showAllBtn) {
           showAllBtn.addEventListener("click", function () {
