@@ -458,7 +458,8 @@
     flex-shrink: 0; background: linear-gradient(135deg, var(--accent1), var(--accent2)); color: #fff;
     font-weight: 700; font-size: 11.5px; line-height: 1; padding: 5px 8px; border-radius: 999px;
   }
-  .leaderboard-info { flex: 1 1 auto; min-width: 0; align-self: flex-start; }
+  /* Klik soni doim pastda — tavsif bor-yo'qligidan qat'i nazar bir xil joyda. */
+  .leaderboard-info { flex: 1 1 auto; min-width: 0; align-self: stretch; display: flex; flex-direction: column; }
   .leaderboard-brand {
     font-weight: 700; font-size: 13px; line-height: 15px; color: var(--text);
     overflow: hidden; text-overflow: ellipsis; white-space: nowrap;
@@ -469,7 +470,7 @@
     display: -webkit-box; -webkit-line-clamp: 3; -webkit-box-orient: vertical; overflow: hidden;
   }
   .leaderboard-clicks {
-    display: flex; align-items: center; gap: 4px; margin-top: 4px;
+    display: flex; align-items: center; gap: 4px; margin-top: auto; padding-top: 4px;
     font-size: 11px; font-weight: 600; color: #2C2C2E; white-space: nowrap;
   }
   .leaderboard-clicks::before {
