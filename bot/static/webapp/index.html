@@ -1236,6 +1236,43 @@
   var AD_INTERVAL_MS = 7000;
 
   function tr(key) { return (UI[state.lang] && UI[state.lang][key]) || UI.uz[key] || key; }
+  // Brend logotipi: saqlangan rasm, bo'lmasa (yoki yuklanmasa) sayt domeni
+  // bo'yicha Google favicon xizmati, u ham bo'lmasa — platforma emojisi.
+  function brandFaviconUrl(siteUrl) {
+    try {
+      var host = new URL(/^https?:\/\//i.test(siteUrl) ? siteUrl : "https://" + siteUrl).hostname;
+      return host ? "https://www.google.com/s2/favicons?sz=128&domain=" + encodeURIComponent(host) : null;
+    } catch (e) {
+      return null;
+    }
+  }
+
+  function brandThumbHtml(photoUrl, siteUrl, platform, emoji) {
+    var favicon = platform === "telegram" ? null : brandFaviconUrl(siteUrl || "");
+    var src = photoUrl || favicon;
+    var emojiHtml = '<span class="advertise-preview-thumb advertise-preview-thumb-emoji">' + emoji + "</span>";
+    if (!src) return emojiHtml;
+    return '<img class="advertise-preview-thumb" src="' + escapeHtml(src) + '" alt=""' +
+      (favicon && src !== favicon ? ' data-fallback="' + escapeHtml(favicon) + '"' : "") +
+      ' data-emoji="' + escapeHtml(emoji) + '">';
+  }
+
+  // Rasm yuklanmasa (buzuq/to'silgan): avval favicon, keyin emoji.
+  document.addEventListener("error", function (e) {
+    var img = e.target;
+    if (!img || img.tagName !== "IMG" || !img.classList.contains("advertise-preview-thumb")) return;
+    var fallback = img.getAttribute("data-fallback");
+    if (fallback) {
+      img.removeAttribute("data-fallback");
+      img.src = fallback;
+      return;
+    }
+    var span = document.createElement("span");
+    span.className = "advertise-preview-thumb advertise-preview-thumb-emoji";
+    span.textContent = img.getAttribute("data-emoji") || "\uD83C\uDF10";
+    if (img.parentNode) img.parentNode.replaceChild(span, img);
+  }, true);
+
   function escapeHtml(s) {
     return String(s == null ? "" : s).replace(/[&<>"']/g, function (c) {
       return { "&": "&amp;", "<": "&lt;", ">": "&gt;", '"': "&quot;", "'": "&#39;" }[c];
@@ -2964,9 +3001,7 @@
 
       function bidRowHtml(b, isTop3) {
         var emoji = ADVERTISE_PLATFORM_EMOJI[b.platform] || ADVERTISE_PLATFORM_EMOJI.website;
-        var thumbHtml = b.photo_url
-          ? '<img class="advertise-preview-thumb" src="' + escapeHtml(b.photo_url) + '" alt="">'
-          : '<span class="advertise-preview-thumb advertise-preview-thumb-emoji">' + emoji + "</span>";
+        var thumbHtml = brandThumbHtml(b.photo_url, b.url, b.platform, emoji);
         var rowClass = "leaderboard-row " + (isTop3 ? "leaderboard-row-top3 leaderboard-row-rank" + b.rank : "leaderboard-row-flat") +
           (b.is_me ? " leaderboard-row-me" : "");
         return '<div class="' + rowClass + '" data-bid-id="' + b.id + '" data-bid-url="' + escapeHtml(b.url) + '">' +
@@ -3176,15 +3211,13 @@
         }
       }
 
-      function renderAdvertisePreview(preview) {
+      function renderAdvertisePreview(preview, siteUrl) {
         var previewEl = document.getElementById("advertise-preview");
         if (!previewEl) return;
         if (!preview || (!preview.title && !preview.description)) { previewEl.innerHTML = ""; return; }
         var emoji = ADVERTISE_PLATFORM_EMOJI[preview.platform] || ADVERTISE_PLATFORM_EMOJI.website;
         var label = ADVERTISE_PLATFORM_LABEL[preview.platform] || ADVERTISE_PLATFORM_LABEL.website;
-        var thumbHtml = preview.photo_url
-          ? '<img class="advertise-preview-thumb" src="' + escapeHtml(preview.photo_url) + '" alt="">'
-          : '<span class="advertise-preview-thumb advertise-preview-thumb-emoji">' + emoji + "</span>";
+        var thumbHtml = brandThumbHtml(preview.photo_url, siteUrl, preview.platform, emoji);
         previewEl.innerHTML =
           '<div class="advertise-preview-card">' +
           thumbHtml +
@@ -3207,7 +3240,7 @@
           api("GET", "/api/ads/preview?url=" + encodeURIComponent(value))
             .then(function (preview) {
               if (urlInput.value.trim() !== value) return;
-              renderAdvertisePreview(preview);
+              renderAdvertisePreview(preview, value);
               lastAdvertisePreview = preview;
               lastAdvertisePreviewUrl = value;
             })
