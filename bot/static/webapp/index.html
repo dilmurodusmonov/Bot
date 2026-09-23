@@ -467,8 +467,19 @@
   }
   .leaderboard-row[data-bid-url] { cursor: pointer; -webkit-tap-highlight-color: transparent; }
   .leaderboard-row[data-bid-url]:active { opacity: 0.7; }
-  .leaderboard-amount { flex-shrink: 0; font-weight: 800; font-size: 18px; color: #FF9A1F; }
-  .leaderboard-row-top3 { padding: 23px; }
+  .leaderboard-side { flex-shrink: 0; width: 112px; display: flex; flex-direction: column; gap: 6px; }
+  .leaderboard-amount {
+    font-weight: 600; font-size: 14px; color: #C8641C; text-align: right; white-space: nowrap; margin-bottom: 1px;
+  }
+  .leaderboard-take-btn, .leaderboard-raise-btn {
+    font-family: inherit; font-size: 11px; font-weight: 700; line-height: 1.2; padding: 7px 4px;
+    border-radius: 999px; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; cursor: pointer;
+    -webkit-tap-highlight-color: transparent;
+  }
+  .leaderboard-take-btn { background: #EF8B2C; color: #FFFFFF; border: none; box-shadow: 0 2px 0 #CF6A14; }
+  .leaderboard-raise-btn { background: #FFFFFF; color: #B8561A; border: 1px solid #F2CFAE; box-shadow: 0 2px 0 #F2DCC6; }
+  .leaderboard-take-btn:active, .leaderboard-raise-btn:active { transform: translateY(1px); box-shadow: none; }
+  .leaderboard-row-top3 { padding: 16px 12px; }
   .leaderboard-row-rank1 { background: #FFF3F1; border: 1.5px solid #F0A99C; }
   .leaderboard-row-rank2 { background: #FFF8F6; border: 1.5px solid #F5C4B9; }
   .leaderboard-row-rank3 { background: #FFFCFB; border: 1.5px solid #FAE0D9; }
@@ -476,14 +487,13 @@
   .leaderboard-row-rank2.leaderboard-row-me { border-color: #F5C4B9; box-shadow: none; }
   .leaderboard-row-rank3.leaderboard-row-me { border-color: #FAE0D9; box-shadow: none; }
   .leaderboard-row-top3 .leaderboard-rank { font-size: 10.5px; padding: 3px 8px; }
-  .leaderboard-row-top3 .advertise-preview-thumb { width: 62px; height: 62px; border-radius: 15px; }
+  .leaderboard-row-top3 .advertise-preview-thumb { width: 54px; height: 54px; border-radius: 14px; }
   .leaderboard-row-top3 .advertise-preview-thumb-emoji { font-size: 20px; }
   .leaderboard-row-top3 .leaderboard-brand { font-size: 13px; }
   .leaderboard-row-top3 .leaderboard-desc { font-size: 11px; }
-  .leaderboard-row-top3 .leaderboard-amount { font-size: 15px; }
   .leaderboard-row-flat {
     background: none; border: none; border-radius: 0; box-shadow: none;
-    border-bottom: 1px solid var(--border); padding: 10px 2px; margin-bottom: 0;
+    border-bottom: 1px solid var(--border); padding: 12px 2px; margin-bottom: 0;
   }
   .leaderboard-row-flat:last-child { border-bottom: none; }
   .leaderboard-row-flat.leaderboard-row-me { border-color: transparent; box-shadow: none; }
@@ -491,7 +501,6 @@
   .leaderboard-row-flat .advertise-preview-thumb-emoji { font-size: 16px; }
   .leaderboard-row-flat .leaderboard-brand { font-size: 14px; }
   .leaderboard-row-flat .leaderboard-desc { -webkit-line-clamp: 1; }
-  .leaderboard-row-flat .leaderboard-amount { font-size: 15px; }
   .leaderboard-row-flat .leaderboard-rank { font-size: 10px; padding: 2px 7px; }
   .advertise-rank-divider {
     display: flex; align-items: center; gap: 10px; margin: 16px 4px; color: #C68A4A;
@@ -750,7 +759,7 @@
       advertise_url_placeholder: "Brendingiz URL manzili",
       advertise_url_hint: "Veb-sayt, Telegram, Instagram, YouTube, App Store yoki Google Play URL",
       advertise_filter_all: "Barchasi", advertise_top3_label: "TOP 3", advertise_submit: "Reytingni sindirish",
-      advertise_empty: "Hozircha takliflar yo'q. Birinchi bo'ling!", advertise_you_badge: "Sizniki", advertise_clicks: "{count} klik",
+      advertise_empty: "Hozircha takliflar yo'q. Birinchi bo'ling!", advertise_you_badge: "Sizniki", advertise_clicks: "{count} klik", advertise_take_rank: "{n}-o'rinni olish", advertise_raise: "Taklifni oshirish", advertise_rank_prefix: "{n}-o'rin uchun", advertise_raise_confirm: "«{brand}» taklifini {amount}gacha oshirasizmi?",
       advertise_show_all: "Barchasini ko'rsatish ({count})", advertise_website_label: "Veb-sayt",
       advertise_category_placeholder: "Kategoriyani tanlang",
       advertise_cat_tech: "Texnologiya va startaplar", advertise_cat_trade: "Savdo va xizmatlar",
@@ -820,7 +829,7 @@
       advertise_url_placeholder: "URL вашего бренда",
       advertise_url_hint: "Сайт, Telegram, Instagram, YouTube, App Store или Google Play ссылка",
       advertise_filter_all: "Все", advertise_top3_label: "ТОП 3", advertise_submit: "Побороться за рейтинг",
-      advertise_empty: "Пока нет ставок. Будьте первым!", advertise_you_badge: "Ваша", advertise_clicks: "{count} кликов",
+      advertise_empty: "Пока нет ставок. Будьте первым!", advertise_you_badge: "Ваша", advertise_clicks: "{count} кликов", advertise_take_rank: "Занять {n}-е место", advertise_raise: "Повысить ставку", advertise_rank_prefix: "За {n}-е место", advertise_raise_confirm: "Повысить ставку «{brand}» до {amount}?",
       advertise_show_all: "Показать все ({count})", advertise_website_label: "Веб-сайт",
       advertise_category_placeholder: "Выберите категорию",
       advertise_cat_tech: "Технологии и стартапы", advertise_cat_trade: "Торговля и услуги",
@@ -890,7 +899,7 @@
       advertise_url_placeholder: "Your brand's URL",
       advertise_url_hint: "Website, Telegram, Instagram, YouTube, App Store or Google Play URL",
       advertise_filter_all: "All", advertise_top3_label: "TOP 3", advertise_submit: "Break the rating",
-      advertise_empty: "No bids yet. Be the first!", advertise_you_badge: "Yours", advertise_clicks: "{count} clicks",
+      advertise_empty: "No bids yet. Be the first!", advertise_you_badge: "Yours", advertise_clicks: "{count} clicks", advertise_take_rank: "Take #{n}", advertise_raise: "Raise bid", advertise_rank_prefix: "For #{n}", advertise_raise_confirm: "Raise «{brand}» bid to {amount}?",
       advertise_show_all: "Show all ({count})", advertise_website_label: "Website",
       advertise_category_placeholder: "Choose a category",
       advertise_cat_tech: "Tech & startups", advertise_cat_trade: "Trade & services",
@@ -960,7 +969,7 @@
       advertise_url_placeholder: "Брендіңіздің URL мекенжайы",
       advertise_url_hint: "Веб-сайт, Telegram, Instagram, YouTube, App Store немесе Google Play сілтемесі",
       advertise_filter_all: "Барлығы", advertise_top3_label: "ТОП 3", advertise_submit: "Рейтинг үшін күресу",
-      advertise_empty: "Әзірге ұсыныстар жоқ. Бірінші болыңыз!", advertise_you_badge: "Сіздікі", advertise_clicks: "{count} басу",
+      advertise_empty: "Әзірге ұсыныстар жоқ. Бірінші болыңыз!", advertise_you_badge: "Сіздікі", advertise_clicks: "{count} басу", advertise_take_rank: "{n}-орынды алу", advertise_raise: "Ұсынысты көтеру", advertise_rank_prefix: "{n}-орын үшін", advertise_raise_confirm: "«{brand}» ұсынысын {amount} дейін көтересіз бе?",
       advertise_show_all: "Барлығын көрсету ({count})", advertise_website_label: "Веб-сайт",
       advertise_category_placeholder: "Санатты таңдаңыз",
       advertise_cat_tech: "Технология және стартаптар", advertise_cat_trade: "Сауда және қызметтер",
@@ -1022,7 +1031,7 @@
       advertise_url_placeholder: "Суроғаи URL-и бренди шумо",
       advertise_url_hint: "Сомона, Telegram, Instagram, YouTube, App Store ё Google Play пайванд",
       advertise_filter_all: "Ҳама", advertise_top3_label: "ТОП 3", advertise_submit: "Барои рейтинг мубориза бурдан",
-      advertise_empty: "Ҳанӯз пешниҳод нест. Аввалин шавед!", advertise_you_badge: "Аз шумо", advertise_clicks: "{count} клик",
+      advertise_empty: "Ҳанӯз пешниҳод нест. Аввалин шавед!", advertise_you_badge: "Аз шумо", advertise_clicks: "{count} клик", advertise_take_rank: "Ҷои {n}-ро гирифтан", advertise_raise: "Баланд бардоштан", advertise_rank_prefix: "Барои ҷои {n}", advertise_raise_confirm: "Пешниҳоди «{brand}»-ро то {amount} баланд мебардоред?",
       advertise_show_all: "Ҳамаро нишон додан ({count})", advertise_website_label: "Сомона",
       advertise_category_placeholder: "Категорияро интихоб кунед",
       advertise_cat_tech: "Технология ва старташҳо", advertise_cat_trade: "Савдо ва хидматҳо",
@@ -1084,7 +1093,7 @@
       advertise_url_placeholder: "Брендиңиздин URL дареги",
       advertise_url_hint: "Веб-сайт, Telegram, Instagram, YouTube, App Store же Google Play шилтемеси",
       advertise_filter_all: "Баары", advertise_top3_label: "ТОП 3", advertise_submit: "Рейтинг үчүн күрөшүү",
-      advertise_empty: "Азырынча сунуштар жок. Биринчи болуңуз!", advertise_you_badge: "Сиздики", advertise_clicks: "{count} басуу",
+      advertise_empty: "Азырынча сунуштар жок. Биринчи болуңуз!", advertise_you_badge: "Сиздики", advertise_clicks: "{count} басуу", advertise_take_rank: "{n}-орунду алуу", advertise_raise: "Сунушту көтөрүү", advertise_rank_prefix: "{n}-орун үчүн", advertise_raise_confirm: "«{brand}» сунушун {amount} чейин көтөрөсүзбү?",
       advertise_show_all: "Баарын көрсөтүү ({count})", advertise_website_label: "Веб-сайт",
       advertise_category_placeholder: "Категорияны тандаңыз",
       advertise_cat_tech: "Технология жана стартаптар", advertise_cat_trade: "Соода жана кызматтар",
@@ -1146,7 +1155,7 @@
       advertise_url_placeholder: "Brendiňiziň URL salgysy",
       advertise_url_hint: "Websahypa, Telegram, Instagram, YouTube, App Store ýa-da Google Play salgysy",
       advertise_filter_all: "Ählisi", advertise_top3_label: "TOP 3", advertise_submit: "Reýting üçin göreşmek",
-      advertise_empty: "Heniz teklip ýok. Birinji boluň!", advertise_you_badge: "Siziňki", advertise_clicks: "{count} basyş",
+      advertise_empty: "Heniz teklip ýok. Birinji boluň!", advertise_you_badge: "Siziňki", advertise_clicks: "{count} basyş", advertise_take_rank: "{n}-nji orny almak", advertise_raise: "Teklibi ýokarlandyrmak", advertise_rank_prefix: "{n}-nji orun üçin", advertise_raise_confirm: "«{brand}» teklibini {amount} çenli ýokarlandyrýarsyňyzmy?",
       advertise_show_all: "Ählisini görkezmek ({count})", advertise_website_label: "Websahypa",
       advertise_category_placeholder: "Kategoriýany saýlaň",
       advertise_cat_tech: "Tehnologiýa we başlangyçlar", advertise_cat_trade: "Söwda we hyzmatlar",
@@ -2797,6 +2806,40 @@
         }
       }
 
+      // "N-o'rinni olish": forma summasi shu o'rindagi taklifdan bir qadam
+      // yuqori qilib qo'yiladi, sarlavha ham "N-o'rin uchun" ga o'zgaradi.
+      var bidTargetAmount = data.next_top_bid;
+      function setBidTarget(rank, amount) {
+        bidTargetAmount = amount;
+        var parts = splitSomUnit(formatSom(amount));
+        document.getElementById("advertise-top-label").textContent =
+          rank === 1 ? tr("advertise_top_prefix") : trf("advertise_rank_prefix", { n: String(rank) });
+        document.getElementById("advertise-top-amount").textContent = parts.value;
+        document.getElementById("advertise-top-amount-unit").textContent = parts.unit;
+      }
+
+      function askConfirm(message, onYes) {
+        if (tg && typeof tg.showConfirm === "function") {
+          try {
+            tg.showConfirm(message, function (ok) { if (ok) onYes(); });
+            return;
+          } catch (e) {}
+        }
+        if (window.confirm(message)) onYes();
+      }
+
+      function confirmRaise(bid) {
+        var newAmount = bid.bid_amount + data.min_increment;
+        askConfirm(trf("advertise_raise_confirm", { brand: bid.brand_name, amount: formatSom(newAmount) }), function () {
+          api("POST", "/api/ads/" + bid.id + "/raise")
+            .then(function () {
+              if (tg && tg.HapticFeedback) tg.HapticFeedback.notificationOccurred("success");
+              renderAdvertise();
+            })
+            .catch(function () { showError(); });
+        });
+      }
+
       function bidRowHtml(b, isTop3) {
         var emoji = ADVERTISE_PLATFORM_EMOJI[b.platform] || ADVERTISE_PLATFORM_EMOJI.website;
         var thumbHtml = b.photo_url
@@ -2814,7 +2857,12 @@
           (b.description ? '<div class="leaderboard-desc">' + escapeHtml(b.description) + "</div>" : "") +
           '<div class="leaderboard-clicks">' + clicksText(b.clicks) + "</div>" +
           "</div>" +
+          '<div class="leaderboard-side">' +
           '<span class="leaderboard-amount">' + formatSom(b.bid_amount) + "</span>" +
+          '<button type="button" class="leaderboard-take-btn" data-take-rank="' + b.rank + '" data-take-amount="' + (b.bid_amount + data.min_increment) + '">' +
+          escapeHtml(trf("advertise_take_rank", { n: String(b.rank) })) + "</button>" +
+          '<button type="button" class="leaderboard-raise-btn" data-raise-id="' + b.id + '">' + escapeHtml(tr("advertise_raise")) + "</button>" +
+          "</div>" +
           "</div>";
       }
 
@@ -2848,7 +2896,8 @@
           : "";
         listEl.innerHTML = rowsHtml + showAllHtml;
         Array.prototype.forEach.call(listEl.querySelectorAll(".leaderboard-row[data-bid-url]"), function (row) {
-          row.addEventListener("click", function () {
+          row.addEventListener("click", function (e) {
+            if (e.target.closest("button")) return;
             var id = Number(row.getAttribute("data-bid-id"));
             var url = row.getAttribute("data-bid-url");
             var bid = data.bids.filter(function (x) { return x.id === id; })[0];
@@ -2859,6 +2908,22 @@
             }
             api("POST", "/api/ads/" + id + "/click").catch(function () {});
             openBrandUrl(url);
+          });
+        });
+        Array.prototype.forEach.call(listEl.querySelectorAll("[data-take-rank]"), function (btn) {
+          btn.addEventListener("click", function () {
+            setBidTarget(Number(btn.getAttribute("data-take-rank")), Number(btn.getAttribute("data-take-amount")));
+            var heroEl = document.querySelector(".advertise-hero-card");
+            if (heroEl) heroEl.scrollIntoView({ behavior: "smooth", block: "start" });
+            var urlInputEl = document.getElementById("advertise-url-input");
+            if (urlInputEl && !urlInputEl.value) urlInputEl.focus();
+          });
+        });
+        Array.prototype.forEach.call(listEl.querySelectorAll("[data-raise-id]"), function (btn) {
+          btn.addEventListener("click", function () {
+            var id = Number(btn.getAttribute("data-raise-id"));
+            var bid = data.bids.filter(function (x) { return x.id === id; })[0];
+            if (bid) confirmRaise(bid);
           });
         });
         var showAllBtn = document.getElementById("advertise-show-all-btn");
@@ -2904,9 +2969,9 @@
         '<div class="advertise-page">' +
         '<div class="section-card advertise-hero-card">' +
         '<div class="advertise-top-row">' +
-        '<span class="advertise-top-label">' + escapeHtml(tr("advertise_top_prefix")) + "</span>" +
-        '<span class="advertise-top-amount">' + escapeHtml(topAmountParts.value) + "</span>" +
-        (topAmountParts.unit ? '<span class="advertise-top-amount-unit">' + escapeHtml(topAmountParts.unit) + "</span>" : "") +
+        '<span class="advertise-top-label" id="advertise-top-label">' + escapeHtml(tr("advertise_top_prefix")) + "</span>" +
+        '<span class="advertise-top-amount" id="advertise-top-amount">' + escapeHtml(topAmountParts.value) + "</span>" +
+        '<span class="advertise-top-amount-unit" id="advertise-top-amount-unit">' + escapeHtml(topAmountParts.unit) + "</span>" +
         '<span class="advertise-top-plus">' + ICONS.plus + "</span>" +
         "</div>" +
         '<div class="advertise-rules-hint">' + rulesHtml + "</div>" +
@@ -3017,7 +3082,7 @@
       document.getElementById("advertise-submit-btn").addEventListener("click", function () {
         var url = document.getElementById("advertise-url-input").value.trim();
         if (!url) { showError(tr("fill_all")); return; }
-        var bidAmount = data.next_top_bid;
+        var bidAmount = bidTargetAmount;
         var hasFreshPreview = lastAdvertisePreviewUrl === url && lastAdvertisePreview;
         var brand = (hasFreshPreview && lastAdvertisePreview.title) ? lastAdvertisePreview.title : deriveBrandFromUrl(url);
         var photoUrl = hasFreshPreview ? lastAdvertisePreview.photo_url : null;
@@ -3033,7 +3098,7 @@
           })
           .catch(function (err) {
             if (err.status === 409 && err.body === "bid_too_low") {
-              showError(trf("advertise_bid_too_low", { amount: formatSom(data.next_top_bid) }));
+              showError(trf("advertise_bid_too_low", { amount: formatSom(bidAmount) }));
             } else {
               showError();
             }

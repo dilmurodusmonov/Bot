@@ -34,6 +34,7 @@ from bot.database import (
     fill_ad_bid_preview,
     get_ad_bids_ranked,
     increment_ad_bid_clicks,
+    raise_ad_bid,
     increment_ad_views,
     increment_donation_share,
     get_active_reservation_for_donation,
@@ -821,6 +822,15 @@ async def api_ads_click(request: web.Request) -> web.Response:
     return web.json_response({"clicks": clicks})
 
 
+async def api_ads_raise(request: web.Request) -> web.Response:
+    """sindr.uz'dagi "Taklifni oshirish": taklif eng kam qadamga oshiriladi."""
+    await _require_user_id(request)
+    bid_amount = await raise_ad_bid(int(request.match_info["id"]), AD_MIN_INCREMENT)
+    if bid_amount is None:
+        raise web.HTTPNotFound()
+    return web.json_response({"bid_amount": bid_amount})
+
+
 async def api_badges(request: web.Request) -> web.Response:
     telegram_id = await _require_user_id(request)
     donor_pending = await count_pending_ship(telegram_id)
@@ -1263,6 +1273,7 @@ def setup_api_routes(app: web.Application) -> None:
     app.router.add_get("/api/ads/leaderboard", api_ads_leaderboard)
     app.router.add_post("/api/ads/bid", api_ads_bid)
     app.router.add_post("/api/ads/{id:\\d+}/click", api_ads_click)
+    app.router.add_post("/api/ads/{id:\\d+}/raise", api_ads_raise)
     app.router.add_get("/api/categories", api_categories)
     app.router.add_get("/api/donations", api_donations)
     app.router.add_get("/api/donation/{id}", api_donation)

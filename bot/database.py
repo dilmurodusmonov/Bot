@@ -605,6 +605,14 @@ async def insert_ad_bid(
     )
 
 
+async def raise_ad_bid(bid_id: int, increment: int) -> Optional[int]:
+    """Taklifni atomik ravishda oshiradi va yangi summani qaytaradi."""
+    return await _get_pool().fetchval(
+        "UPDATE ad_bids SET bid_amount = bid_amount + $2 WHERE id = $1 RETURNING bid_amount",
+        bid_id, increment,
+    )
+
+
 async def increment_ad_bid_clicks(bid_id: int) -> Optional[int]:
     return await _get_pool().fetchval(
         "UPDATE ad_bids SET clicks = clicks + 1 WHERE id = $1 RETURNING clicks", bid_id
