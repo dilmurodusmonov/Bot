@@ -526,10 +526,22 @@
     flex-shrink: 0; border: 1px solid #EFC585; border-radius: 999px; padding: 3px 12px;
     font-size: 10px; font-weight: 400;
   }
-  .advertise-show-all-btn {
-    display: block; width: 100%; background: none; border: 1.5px solid #1C93F3; color: #1C93F3;
-    border-radius: 10px; padding: 11px; font-size: 14px; font-weight: 600; margin-top: 4px; margin-bottom: 10px;
+  /* sindr.uz kabi sahifalash: "‹ 1 2 ›" va "1–20, jami N ta loyiha". */
+  .advertise-pager { display: flex; align-items: center; justify-content: center; gap: 6px; margin: 22px 0 8px; }
+  .advertise-pager-btn {
+    min-width: 36px; height: 36px; padding: 0 6px; border-radius: 12px; border: 1px solid transparent;
+    background: none; color: #636366; font-family: inherit; font-size: 16px; font-weight: 500;
+    display: inline-flex; align-items: center; justify-content: center; cursor: pointer;
+    -webkit-tap-highlight-color: transparent;
   }
+  .advertise-pager-btn svg { width: 18px; height: 18px; }
+  .advertise-pager-btn.active {
+    background: #FFFFFF; border-color: #F5C4B9; color: #1C1C1E; font-weight: 700;
+    box-shadow: 0 1px 3px rgba(229, 72, 77, 0.12);
+  }
+  .advertise-pager-btn:disabled { color: #C7C7CC; cursor: default; }
+  .advertise-pager-gap { color: #8E8E93; font-size: 15px; padding: 0 2px; }
+  .advertise-pager-summary { text-align: center; color: var(--hint); font-size: 12.5px; margin-bottom: 14px; }
   .advertise-preview-card {
     display: flex; align-items: flex-start; gap: 10px; background: var(--bg);
     border: 1px solid var(--border); border-radius: 12px; padding: 10px; margin-top: 10px;
@@ -772,9 +784,9 @@
       advertise_top_prefix: "TOP-1 uchun", advertise_rules: "{min}dan boshlang. Har bir oshirish kamida {inc}.",
       advertise_url_placeholder: "Brendingiz URL manzili",
       advertise_url_hint: "Veb-sayt, Telegram, Instagram, YouTube, App Store yoki Google Play URL",
-      advertise_filter_all: "Barchasi", advertise_top3_label: "TOP 3", advertise_top10_label: "TOP 10", advertise_submit: "Reytingni sindirish",
+      advertise_filter_all: "Barchasi", advertise_top_n_label: "TOP {n}", advertise_submit: "Reytingni sindirish",
       advertise_empty: "Hozircha takliflar yo'q. Birinchi bo'ling!", advertise_you_badge: "Sizniki", advertise_clicks: "{count} klik", advertise_take_rank: "{n}-o'rinni olish", advertise_raise: "Taklifni oshirish", advertise_rank_prefix: "{n}-o'rin uchun", advertise_raise_confirm: "«{brand}» taklifini {amount}gacha oshirasizmi?",
-      advertise_show_all: "Barchasini ko'rsatish ({count})", advertise_website_label: "Veb-sayt",
+      advertise_page_summary: "{from}–{to}, jami {total} ta loyiha", advertise_website_label: "Veb-sayt",
       advertise_category_placeholder: "Kategoriyani tanlang",
       advertise_cat_tech: "Texnologiya va startaplar", advertise_cat_trade: "Savdo va xizmatlar",
       advertise_cat_people: "Shaxslar va media", advertise_cat_education: "Ta'lim va karyera",
@@ -842,9 +854,9 @@
       advertise_top_prefix: "За ТОП-1", advertise_rules: "Начните от {min}. Каждое повышение минимум {inc}.",
       advertise_url_placeholder: "URL вашего бренда",
       advertise_url_hint: "Сайт, Telegram, Instagram, YouTube, App Store или Google Play ссылка",
-      advertise_filter_all: "Все", advertise_top3_label: "ТОП 3", advertise_top10_label: "ТОП 10", advertise_submit: "Побороться за рейтинг",
+      advertise_filter_all: "Все", advertise_top_n_label: "ТОП {n}", advertise_submit: "Побороться за рейтинг",
       advertise_empty: "Пока нет ставок. Будьте первым!", advertise_you_badge: "Ваша", advertise_clicks: "{count} кликов", advertise_take_rank: "Занять {n}-е место", advertise_raise: "Повысить ставку", advertise_rank_prefix: "За {n}-е место", advertise_raise_confirm: "Повысить ставку «{brand}» до {amount}?",
-      advertise_show_all: "Показать все ({count})", advertise_website_label: "Веб-сайт",
+      advertise_page_summary: "{from}–{to}, всего {total} проектов", advertise_website_label: "Веб-сайт",
       advertise_category_placeholder: "Выберите категорию",
       advertise_cat_tech: "Технологии и стартапы", advertise_cat_trade: "Торговля и услуги",
       advertise_cat_people: "Люди и медиа", advertise_cat_education: "Образование и карьера",
@@ -912,9 +924,9 @@
       advertise_top_prefix: "For TOP-1", advertise_rules: "Start from {min}. Each raise is at least {inc}.",
       advertise_url_placeholder: "Your brand's URL",
       advertise_url_hint: "Website, Telegram, Instagram, YouTube, App Store or Google Play URL",
-      advertise_filter_all: "All", advertise_top3_label: "TOP 3", advertise_top10_label: "TOP 10", advertise_submit: "Break the rating",
+      advertise_filter_all: "All", advertise_top_n_label: "TOP {n}", advertise_submit: "Break the rating",
       advertise_empty: "No bids yet. Be the first!", advertise_you_badge: "Yours", advertise_clicks: "{count} clicks", advertise_take_rank: "Take #{n}", advertise_raise: "Raise bid", advertise_rank_prefix: "For #{n}", advertise_raise_confirm: "Raise «{brand}» bid to {amount}?",
-      advertise_show_all: "Show all ({count})", advertise_website_label: "Website",
+      advertise_page_summary: "{from}–{to} of {total} projects", advertise_website_label: "Website",
       advertise_category_placeholder: "Choose a category",
       advertise_cat_tech: "Tech & startups", advertise_cat_trade: "Trade & services",
       advertise_cat_people: "People & media", advertise_cat_education: "Education & career",
@@ -982,9 +994,9 @@
       advertise_top_prefix: "TOP-1 үшін", advertise_rules: "{min} бастаңыз. Әр өсіру кемінде {inc}.",
       advertise_url_placeholder: "Брендіңіздің URL мекенжайы",
       advertise_url_hint: "Веб-сайт, Telegram, Instagram, YouTube, App Store немесе Google Play сілтемесі",
-      advertise_filter_all: "Барлығы", advertise_top3_label: "ТОП 3", advertise_top10_label: "ТОП 10", advertise_submit: "Рейтинг үшін күресу",
+      advertise_filter_all: "Барлығы", advertise_top_n_label: "ТОП {n}", advertise_submit: "Рейтинг үшін күресу",
       advertise_empty: "Әзірге ұсыныстар жоқ. Бірінші болыңыз!", advertise_you_badge: "Сіздікі", advertise_clicks: "{count} басу", advertise_take_rank: "{n}-орынды алу", advertise_raise: "Ұсынысты көтеру", advertise_rank_prefix: "{n}-орын үшін", advertise_raise_confirm: "«{brand}» ұсынысын {amount} дейін көтересіз бе?",
-      advertise_show_all: "Барлығын көрсету ({count})", advertise_website_label: "Веб-сайт",
+      advertise_page_summary: "{from}–{to}, барлығы {total} жоба", advertise_website_label: "Веб-сайт",
       advertise_category_placeholder: "Санатты таңдаңыз",
       advertise_cat_tech: "Технология және стартаптар", advertise_cat_trade: "Сауда және қызметтер",
       advertise_cat_people: "Адамдар және медиа", advertise_cat_education: "Білім және мансап",
@@ -1044,9 +1056,9 @@
       advertise_top_prefix: "Барои TOP-1", advertise_rules: "Аз {min} сар кунед. Ҳар боло баровардан ҳадди ақал {inc}.",
       advertise_url_placeholder: "Суроғаи URL-и бренди шумо",
       advertise_url_hint: "Сомона, Telegram, Instagram, YouTube, App Store ё Google Play пайванд",
-      advertise_filter_all: "Ҳама", advertise_top3_label: "ТОП 3", advertise_top10_label: "ТОП 10", advertise_submit: "Барои рейтинг мубориза бурдан",
+      advertise_filter_all: "Ҳама", advertise_top_n_label: "ТОП {n}", advertise_submit: "Барои рейтинг мубориза бурдан",
       advertise_empty: "Ҳанӯз пешниҳод нест. Аввалин шавед!", advertise_you_badge: "Аз шумо", advertise_clicks: "{count} клик", advertise_take_rank: "Ҷои {n}-ро гирифтан", advertise_raise: "Баланд бардоштан", advertise_rank_prefix: "Барои ҷои {n}", advertise_raise_confirm: "Пешниҳоди «{brand}»-ро то {amount} баланд мебардоред?",
-      advertise_show_all: "Ҳамаро нишон додан ({count})", advertise_website_label: "Сомона",
+      advertise_page_summary: "{from}–{to}, ҳамагӣ {total} лоиҳа", advertise_website_label: "Сомона",
       advertise_category_placeholder: "Категорияро интихоб кунед",
       advertise_cat_tech: "Технология ва старташҳо", advertise_cat_trade: "Савдо ва хидматҳо",
       advertise_cat_people: "Одамон ва медиа", advertise_cat_education: "Таҳсил ва касб",
@@ -1106,9 +1118,9 @@
       advertise_top_prefix: "TOP-1 үчүн", advertise_rules: "{min} баштаңыз. Ар бир көтөрүү кеминде {inc}.",
       advertise_url_placeholder: "Брендиңиздин URL дареги",
       advertise_url_hint: "Веб-сайт, Telegram, Instagram, YouTube, App Store же Google Play шилтемеси",
-      advertise_filter_all: "Баары", advertise_top3_label: "ТОП 3", advertise_top10_label: "ТОП 10", advertise_submit: "Рейтинг үчүн күрөшүү",
+      advertise_filter_all: "Баары", advertise_top_n_label: "ТОП {n}", advertise_submit: "Рейтинг үчүн күрөшүү",
       advertise_empty: "Азырынча сунуштар жок. Биринчи болуңуз!", advertise_you_badge: "Сиздики", advertise_clicks: "{count} басуу", advertise_take_rank: "{n}-орунду алуу", advertise_raise: "Сунушту көтөрүү", advertise_rank_prefix: "{n}-орун үчүн", advertise_raise_confirm: "«{brand}» сунушун {amount} чейин көтөрөсүзбү?",
-      advertise_show_all: "Баарын көрсөтүү ({count})", advertise_website_label: "Веб-сайт",
+      advertise_page_summary: "{from}–{to}, бардыгы {total} долбоор", advertise_website_label: "Веб-сайт",
       advertise_category_placeholder: "Категорияны тандаңыз",
       advertise_cat_tech: "Технология жана стартаптар", advertise_cat_trade: "Соода жана кызматтар",
       advertise_cat_people: "Адамдар жана медиа", advertise_cat_education: "Билим жана кесип",
@@ -1168,9 +1180,9 @@
       advertise_top_prefix: "TOP-1 üçin", advertise_rules: "{min} başlaň. Her ýokarlandyrma iň az {inc}.",
       advertise_url_placeholder: "Brendiňiziň URL salgysy",
       advertise_url_hint: "Websahypa, Telegram, Instagram, YouTube, App Store ýa-da Google Play salgysy",
-      advertise_filter_all: "Ählisi", advertise_top3_label: "TOP 3", advertise_top10_label: "TOP 10", advertise_submit: "Reýting üçin göreşmek",
+      advertise_filter_all: "Ählisi", advertise_top_n_label: "TOP {n}", advertise_submit: "Reýting üçin göreşmek",
       advertise_empty: "Heniz teklip ýok. Birinji boluň!", advertise_you_badge: "Siziňki", advertise_clicks: "{count} basyş", advertise_take_rank: "{n}-nji orny almak", advertise_raise: "Teklibi ýokarlandyrmak", advertise_rank_prefix: "{n}-nji orun üçin", advertise_raise_confirm: "«{brand}» teklibini {amount} çenli ýokarlandyrýarsyňyzmy?",
-      advertise_show_all: "Ählisini görkezmek ({count})", advertise_website_label: "Websahypa",
+      advertise_page_summary: "{from}–{to}, jemi {total} taslama", advertise_website_label: "Websahypa",
       advertise_category_placeholder: "Kategoriýany saýlaň",
       advertise_cat_tech: "Tehnologiýa we başlangyçlar", advertise_cat_trade: "Söwda we hyzmatlar",
       advertise_cat_people: "Adamlar we media", advertise_cat_education: "Bilim we karýera",
@@ -2783,7 +2795,7 @@
     return s;
   }
 
-  var ADVERTISE_PAGE_SIZE = 10;
+  var ADVERTISE_PAGE_SIZE = 20;
 
   function renderAdvertise() {
     api("GET", "/api/ads/leaderboard").then(function (data) {
@@ -2791,7 +2803,7 @@
         min: formatSom(data.min_starting_bid),
         inc: formatSom(data.min_increment),
       });
-      var visibleCount = Math.min(ADVERTISE_PAGE_SIZE, data.bids.length);
+      var currentPage = 1;
       var activeFilterCategory = null;
 
       var ADVERTISE_PLATFORM_EMOJI = {
@@ -2854,6 +2866,28 @@
         });
       }
 
+      var PAGER_PREV_ICON = '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><polyline points="15 18 9 12 15 6"></polyline></svg>';
+      var PAGER_NEXT_ICON = '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><polyline points="9 18 15 12 9 6"></polyline></svg>';
+
+      // Sahifa raqamlari: 7 tagacha hammasi, ko'p bo'lsa 1 … joriy±1 … oxirgi.
+      function pagerHtmlFor(page, pageCount) {
+        if (pageCount <= 1) return "";
+        var pages = [];
+        for (var i = 1; i <= pageCount; i++) {
+          if (pageCount <= 7 || i === 1 || i === pageCount || Math.abs(i - page) <= 1) pages.push(i);
+          else if (pages[pages.length - 1] !== "…") pages.push("…");
+        }
+        return '<div class="advertise-pager">' +
+          '<button type="button" class="advertise-pager-btn" data-page="' + (page - 1) + '"' + (page === 1 ? " disabled" : "") + ">" + PAGER_PREV_ICON + "</button>" +
+          pages.map(function (p) {
+            return p === "…"
+              ? '<span class="advertise-pager-gap">…</span>'
+              : '<button type="button" class="advertise-pager-btn' + (p === page ? " active" : "") + '" data-page="' + p + '">' + p + "</button>";
+          }).join("") +
+          '<button type="button" class="advertise-pager-btn" data-page="' + (page + 1) + '"' + (page === pageCount ? " disabled" : "") + ">" + PAGER_NEXT_ICON + "</button>" +
+          "</div>";
+      }
+
       function rankDividerHtml(label) {
         return '<div class="advertise-rank-divider"><span class="advertise-rank-divider-label">' + label + "</span></div>";
       }
@@ -2896,29 +2930,31 @@
           copy.rank = i + 1;
           return copy;
         });
-        var visibleBids = filteredBids.slice(0, visibleCount);
+        var total = filteredBids.length;
+        var pageCount = Math.max(1, Math.ceil(total / ADVERTISE_PAGE_SIZE));
+        if (currentPage > pageCount) currentPage = pageCount;
+        var pageStart = (currentPage - 1) * ADVERTISE_PAGE_SIZE;
+        var pageBids = filteredBids.slice(pageStart, pageStart + ADVERTISE_PAGE_SIZE);
         var rowsHtml;
-        if (!visibleBids.length) {
+        if (!pageBids.length) {
           rowsHtml = '<div class="empty-state">' + tr("advertise_empty") + "</div>";
         } else {
-          var top3 = visibleBids.slice(0, 3);
-          var rest = visibleBids.slice(3);
-          rowsHtml = top3.map(function (b) { return bidRowHtml(b, true); }).join("");
-          if (rest.length) {
-            // sindr.uz kabi: TOP 3 dan keyin va TOP 10 dan keyin ajratuvchi chiziq.
-            rowsHtml += rankDividerHtml(tr("advertise_top3_label")) +
-              rest.slice(0, 7).map(function (b) { return bidRowHtml(b, false); }).join("");
-            if (filteredBids.length > 10) {
-              rowsHtml += rankDividerHtml(tr("advertise_top10_label")) +
-                rest.slice(7).map(function (b) { return bidRowHtml(b, false); }).join("");
+          // sindr.uz kabi: TOP 3, TOP 10 va har sahifa oxirida (TOP 20, TOP 40...)
+          // ajratuvchi chiziq — faqat undan keyin yana brendlar bo'lsa.
+          rowsHtml = pageBids.map(function (b) {
+            var html = bidRowHtml(b, b.rank <= 3);
+            var isBreak = b.rank === 3 || b.rank === 10 || b.rank % ADVERTISE_PAGE_SIZE === 0;
+            if (isBreak && total > b.rank) {
+              html += rankDividerHtml(trf("advertise_top_n_label", { n: String(b.rank) }));
             }
-          }
+            return html;
+          }).join("");
         }
-        var showAllHtml = filteredBids.length > visibleCount
-          ? '<button class="advertise-show-all-btn" id="advertise-show-all-btn">' +
-            trf("advertise_show_all", { count: String(filteredBids.length) }) + "</button>"
-          : "";
-        listEl.innerHTML = rowsHtml + showAllHtml;
+        var pagerHtml = total ? pagerHtmlFor(currentPage, pageCount) +
+          '<div class="advertise-pager-summary">' + escapeHtml(trf("advertise_page_summary", {
+            from: String(pageStart + 1), to: String(pageStart + pageBids.length), total: String(total),
+          })) + "</div>" : "";
+        listEl.innerHTML = '<div class="advertise-rows">' + rowsHtml + "</div>" + pagerHtml;
         Array.prototype.forEach.call(listEl.querySelectorAll(".leaderboard-row[data-bid-url]"), function (row) {
           row.addEventListener("click", function (e) {
             if (e.target.closest("button")) return;
@@ -2950,13 +2986,16 @@
             if (bid) confirmRaise(bid);
           });
         });
-        var showAllBtn = document.getElementById("advertise-show-all-btn");
-        if (showAllBtn) {
-          showAllBtn.addEventListener("click", function () {
-            visibleCount = filteredBids.length;
+        Array.prototype.forEach.call(listEl.querySelectorAll("[data-page]"), function (btn) {
+          btn.addEventListener("click", function () {
+            var page = Number(btn.getAttribute("data-page"));
+            if (!page || page === currentPage || page < 1 || page > pageCount) return;
+            currentPage = page;
             renderList();
+            var tabsEl = document.querySelector(".advertise-filter-tabs");
+            if (tabsEl) tabsEl.scrollIntoView({ behavior: "smooth", block: "start" });
           });
-        }
+        });
       }
 
       var ADVERTISE_CATEGORIES = [
@@ -3024,7 +3063,7 @@
       document.querySelectorAll("[data-filter-cat]").forEach(function (tab) {
         tab.addEventListener("click", function () {
           activeFilterCategory = tab.getAttribute("data-filter-cat") || null;
-          visibleCount = ADVERTISE_PAGE_SIZE;
+          currentPage = 1;
           document.querySelectorAll(".advertise-filter-tab").forEach(function (t) {
             t.classList.toggle("active", t === tab);
           });
