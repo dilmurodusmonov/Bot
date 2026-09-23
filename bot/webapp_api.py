@@ -5,7 +5,7 @@ import logging
 import re
 from html import escape, unescape
 from typing import Any, Optional
-from urllib.parse import urlparse
+from urllib.parse import urljoin, urlparse
 
 import aiohttp
 from aiogram import Bot
@@ -657,6 +657,45 @@ def _extract_meta(html_text: str, *props: str) -> str:
     return ""
 
 
+def _absolute_image_url(base_url: str, src: str) -> Optional[str]:
+    """Nisbiy ("/img/logo.png", "//cdn...") manzilni to'liq https manzilga
+    aylantiradi — Telegram WebView http rasmlarni ko'rsatmaydi."""
+    src = (src or "").strip()
+    if not src or src.startswith("data:"):
+        return None
+    full = urljoin(base_url, src)
+    if full.startswith("http://"):
+        full = "https://" + full[len("http://"):]
+    return full if full.startswith("https://") else None
+
+
+def _extract_site_icon(html_text: str, base_url: str) -> Optional[str]:
+    """Saytning logotip ikonkasini topadi: apple-touch-icon yoki kattaligi
+    kamida 96px bo'lgan (yoki SVG) icon. Kichik favicon'lar olinmaydi."""
+    best, best_score = None, 0
+    for tag in re.findall(r"<link\b[^>]*>", html_text, re.I):
+        rel_m = re.search(r'rel=["\']([^"\']*)["\']', tag, re.I)
+        href_m = re.search(r'href=["\']([^"\']*)["\']', tag, re.I)
+        if not rel_m or not href_m:
+            continue
+        rel = rel_m.group(1).lower()
+        if "icon" not in rel or "mask-icon" in rel:
+            continue
+        sizes = [int(n) for n in re.findall(r"(\d+)x\d+", tag)]
+        size = max(sizes) if sizes else 0
+        if "apple-touch-icon" in rel:
+            score = 1000 + (size or 180)
+        elif href_m.group(1).lower().split("?")[0].endswith(".svg"):
+            score = 500
+        else:
+            score = size
+        if score > best_score:
+            best, best_score = href_m.group(1), score
+    if best is None or best_score < 96:
+        return None
+    return _absolute_image_url(base_url, unescape(best))
+
+
 class _AdPreviewError(Exception):
     def __init__(self, status: int, reason: str):
         super().__init__(reason)
@@ -698,9 +737,16 @@ async def _fetch_ad_preview(bot: Bot, url: str) -> dict:
         async with aiohttp.ClientSession() as session:
             async with session.get(
                 url, timeout=aiohttp.ClientTimeout(total=6),
-                headers={"User-Agent": "Mozilla/5.0 (compatible; EhsonAppBot/1.0)"},
+                # Oddiy brauzer kabi — ko'p saytlar bot User-Agent'ini to'sadi.
+                headers={
+                    "User-Agent": "Mozilla/5.0 (Linux; Android 13) AppleWebKit/537.36 "
+                                  "(KHTML, like Gecko) Chrome/124.0 Mobile Safari/537.36",
+                    "Accept": "text/html,application/xhtml+xml",
+                    "Accept-Language": "uz,ru;q=0.9,en;q=0.8",
+                },
             ) as resp:
                 html_text = await resp.text(errors="ignore")
+                base_url = str(resp.url)
     except Exception:
         return {"platform": platform, "title": "", "description": "", "photo_url": None}
 
@@ -709,13 +755,17 @@ async def _fetch_ad_preview(bot: Bot, url: str) -> dict:
         m = re.search(r"<title[^>]*>([^<]*)</title>", html_text, re.I)
         title = unescape(m.group(1)).strip() if m else ""
     description = _extract_meta(html_text, "og:description", "twitter:description", "description")
-    image = _extract_meta(html_text, "og:image", "twitter:image")
+    og_image = _absolute_image_url(base_url, _extract_meta(html_text, "og:image", "twitter:image"))
+    icon = _extract_site_icon(html_text, base_url)
+    # Oddiy saytlarda og:image ko'pincha keng banner — logotip (ikonka) afzal.
+    # Instagram/YouTube/do'konlarda esa og:image aynan profil/ilova rasmi.
+    photo_url = (icon or og_image) if platform == "website" else (og_image or icon)
 
     return {
         "platform": platform,
         "title": title[:120],
         "description": description[:200],
-        "photo_url": image or None,
+        "photo_url": photo_url,
     }
 
 
