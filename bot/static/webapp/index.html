@@ -491,10 +491,13 @@
   .leaderboard-row-flat .leaderboard-rank { font-size: 10px; padding: 2px 7px; }
   .advertise-rank-divider {
     display: flex; align-items: center; gap: 10px; margin: 16px 4px; color: #C68A4A;
-    font-size: 12px; font-weight: 700;
   }
   .advertise-rank-divider::before, .advertise-rank-divider::after {
     content: ""; flex: 1 1 auto; border-top: 1px solid #EFC585;
+  }
+  .advertise-rank-divider-label {
+    flex-shrink: 0; border: 1px solid #EFC585; border-radius: 999px; padding: 5px 16px;
+    font-size: 14px; font-weight: 500;
   }
   .advertise-show-all-btn {
     display: block; width: 100%; background: none; border: 1.5px solid #1C93F3; color: #1C93F3;
@@ -2814,7 +2817,7 @@
           var rest = visibleBids.slice(3);
           rowsHtml = top3.map(function (b) { return bidRowHtml(b, true); }).join("");
           if (rest.length) {
-            rowsHtml += '<div class="advertise-rank-divider"><span>' + tr("advertise_top3_label") + "</span></div>" +
+            rowsHtml += '<div class="advertise-rank-divider"><span class="advertise-rank-divider-label">' + tr("advertise_top3_label") + "</span></div>" +
               rest.map(function (b) { return bidRowHtml(b, false); }).join("");
           }
         }
