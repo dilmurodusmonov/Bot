@@ -628,6 +628,13 @@ def _sanitize_ad_photo_url(photo_url: Any) -> Optional[str]:
     return None
 
 
+def _sanitize_ad_description(description: Any) -> Optional[str]:
+    if not isinstance(description, str):
+        return None
+    description = description.strip()
+    return description[:200] or None
+
+
 def _extract_meta(html_text: str, *props: str) -> str:
     for prop in props:
         escaped = re.escape(prop)
@@ -720,6 +727,7 @@ async def api_ads_leaderboard(request: web.Request) -> web.Response:
             "platform": b["platform"],
             "photo_url": b["photo_url"],
             "category": b["category"],
+            "description": b["description"],
             "is_me": b["telegram_id"] == telegram_id,
         }
         for i, b in enumerate(bids)
@@ -757,7 +765,8 @@ async def api_ads_bid(request: web.Request) -> web.Response:
     photo_url = _sanitize_ad_photo_url(body.get("photo_url"))
     category = body.get("category")
     category = category if category in _AD_CATEGORY_KEYS else None
-    await insert_ad_bid(telegram_id, brand_name, url, bid_amount, platform, photo_url, category)
+    description = _sanitize_ad_description(body.get("description"))
+    await insert_ad_bid(telegram_id, brand_name[:80], url, bid_amount, platform, photo_url, category, description)
     return web.json_response({"ok": True})
 
 

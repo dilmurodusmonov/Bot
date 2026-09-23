@@ -69,6 +69,7 @@ CREATE TABLE IF NOT EXISTS ad_bids (
     platform TEXT,
     photo_url TEXT,
     category TEXT,
+    description TEXT,
     created_at TIMESTAMPTZ NOT NULL DEFAULT now()
 );
 """
@@ -95,6 +96,7 @@ async def init_db() -> None:
         await _migrate_ad_bids_multi(conn)
         await _migrate_ad_bids_platform(conn)
         await _migrate_ad_bids_category(conn)
+        await _migrate_ad_bids_description(conn)
 
 
 async def _migrate_ad_stats(conn: asyncpg.Connection) -> None:
@@ -204,6 +206,12 @@ async def _migrate_ad_bids_category(conn: asyncpg.Connection) -> None:
     """Taklif yuborishda foydalanuvchi brend kategoriyasini (masalan
     'Texnologiya va startaplar') tanlashi mumkin — buning uchun ustun."""
     await conn.execute("ALTER TABLE ad_bids ADD COLUMN IF NOT EXISTS category TEXT")
+
+
+async def _migrate_ad_bids_description(conn: asyncpg.Connection) -> None:
+    """Reyting ro'yxatida brend nomi ostida qisqa tavsif chiqishi uchun —
+    URL preview'dan olingan tavsif shu ustunda saqlanadi."""
+    await conn.execute("ALTER TABLE ad_bids ADD COLUMN IF NOT EXISTS description TEXT")
 
 
 # --- users -----------------------------------------------------------------
@@ -573,14 +581,14 @@ async def get_ad_bids_ranked() -> list[dict[str, Any]]:
 async def insert_ad_bid(
     telegram_id: int, brand_name: str, url: str, bid_amount: int,
     platform: Optional[str] = None, photo_url: Optional[str] = None,
-    category: Optional[str] = None,
+    category: Optional[str] = None, description: Optional[str] = None,
 ) -> None:
     """Har bir taklif alohida qator sifatida qo'shiladi — bitta foydalanuvchi
     bir nechta mustaqil brend/taklif joylashtirishi mumkin."""
     await _get_pool().execute(
-        """INSERT INTO ad_bids (telegram_id, brand_name, url, bid_amount, platform, photo_url, category)
-           VALUES ($1, $2, $3, $4, $5, $6, $7)""",
-        telegram_id, brand_name, url, bid_amount, platform, photo_url, category,
+        """INSERT INTO ad_bids (telegram_id, brand_name, url, bid_amount, platform, photo_url, category, description)
+           VALUES ($1, $2, $3, $4, $5, $6, $7, $8)""",
+        telegram_id, brand_name, url, bid_amount, platform, photo_url, category, description,
     )
 
 
