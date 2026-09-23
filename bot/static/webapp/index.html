@@ -439,69 +439,73 @@
   .advertise-filter-tab.active {
     background: linear-gradient(135deg, var(--accent1), var(--accent2)); color: #fff; border-color: transparent;
   }
+  /* Reyting kartochkalari — joylashuv va o'lchamlar sindr.uz bilan bir xil,
+     rangli qismlar "Reytingni sindirish" tugmasidek qizg'ish. */
   .leaderboard-row {
-    display: flex; align-items: center; gap: 10px; background: var(--section-bg);
-    border: 1px solid var(--border); border-radius: 14px; padding: 12px; margin-bottom: 10px;
+    display: flex; align-items: center; gap: 7px; background: var(--section-bg);
+    border: 1px solid var(--border); border-radius: 16px; padding: 12px 10px 12px 9px; margin-bottom: 8px;
   }
   .leaderboard-row-me { border-color: #1C93F3; box-shadow: 0 0 0 1px #1C93F3; }
   .leaderboard-rank {
-    flex-shrink: 0; background: #FF9A1F; color: #fff; font-weight: 700; font-size: 11px;
-    padding: 3px 8px; border-radius: 999px;
+    flex-shrink: 0; background: linear-gradient(135deg, var(--accent1), var(--accent2)); color: #fff;
+    font-weight: 700; font-size: 11.5px; line-height: 1; padding: 5px 8px; border-radius: 999px;
   }
-  .leaderboard-info { flex: 1 1 auto; min-width: 0; }
+  .leaderboard-info { flex: 1 1 auto; min-width: 0; align-self: center; }
   .leaderboard-brand {
-    font-weight: 700; font-size: 16px; color: var(--text);
+    font-weight: 700; font-size: 14px; line-height: 1.25; color: var(--text);
     overflow: hidden; text-overflow: ellipsis; white-space: nowrap;
   }
-  .leaderboard-you-badge { font-size: 12px; font-weight: 600; color: #1C93F3; }
+  .leaderboard-you-badge { font-size: 11px; font-weight: 600; color: #1C93F3; }
   .leaderboard-desc {
-    font-size: 12px; color: var(--hint); line-height: 1.3; margin-top: 1px;
+    font-size: 12px; color: #6E6E73; line-height: 1.25; margin-top: 3px;
     display: -webkit-box; -webkit-line-clamp: 2; -webkit-box-orient: vertical; overflow: hidden;
   }
   .leaderboard-clicks {
-    display: flex; align-items: center; gap: 5px; margin-top: 3px;
-    font-size: 11px; color: var(--hint); white-space: nowrap;
+    display: flex; align-items: center; gap: 4px; margin-top: 4px;
+    font-size: 11.5px; font-weight: 600; color: #2C2C2E; white-space: nowrap;
   }
   .leaderboard-clicks::before {
-    content: ""; width: 6px; height: 6px; border-radius: 50%; background: #FF6B4A; flex-shrink: 0;
+    content: ""; width: 7px; height: 7px; border-radius: 50%; flex-shrink: 0;
+    background: linear-gradient(135deg, var(--accent1), var(--accent2));
   }
   .leaderboard-row[data-bid-url] { cursor: pointer; -webkit-tap-highlight-color: transparent; }
   .leaderboard-row[data-bid-url]:active { opacity: 0.7; }
-  .leaderboard-side { flex-shrink: 0; width: 112px; display: flex; flex-direction: column; gap: 6px; }
+  .leaderboard-side { flex-shrink: 0; width: 92px; display: flex; flex-direction: column; gap: 5px; align-self: center; }
   .leaderboard-amount {
-    font-weight: 600; font-size: 14px; color: #C8641C; text-align: right; white-space: nowrap; margin-bottom: 1px;
+    font-weight: 600; font-size: 12.5px; line-height: 1.2; color: #E5484D; text-align: right; white-space: nowrap;
+    margin-bottom: 3px;
   }
   .leaderboard-take-btn, .leaderboard-raise-btn {
-    font-family: inherit; font-size: 11px; font-weight: 700; line-height: 1.2; padding: 7px 4px;
+    font-family: inherit; font-size: 10px; font-weight: 700; line-height: 1.2; padding: 6px 2px;
     border-radius: 999px; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; cursor: pointer;
     -webkit-tap-highlight-color: transparent;
   }
-  .leaderboard-take-btn { background: #EF8B2C; color: #FFFFFF; border: none; box-shadow: 0 2px 0 #CF6A14; }
-  .leaderboard-raise-btn { background: #FFFFFF; color: #B8561A; border: 1px solid #F2CFAE; box-shadow: 0 2px 0 #F2DCC6; }
+  .leaderboard-take-btn {
+    background: linear-gradient(135deg, var(--accent1), var(--accent2)); color: #FFFFFF; border: none;
+    box-shadow: 0 2px 0 #C9383D;
+  }
+  .leaderboard-raise-btn { background: #FFFFFF; color: #D2453F; border: 1px solid #F5C4B9; box-shadow: 0 2px 0 #F8D9D1; }
   .leaderboard-take-btn:active, .leaderboard-raise-btn:active { transform: translateY(1px); box-shadow: none; }
-  .leaderboard-row-top3 { padding: 16px 12px; }
+  .leaderboard-row-top3 { min-height: 76px; }
   .leaderboard-row-rank1 { background: #FFF3F1; border: 1.5px solid #F0A99C; }
   .leaderboard-row-rank2 { background: #FFF8F6; border: 1.5px solid #F5C4B9; }
   .leaderboard-row-rank3 { background: #FFFCFB; border: 1.5px solid #FAE0D9; }
   .leaderboard-row-rank1.leaderboard-row-me { border-color: #F0A99C; box-shadow: none; }
   .leaderboard-row-rank2.leaderboard-row-me { border-color: #F5C4B9; box-shadow: none; }
   .leaderboard-row-rank3.leaderboard-row-me { border-color: #FAE0D9; box-shadow: none; }
-  .leaderboard-row-top3 .leaderboard-rank { font-size: 10.5px; padding: 3px 8px; }
-  .leaderboard-row-top3 .advertise-preview-thumb { width: 54px; height: 54px; border-radius: 14px; }
-  .leaderboard-row-top3 .advertise-preview-thumb-emoji { font-size: 20px; }
-  .leaderboard-row-top3 .leaderboard-brand { font-size: 13px; }
-  .leaderboard-row-top3 .leaderboard-desc { font-size: 11px; }
+  .leaderboard-row-top3 .advertise-preview-thumb { width: 44px; height: 44px; border-radius: 11px; }
+  .leaderboard-row-top3 .advertise-preview-thumb-emoji { font-size: 18px; }
   .leaderboard-row-flat {
     background: none; border: none; border-radius: 0; box-shadow: none;
-    border-bottom: 1px solid var(--border); padding: 12px 2px; margin-bottom: 0;
+    border-bottom: 1px solid var(--border); padding: 12px 4px 12px 2px; margin-bottom: 0; gap: 9px;
   }
   .leaderboard-row-flat:last-child { border-bottom: none; }
   .leaderboard-row-flat.leaderboard-row-me { border-color: transparent; box-shadow: none; }
-  .leaderboard-row-flat .advertise-preview-thumb { width: 36px; height: 36px; border-radius: 8px; }
-  .leaderboard-row-flat .advertise-preview-thumb-emoji { font-size: 16px; }
-  .leaderboard-row-flat .leaderboard-brand { font-size: 14px; }
-  .leaderboard-row-flat .leaderboard-desc { -webkit-line-clamp: 1; }
-  .leaderboard-row-flat .leaderboard-rank { font-size: 10px; padding: 2px 7px; }
+  .leaderboard-row-flat .advertise-preview-thumb { width: 42px; height: 42px; border-radius: 10px; }
+  .leaderboard-row-flat .advertise-preview-thumb-emoji { font-size: 17px; }
+  .leaderboard-row-flat .leaderboard-rank {
+    background: none; color: #636366; font-size: 13px; font-weight: 700; padding: 0; min-width: 24px;
+  }
   .advertise-rank-divider {
     display: flex; align-items: center; gap: 10px; margin: 16px 4px; color: #C68A4A;
   }
