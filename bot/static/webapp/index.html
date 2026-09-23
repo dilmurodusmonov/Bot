@@ -459,6 +459,7 @@
   .leaderboard-rank {
     flex-shrink: 0; background: linear-gradient(135deg, var(--accent1), var(--accent2)); color: #fff;
     font-weight: 700; font-size: 11.5px; line-height: 1; padding: 5px 8px; border-radius: 999px;
+    min-width: 36px; text-align: center;
   }
   /* Klik soni doim pastda — tavsif bor-yo'qligidan qat'i nazar bir xil joyda. */
   .leaderboard-info { flex: 1 1 auto; min-width: 0; align-self: stretch; display: flex; flex-direction: column; }
@@ -508,15 +509,17 @@
   .leaderboard-row-top3 .advertise-preview-thumb-emoji { font-size: 18px; }
   .leaderboard-row-flat {
     background: none; border: none; border-radius: 0; box-shadow: none;
-    border-bottom: 1px solid #E8E8EA; padding: 12px 4px 12px 2px; margin-bottom: 0; gap: 9px;
+    /* Chetlar TOP-3 kartochkasi (1.5px chegara + ichki chet) bilan bir xil —
+       raqam, logotip, matn va narx ustma-ust bir ustunda turadi. */
+    border-bottom: 1px solid #E8E8EA; padding: 12px 11.5px 12px 10.5px; margin-bottom: 0;
   }
   .leaderboard-row-flat:last-child { border-bottom: none; }
   .leaderboard-row-flat:has(+ .advertise-rank-divider) { border-bottom: none; }
   .leaderboard-row-flat.leaderboard-row-me { border-color: #E8E8EA; box-shadow: none; }
-  .leaderboard-row-flat .advertise-preview-thumb { width: 42px; height: 42px; border-radius: 10px; }
+  .leaderboard-row-flat .advertise-preview-thumb { width: 44px; height: 44px; border-radius: 11px; }
   .leaderboard-row-flat .advertise-preview-thumb-emoji { font-size: 17px; }
   .leaderboard-row-flat .leaderboard-rank {
-    background: none; color: #636366; font-size: 13px; font-weight: 700; padding: 0; min-width: 24px;
+    background: none; color: #636366; font-size: 13px; font-weight: 700; padding: 0;
   }
   .advertise-rank-divider {
     display: flex; align-items: center; gap: 10px; margin: 28px 4px 16px; color: #C68A4A;
