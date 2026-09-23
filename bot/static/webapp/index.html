@@ -28,6 +28,8 @@
   }
   button { font-family: inherit; font-size: inherit; }
   #app { min-height: 100vh; padding: 16px 16px 110px; }
+  /* Reklama sahifasi to'liq oq fonda — pastki bo'sh joy ham. */
+  html.page-white, html.page-white body { background: #FFFFFF; }
   .center-loader { display: flex; align-items: center; justify-content: center; height: 80vh; color: var(--hint); }
   .brand { display: flex; align-items: center; gap: 12px; margin-bottom: 20px; }
   .avatar {
@@ -3306,6 +3308,7 @@
     if (adTimer) { clearInterval(adTimer); adTimer = null; }
     if (ad2Timer) { ad2Timer.stop(); ad2Timer = null; }
     var fn = screens[state.screen] || renderHome;
+    document.documentElement.classList.toggle("page-white", state.screen === "advertise");
     fn();
     updateBottomNav();
   }
