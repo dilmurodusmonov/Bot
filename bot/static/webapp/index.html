@@ -456,6 +456,35 @@
     overflow: hidden; text-overflow: ellipsis; white-space: nowrap;
   }
   .leaderboard-amount { flex-shrink: 0; font-weight: 800; font-size: 18px; color: #FF9A1F; }
+  .leaderboard-row-top3 {
+    background: linear-gradient(180deg, #FFF3E0 0%, #FFEEDA 100%);
+    border: 1.5px solid #F5C88A; padding: 16px;
+  }
+  .leaderboard-row-top3 .leaderboard-rank { font-size: 14px; padding: 5px 12px; }
+  .leaderboard-row-top3 .advertise-preview-thumb { width: 56px; height: 56px; border-radius: 14px; }
+  .leaderboard-row-top3 .advertise-preview-thumb-emoji { font-size: 26px; }
+  .leaderboard-row-top3 .leaderboard-brand { font-size: 18px; }
+  .leaderboard-row-top3 .leaderboard-url { font-size: 14px; }
+  .leaderboard-row-top3 .leaderboard-amount { font-size: 20px; }
+  .leaderboard-row-flat {
+    background: none; border: none; border-radius: 0; box-shadow: none;
+    border-bottom: 1px solid var(--border); padding: 10px 2px; margin-bottom: 0;
+  }
+  .leaderboard-row-flat:last-child { border-bottom: none; }
+  .leaderboard-row-flat.leaderboard-row-me { border-color: transparent; box-shadow: none; }
+  .leaderboard-row-flat .advertise-preview-thumb { width: 36px; height: 36px; border-radius: 8px; }
+  .leaderboard-row-flat .advertise-preview-thumb-emoji { font-size: 16px; }
+  .leaderboard-row-flat .leaderboard-brand { font-size: 14px; }
+  .leaderboard-row-flat .leaderboard-url { font-size: 12px; }
+  .leaderboard-row-flat .leaderboard-amount { font-size: 15px; }
+  .leaderboard-row-flat .leaderboard-rank { font-size: 12px; padding: 3px 9px; }
+  .advertise-rank-divider {
+    display: flex; align-items: center; gap: 10px; margin: 16px 4px; color: #C68A4A;
+    font-size: 12px; font-weight: 700;
+  }
+  .advertise-rank-divider::before, .advertise-rank-divider::after {
+    content: ""; flex: 1 1 auto; border-top: 1px dashed #EFC585;
+  }
   .advertise-show-all-btn {
     display: block; width: 100%; background: none; border: 1.5px solid #1C93F3; color: #1C93F3;
     border-radius: 10px; padding: 11px; font-size: 14px; font-weight: 600; margin-top: 4px; margin-bottom: 10px;
@@ -704,7 +733,7 @@
       advertise_top_prefix: "TOP-1 uchun", advertise_rules: "{min}dan boshlang. Har bir oshirish kamida {inc}.",
       advertise_url_placeholder: "Brendingiz URL manzili", advertise_brand_placeholder: "Brend nomi",
       advertise_url_hint: "Veb-sayt, Telegram, Instagram, YouTube, App Store yoki Google Play URL",
-      advertise_filter_all: "Barchasi",
+      advertise_filter_all: "Barchasi", advertise_top3_label: "TOP 3",
       advertise_bid_placeholder: "Taklif summasi (so'm)", advertise_submit: "Reytingni sindirish",
       advertise_empty: "Hozircha takliflar yo'q. Birinchi bo'ling!", advertise_you_badge: "Sizniki",
       advertise_show_all: "Barchasini ko'rsatish ({count})", advertise_website_label: "Veb-sayt",
@@ -777,7 +806,7 @@
       advertise_top_prefix: "За ТОП-1", advertise_rules: "Начните от {min}. Каждое повышение минимум {inc}.",
       advertise_url_placeholder: "URL вашего бренда", advertise_brand_placeholder: "Название бренда",
       advertise_url_hint: "Сайт, Telegram, Instagram, YouTube, App Store или Google Play ссылка",
-      advertise_filter_all: "Все",
+      advertise_filter_all: "Все", advertise_top3_label: "ТОП 3",
       advertise_bid_placeholder: "Сумма ставки (сум)", advertise_submit: "Побороться за рейтинг",
       advertise_empty: "Пока нет ставок. Будьте первым!", advertise_you_badge: "Ваша",
       advertise_show_all: "Показать все ({count})", advertise_website_label: "Веб-сайт",
@@ -850,7 +879,7 @@
       advertise_top_prefix: "For TOP-1", advertise_rules: "Start from {min}. Each raise is at least {inc}.",
       advertise_url_placeholder: "Your brand's URL", advertise_brand_placeholder: "Brand name",
       advertise_url_hint: "Website, Telegram, Instagram, YouTube, App Store or Google Play URL",
-      advertise_filter_all: "All",
+      advertise_filter_all: "All", advertise_top3_label: "TOP 3",
       advertise_bid_placeholder: "Bid amount (so'm)", advertise_submit: "Break the rating",
       advertise_empty: "No bids yet. Be the first!", advertise_you_badge: "Yours",
       advertise_show_all: "Show all ({count})", advertise_website_label: "Website",
@@ -923,7 +952,7 @@
       advertise_top_prefix: "TOP-1 үшін", advertise_rules: "{min} бастаңыз. Әр өсіру кемінде {inc}.",
       advertise_url_placeholder: "Брендіңіздің URL мекенжайы", advertise_brand_placeholder: "Бренд атауы",
       advertise_url_hint: "Веб-сайт, Telegram, Instagram, YouTube, App Store немесе Google Play сілтемесі",
-      advertise_filter_all: "Барлығы",
+      advertise_filter_all: "Барлығы", advertise_top3_label: "ТОП 3",
       advertise_bid_placeholder: "Ұсыныс сомасы (сўм)", advertise_submit: "Рейтинг үшін күресу",
       advertise_empty: "Әзірге ұсыныстар жоқ. Бірінші болыңыз!", advertise_you_badge: "Сіздікі",
       advertise_show_all: "Барлығын көрсету ({count})", advertise_website_label: "Веб-сайт",
@@ -988,7 +1017,7 @@
       advertise_top_prefix: "Барои TOP-1", advertise_rules: "Аз {min} сар кунед. Ҳар боло баровардан ҳадди ақал {inc}.",
       advertise_url_placeholder: "Суроғаи URL-и бренди шумо", advertise_brand_placeholder: "Номи бренд",
       advertise_url_hint: "Сомона, Telegram, Instagram, YouTube, App Store ё Google Play пайванд",
-      advertise_filter_all: "Ҳама",
+      advertise_filter_all: "Ҳама", advertise_top3_label: "ТОП 3",
       advertise_bid_placeholder: "Маблағи пешниҳод (сўм)", advertise_submit: "Барои рейтинг мубориза бурдан",
       advertise_empty: "Ҳанӯз пешниҳод нест. Аввалин шавед!", advertise_you_badge: "Аз шумо",
       advertise_show_all: "Ҳамаро нишон додан ({count})", advertise_website_label: "Сомона",
@@ -1053,7 +1082,7 @@
       advertise_top_prefix: "TOP-1 үчүн", advertise_rules: "{min} баштаңыз. Ар бир көтөрүү кеминде {inc}.",
       advertise_url_placeholder: "Брендиңиздин URL дареги", advertise_brand_placeholder: "Бренддин аты",
       advertise_url_hint: "Веб-сайт, Telegram, Instagram, YouTube, App Store же Google Play шилтемеси",
-      advertise_filter_all: "Баары",
+      advertise_filter_all: "Баары", advertise_top3_label: "ТОП 3",
       advertise_bid_placeholder: "Сунуш суммасы (сом)", advertise_submit: "Рейтинг үчүн күрөшүү",
       advertise_empty: "Азырынча сунуштар жок. Биринчи болуңуз!", advertise_you_badge: "Сиздики",
       advertise_show_all: "Баарын көрсөтүү ({count})", advertise_website_label: "Веб-сайт",
@@ -1118,7 +1147,7 @@
       advertise_top_prefix: "TOP-1 üçin", advertise_rules: "{min} başlaň. Her ýokarlandyrma iň az {inc}.",
       advertise_url_placeholder: "Brendiňiziň URL salgysy", advertise_brand_placeholder: "Brend ady",
       advertise_url_hint: "Websahypa, Telegram, Instagram, YouTube, App Store ýa-da Google Play salgysy",
-      advertise_filter_all: "Ählisi",
+      advertise_filter_all: "Ählisi", advertise_top3_label: "TOP 3",
       advertise_bid_placeholder: "Teklip mukdary (som)", advertise_submit: "Reýting üçin göreşmek",
       advertise_empty: "Heniz teklip ýok. Birinji boluň!", advertise_you_badge: "Siziňki",
       advertise_show_all: "Ählisini görkezmek ({count})", advertise_website_label: "Websahypa",
@@ -2754,12 +2783,14 @@
         appstore: "App Store", googleplay: "Google Play", website: tr("advertise_website_label"),
       };
 
-      function bidRowHtml(b) {
+      function bidRowHtml(b, isTop3) {
         var emoji = ADVERTISE_PLATFORM_EMOJI[b.platform] || ADVERTISE_PLATFORM_EMOJI.website;
         var thumbHtml = b.photo_url
           ? '<img class="advertise-preview-thumb" src="' + escapeHtml(b.photo_url) + '" alt="">'
           : '<span class="advertise-preview-thumb advertise-preview-thumb-emoji">' + emoji + "</span>";
-        return '<div class="leaderboard-row' + (b.is_me ? " leaderboard-row-me" : "") + '">' +
+        var rowClass = "leaderboard-row " + (isTop3 ? "leaderboard-row-top3" : "leaderboard-row-flat") +
+          (b.is_me ? " leaderboard-row-me" : "");
+        return '<div class="' + rowClass + '">' +
           '<span class="leaderboard-rank">#' + b.rank + "</span>" +
           thumbHtml +
           '<div class="leaderboard-info">' +
@@ -2784,9 +2815,18 @@
           return copy;
         });
         var visibleBids = filteredBids.slice(0, visibleCount);
-        var rowsHtml = visibleBids.length
-          ? visibleBids.map(bidRowHtml).join("")
-          : '<div class="empty-state">' + tr("advertise_empty") + "</div>";
+        var rowsHtml;
+        if (!visibleBids.length) {
+          rowsHtml = '<div class="empty-state">' + tr("advertise_empty") + "</div>";
+        } else {
+          var top3 = visibleBids.slice(0, 3);
+          var rest = visibleBids.slice(3);
+          rowsHtml = top3.map(function (b) { return bidRowHtml(b, true); }).join("");
+          if (rest.length) {
+            rowsHtml += '<div class="advertise-rank-divider"><span>' + tr("advertise_top3_label") + "</span></div>" +
+              rest.map(function (b) { return bidRowHtml(b, false); }).join("");
+          }
+        }
         var showAllHtml = filteredBids.length > visibleCount
           ? '<button class="advertise-show-all-btn" id="advertise-show-all-btn">' +
             trf("advertise_show_all", { count: String(filteredBids.length) }) + "</button>"
