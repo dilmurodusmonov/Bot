@@ -30,7 +30,10 @@ from bot.database import (
     create_user_if_missing,
     count_new_donations_last_24h,
     delete_donation,
+    claim_ad_bids_for_description,
+    fill_ad_bid_preview,
     get_ad_bids_ranked,
+    increment_ad_bid_clicks,
     increment_ad_views,
     increment_donation_share,
     get_active_reservation_for_donation,
@@ -652,42 +655,42 @@ def _extract_meta(html_text: str, *props: str) -> str:
     return ""
 
 
-async def api_ads_preview(request: web.Request) -> web.Response:
-    """URL kiritilganda brend nomi/tavsifi/rasmini avtomatik aniqlab beradi
-    (sindr.uz'dagi kabi). Telegram havolalari uchun bot.get_chat() orqali,
-    boshqa saytlar uchun Open Graph meta teglarini o'qib."""
-    await _require_user_id(request)
-    url = (request.query.get("url") or "").strip()
-    if not url:
-        raise web.HTTPBadRequest(text="missing url")
+class _AdPreviewError(Exception):
+    def __init__(self, status: int, reason: str):
+        super().__init__(reason)
+        self.status = status
+        self.reason = reason
+
+
+async def _fetch_ad_preview(bot: Bot, url: str) -> dict:
+    """URL bo'yicha brend nomi/tavsifi/rasmini aniqlaydi (sindr.uz'dagi kabi).
+    Telegram havolalari uchun bot.get_chat() orqali, boshqa saytlar uchun
+    Open Graph meta teglarini o'qib."""
     if not re.match(r"^https?://", url):
         url = "https://" + url
 
     parsed = urlparse(url)
     host = (parsed.hostname or "").lower()
     if not host:
-        raise web.HTTPBadRequest(text="invalid url")
+        raise _AdPreviewError(400, "invalid url")
 
     platform = _derive_ad_platform(url)
 
     if platform == "telegram":
         username = parsed.path.strip("/").split("/")[0]
         if not username or username.startswith("+") or username.lower() == "joinchat":
-            raise web.HTTPBadRequest(text="invalid telegram link")
-        bot: Bot = request.app["bot"]
+            raise _AdPreviewError(400, "invalid telegram link")
         try:
             chat = await bot.get_chat("@" + username)
         except TelegramAPIError:
-            raise web.HTTPNotFound(text="chat_not_found")
+            raise _AdPreviewError(404, "chat_not_found")
         title = chat.title or " ".join(filter(None, [chat.first_name, chat.last_name])) or username
         description = chat.description or chat.bio or ""
         photo_url = f"/api/photo/{chat.photo.small_file_id}" if chat.photo else None
-        return web.json_response({
-            "platform": "telegram", "title": title, "description": description, "photo_url": photo_url,
-        })
+        return {"platform": "telegram", "title": title, "description": description, "photo_url": photo_url}
 
     if not await _resolve_is_public_host(host):
-        raise web.HTTPBadRequest(text="host_not_allowed")
+        raise _AdPreviewError(400, "host_not_allowed")
 
     try:
         async with aiohttp.ClientSession() as session:
@@ -697,7 +700,7 @@ async def api_ads_preview(request: web.Request) -> web.Response:
             ) as resp:
                 html_text = await resp.text(errors="ignore")
     except Exception:
-        return web.json_response({"platform": platform, "title": "", "description": "", "photo_url": None})
+        return {"platform": platform, "title": "", "description": "", "photo_url": None}
 
     title = _extract_meta(html_text, "og:title", "twitter:title")
     if not title:
@@ -706,20 +709,59 @@ async def api_ads_preview(request: web.Request) -> web.Response:
     description = _extract_meta(html_text, "og:description", "twitter:description", "description")
     image = _extract_meta(html_text, "og:image", "twitter:image")
 
-    return web.json_response({
+    return {
         "platform": platform,
         "title": title[:120],
         "description": description[:200],
         "photo_url": image or None,
-    })
+    }
+
+
+async def api_ads_preview(request: web.Request) -> web.Response:
+    await _require_user_id(request)
+    url = (request.query.get("url") or "").strip()
+    if not url:
+        raise web.HTTPBadRequest(text="missing url")
+    try:
+        preview = await _fetch_ad_preview(request.app["bot"], url)
+    except _AdPreviewError as e:
+        if e.status == 404:
+            raise web.HTTPNotFound(text=e.reason)
+        raise web.HTTPBadRequest(text=e.reason)
+    return web.json_response(preview)
+
+
+_background_tasks: set[asyncio.Task] = set()
+
+
+async def _backfill_ad_descriptions(bot: Bot, bid_ids: list[int]) -> None:
+    """Tavsif ustuni qo'shilishidan oldin joylangan takliflar uchun preview
+    orqa fonda bir marta so'raladi — keyingi ochilishda tavsif ko'rinadi."""
+    for bid in await claim_ad_bids_for_description(bid_ids):
+        try:
+            preview = await _fetch_ad_preview(bot, bid["url"])
+        except Exception:
+            continue
+        description = _sanitize_ad_description(preview.get("description"))
+        photo_url = None if bid["photo_url"] else _sanitize_ad_photo_url(preview.get("photo_url"))
+        if description or photo_url:
+            await fill_ad_bid_preview(bid["id"], description, photo_url)
 
 
 async def api_ads_leaderboard(request: web.Request) -> web.Response:
     telegram_id = await _require_user_id(request)
     bids = await get_ad_bids_ranked()
     top_amount = bids[0]["bid_amount"] if bids else 0
+
+    missing = [b["id"] for b in bids if b["description"] is None and not b["description_checked"]]
+    if missing:
+        task = asyncio.create_task(_backfill_ad_descriptions(request.app["bot"], missing))
+        _background_tasks.add(task)
+        task.add_done_callback(_background_tasks.discard)
+
     result = [
         {
+            "id": b["id"],
             "rank": i + 1,
             "brand_name": b["brand_name"],
             "url": b["url"],
@@ -728,6 +770,7 @@ async def api_ads_leaderboard(request: web.Request) -> web.Response:
             "photo_url": b["photo_url"],
             "category": b["category"],
             "description": b["description"],
+            "clicks": b["clicks"],
             "is_me": b["telegram_id"] == telegram_id,
         }
         for i, b in enumerate(bids)
@@ -768,6 +811,14 @@ async def api_ads_bid(request: web.Request) -> web.Response:
     description = _sanitize_ad_description(body.get("description"))
     await insert_ad_bid(telegram_id, brand_name[:80], url, bid_amount, platform, photo_url, category, description)
     return web.json_response({"ok": True})
+
+
+async def api_ads_click(request: web.Request) -> web.Response:
+    await _require_user_id(request)
+    clicks = await increment_ad_bid_clicks(int(request.match_info["id"]))
+    if clicks is None:
+        raise web.HTTPNotFound()
+    return web.json_response({"clicks": clicks})
 
 
 async def api_badges(request: web.Request) -> web.Response:
@@ -1211,6 +1262,7 @@ def setup_api_routes(app: web.Application) -> None:
     app.router.add_get("/api/ads/preview", api_ads_preview)
     app.router.add_get("/api/ads/leaderboard", api_ads_leaderboard)
     app.router.add_post("/api/ads/bid", api_ads_bid)
+    app.router.add_post("/api/ads/{id:\\d+}/click", api_ads_click)
     app.router.add_get("/api/categories", api_categories)
     app.router.add_get("/api/donations", api_donations)
     app.router.add_get("/api/donation/{id}", api_donation)

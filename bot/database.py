@@ -70,6 +70,8 @@ CREATE TABLE IF NOT EXISTS ad_bids (
     photo_url TEXT,
     category TEXT,
     description TEXT,
+    description_checked BOOLEAN NOT NULL DEFAULT FALSE,
+    clicks INTEGER NOT NULL DEFAULT 0,
     created_at TIMESTAMPTZ NOT NULL DEFAULT now()
 );
 """
@@ -97,6 +99,7 @@ async def init_db() -> None:
         await _migrate_ad_bids_platform(conn)
         await _migrate_ad_bids_category(conn)
         await _migrate_ad_bids_description(conn)
+        await _migrate_ad_bids_clicks(conn)
 
 
 async def _migrate_ad_stats(conn: asyncpg.Connection) -> None:
@@ -212,6 +215,16 @@ async def _migrate_ad_bids_description(conn: asyncpg.Connection) -> None:
     """Reyting ro'yxatida brend nomi ostida qisqa tavsif chiqishi uchun —
     URL preview'dan olingan tavsif shu ustunda saqlanadi."""
     await conn.execute("ALTER TABLE ad_bids ADD COLUMN IF NOT EXISTS description TEXT")
+
+
+async def _migrate_ad_bids_clicks(conn: asyncpg.Connection) -> None:
+    """Reytingdagi har bir brendga necha marta bosilgani hisoblanadi.
+    description_checked — tavsifi yo'q eski takliflar uchun preview bir
+    marta qayta so'ralganini belgilaydi (har safar qayta so'ramaslik uchun)."""
+    await conn.execute("ALTER TABLE ad_bids ADD COLUMN IF NOT EXISTS clicks INTEGER NOT NULL DEFAULT 0")
+    await conn.execute(
+        "ALTER TABLE ad_bids ADD COLUMN IF NOT EXISTS description_checked BOOLEAN NOT NULL DEFAULT FALSE"
+    )
 
 
 # --- users -----------------------------------------------------------------
@@ -589,6 +602,33 @@ async def insert_ad_bid(
         """INSERT INTO ad_bids (telegram_id, brand_name, url, bid_amount, platform, photo_url, category, description)
            VALUES ($1, $2, $3, $4, $5, $6, $7, $8)""",
         telegram_id, brand_name, url, bid_amount, platform, photo_url, category, description,
+    )
+
+
+async def increment_ad_bid_clicks(bid_id: int) -> Optional[int]:
+    return await _get_pool().fetchval(
+        "UPDATE ad_bids SET clicks = clicks + 1 WHERE id = $1 RETURNING clicks", bid_id
+    )
+
+
+async def claim_ad_bids_for_description(bid_ids: list[int]) -> list[dict[str, Any]]:
+    """Tavsifi yo'q, hali tekshirilmagan takliflarni tekshirildi deb belgilab
+    qaytaradi — bir vaqtda kelgan so'rovlar bir xil taklifni ikki marta olmaydi."""
+    rows = await _get_pool().fetch(
+        """UPDATE ad_bids SET description_checked = TRUE
+           WHERE id = ANY($1::int[]) AND description IS NULL AND NOT description_checked
+           RETURNING id, url, photo_url""",
+        bid_ids,
+    )
+    return [dict(row) for row in rows]
+
+
+async def fill_ad_bid_preview(bid_id: int, description: Optional[str], photo_url: Optional[str]) -> None:
+    await _get_pool().execute(
+        """UPDATE ad_bids
+           SET description = COALESCE(description, $2), photo_url = COALESCE(photo_url, $3)
+           WHERE id = $1""",
+        bid_id, description, photo_url,
     )
 
 
