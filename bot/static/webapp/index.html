@@ -464,12 +464,7 @@
   }
   .leaderboard-amount { flex-shrink: 0; font-weight: 800; font-size: 18px; color: #FF9A1F; }
   .leaderboard-row-top3 { padding: 23px; background: #FFFFFF; }
-  .leaderboard-row-rank1 { border: 1.5px solid #F0A99C; }
-  .leaderboard-row-rank2 { border: 1.5px solid #F5C4B9; }
-  .leaderboard-row-rank3 { border: 1.5px solid #FAE0D9; }
-  .leaderboard-row-rank1.leaderboard-row-me { border-color: #F0A99C; box-shadow: none; }
-  .leaderboard-row-rank2.leaderboard-row-me { border-color: #F5C4B9; box-shadow: none; }
-  .leaderboard-row-rank3.leaderboard-row-me { border-color: #FAE0D9; box-shadow: none; }
+  .leaderboard-row-top3.leaderboard-row-me { border-color: var(--border); box-shadow: none; }
   .leaderboard-row-top3 .leaderboard-rank { font-size: 10.5px; padding: 3px 8px; }
   .leaderboard-row-top3 .advertise-preview-thumb { width: 62px; height: 62px; border-radius: 15px; }
   .leaderboard-row-top3 .advertise-preview-thumb-emoji { font-size: 20px; }
@@ -2799,7 +2794,7 @@
         var thumbHtml = b.photo_url
           ? '<img class="advertise-preview-thumb" src="' + escapeHtml(b.photo_url) + '" alt="">'
           : '<span class="advertise-preview-thumb advertise-preview-thumb-emoji">' + emoji + "</span>";
-        var rowClass = "leaderboard-row " + (isTop3 ? "leaderboard-row-top3 leaderboard-row-rank" + b.rank : "leaderboard-row-flat") +
+        var rowClass = "leaderboard-row " + (isTop3 ? "leaderboard-row-top3" : "leaderboard-row-flat") +
           (b.is_me ? " leaderboard-row-me" : "");
         return '<div class="' + rowClass + '">' +
           '<span class="leaderboard-rank">#' + b.rank + "</span>" +
