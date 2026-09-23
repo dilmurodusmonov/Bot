@@ -420,6 +420,9 @@
   .advertise-cat-trigger-icon svg { width: 18px; height: 18px; }
   .advertise-cat-trigger-label { flex: 1 1 auto; color: var(--hint); }
   .advertise-cat-trigger.has-value .advertise-cat-trigger-label { color: var(--text); }
+  .advertise-cat-row-icon { display: flex; align-items: center; color: var(--hint); flex-shrink: 0; }
+  .advertise-cat-row-icon svg { width: 20px; height: 20px; }
+  .advertise-cat-row-label { font-weight: 600; flex: 1 1 auto; }
   .advertise-url-hint { color: var(--hint); font-size: 10.5px; line-height: 1.4; margin: 0 6px 14px; }
   .leaderboard-row {
     display: flex; align-items: center; gap: 10px; background: var(--section-bg);
@@ -626,7 +629,14 @@
     globe: '<svg ' + SVG_ATTRS + '><circle cx="12" cy="12" r="10"></circle><line x1="2" y1="12" x2="22" y2="12"></line><path d="M12 2a15.3 15.3 0 0 1 4 10 15.3 15.3 0 0 1-4 10 15.3 15.3 0 0 1-4-10 15.3 15.3 0 0 1 4-10z"></path></svg>',
     grid: '<svg ' + SVG_ATTRS + '><rect x="3" y="3" width="7" height="7" rx="1.5"></rect><rect x="14" y="3" width="7" height="7" rx="1.5"></rect><rect x="3" y="14" width="7" height="7" rx="1.5"></rect><rect x="14" y="14" width="7" height="7" rx="1.5"></rect></svg>',
     verifiedBadge: '<svg viewBox="0 0 24 24" width="16" height="16" fill="#4EA4F5"><path fill-rule="evenodd" clip-rule="evenodd" d="M8.603 3.799A4.49 4.49 0 0112 2.25c1.357 0 2.573.6 3.397 1.549a4.49 4.49 0 013.498 1.307 4.491 4.491 0 011.307 3.497A4.49 4.49 0 0121.75 12a4.49 4.49 0 01-1.549 3.397 4.491 4.491 0 01-1.307 3.497 4.491 4.491 0 01-3.497 1.307A4.49 4.49 0 0112 21.75a4.49 4.49 0 01-3.397-1.549 4.49 4.49 0 01-3.498-1.306 4.491 4.491 0 01-1.307-3.498A4.49 4.49 0 012.25 12c0-1.357.6-2.573 1.549-3.397a4.49 4.49 0 011.307-3.497 4.49 4.49 0 013.497-1.307zm7.007 6.387a.75.75 0 10-1.22-.872l-3.236 4.53L9.53 12.22a.75.75 0 00-1.06 1.06l2.25 2.25a.75.75 0 001.14-.094l3.75-5.25z"></path></svg>',
-    closeX: '<svg viewBox="0 0 24 24" width="10" height="10" fill="none" stroke="currentColor" stroke-width="3.4" stroke-linecap="round"><path d="M6 6 18 18M18 6 6 18"></path></svg>'
+    closeX: '<svg viewBox="0 0 24 24" width="10" height="10" fill="none" stroke="currentColor" stroke-width="3.4" stroke-linecap="round"><path d="M6 6 18 18M18 6 6 18"></path></svg>',
+    catTech: '<svg ' + SVG_ATTRS + '><rect x="6" y="6" width="12" height="12" rx="1.5"></rect><line x1="9" y1="1" x2="9" y2="6"></line><line x1="15" y1="1" x2="15" y2="6"></line><line x1="9" y1="18" x2="9" y2="23"></line><line x1="15" y1="18" x2="15" y2="23"></line><line x1="1" y1="9" x2="6" y2="9"></line><line x1="1" y1="15" x2="6" y2="15"></line><line x1="18" y1="9" x2="23" y2="9"></line><line x1="18" y1="15" x2="23" y2="15"></line></svg>',
+    catTrade: '<svg ' + SVG_ATTRS + '><path d="M6 8h12l-1 13H7L6 8z"></path><path d="M9 8V6a3 3 0 0 1 6 0v2"></path></svg>',
+    catPeople: '<svg ' + SVG_ATTRS + '><circle cx="8" cy="8" r="3.2"></circle><path d="M2.5 20c0-3.5 2.8-6 5.5-6s5.5 2.5 5.5 6"></path><circle cx="17" cy="9" r="2.6"></circle><path d="M14.7 20c.2-2.8 2-5 4.8-5.3"></path></svg>',
+    catEducation: '<svg ' + SVG_ATTRS + '><path d="M2 9l10-5 10 5-10 5-10-5z"></path><path d="M6 11.5v5c0 1.4 2.5 2.8 6 2.8s6-1.4 6-2.8v-5"></path><path d="M22 9v6.5"></path></svg>',
+    catMarketing: '<svg ' + SVG_ATTRS + '><path d="M3 9v6h4l7 4V5L7 9H3z"></path><path d="M16.5 9a3.5 3.5 0 0 1 0 6"></path></svg>',
+    catLifestyle: '<svg ' + SVG_ATTRS + '><path d="M12 2l1.8 5.2L19 9l-5.2 1.8L12 16l-1.8-5.2L5 9l5.2-1.8L12 2z"></path><path d="M19 15l.9 2.1L22 18l-2.1.9L19 21l-.9-2.1L16 18l2.1-.9L19 15z"></path></svg>',
+    catOther: '<svg ' + SVG_ATTRS + '><polygon points="12 3 15.5 9.5 8.5 9.5"></polygon><circle cx="6" cy="17.5" r="3.2"></circle><rect x="13.5" y="14.3" width="6.4" height="6.4" rx="1.2"></rect></svg>'
   };
 
   var UI = {
@@ -2760,18 +2770,19 @@
       }
 
       var ADVERTISE_CATEGORIES = [
-        { key: "tech", label: tr("advertise_cat_tech") },
-        { key: "trade", label: tr("advertise_cat_trade") },
-        { key: "people", label: tr("advertise_cat_people") },
-        { key: "education", label: tr("advertise_cat_education") },
-        { key: "marketing", label: tr("advertise_cat_marketing") },
-        { key: "lifestyle", label: tr("advertise_cat_lifestyle") },
-        { key: "other", label: tr("advertise_cat_other") },
+        { key: "tech", label: tr("advertise_cat_tech"), icon: ICONS.catTech },
+        { key: "trade", label: tr("advertise_cat_trade"), icon: ICONS.catTrade },
+        { key: "people", label: tr("advertise_cat_people"), icon: ICONS.catPeople },
+        { key: "education", label: tr("advertise_cat_education"), icon: ICONS.catEducation },
+        { key: "marketing", label: tr("advertise_cat_marketing"), icon: ICONS.catMarketing },
+        { key: "lifestyle", label: tr("advertise_cat_lifestyle"), icon: ICONS.catLifestyle },
+        { key: "other", label: tr("advertise_cat_other"), icon: ICONS.catOther },
       ];
       var selectedAdvertiseCategory = null;
       var catRowsHtml = ADVERTISE_CATEGORIES.map(function (c) {
-        return '<button type="button" class="picker-row" data-advertise-cat-option="' + c.key + '">' +
-          "<span>" + escapeHtml(c.label) + "</span>" +
+        return '<button type="button" class="picker-row advertise-cat-row" data-advertise-cat-option="' + c.key + '">' +
+          '<span class="advertise-cat-row-icon">' + c.icon + "</span>" +
+          '<span class="advertise-cat-row-label">' + escapeHtml(c.label) + "</span>" +
           '<span class="picker-radio"></span>' +
           "</button>";
       }).join("");
