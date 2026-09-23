@@ -424,6 +424,21 @@
   .advertise-cat-row-icon svg { width: 20px; height: 20px; }
   .advertise-cat-row-label { font-weight: 600; flex: 1 1 auto; }
   .advertise-url-hint { color: var(--hint); font-size: 10.5px; line-height: 1.4; margin: 0 6px 14px; }
+  .advertise-filter-tabs {
+    display: flex; gap: 8px; overflow-x: auto; padding: 2px 6px 6px; margin: 14px 0 14px;
+    scrollbar-width: none;
+  }
+  .advertise-filter-tabs::-webkit-scrollbar { display: none; }
+  .advertise-filter-tab {
+    flex-shrink: 0; display: flex; align-items: center; gap: 6px; white-space: nowrap;
+    background: var(--section-bg); border: 1px solid var(--border); color: var(--text);
+    border-radius: 999px; padding: 9px 14px; font-size: 13px; font-weight: 600;
+  }
+  .advertise-filter-tab-icon { display: flex; align-items: center; }
+  .advertise-filter-tab-icon svg { width: 15px; height: 15px; }
+  .advertise-filter-tab.active {
+    background: linear-gradient(135deg, var(--accent1), var(--accent2)); color: #fff; border-color: transparent;
+  }
   .leaderboard-row {
     display: flex; align-items: center; gap: 10px; background: var(--section-bg);
     border: 1px solid var(--border); border-radius: 14px; padding: 12px; margin-bottom: 10px;
@@ -689,6 +704,7 @@
       advertise_top_prefix: "TOP-1 uchun", advertise_rules: "{min}dan boshlang. Har bir oshirish kamida {inc}.",
       advertise_url_placeholder: "Brendingiz URL manzili", advertise_brand_placeholder: "Brend nomi",
       advertise_url_hint: "Veb-sayt, Telegram, Instagram, YouTube, App Store yoki Google Play URL",
+      advertise_filter_all: "Barchasi",
       advertise_bid_placeholder: "Taklif summasi (so'm)", advertise_submit: "Reytingni sindirish",
       advertise_empty: "Hozircha takliflar yo'q. Birinchi bo'ling!", advertise_you_badge: "Sizniki",
       advertise_show_all: "Barchasini ko'rsatish ({count})", advertise_website_label: "Veb-sayt",
@@ -761,6 +777,7 @@
       advertise_top_prefix: "За ТОП-1", advertise_rules: "Начните от {min}. Каждое повышение минимум {inc}.",
       advertise_url_placeholder: "URL вашего бренда", advertise_brand_placeholder: "Название бренда",
       advertise_url_hint: "Сайт, Telegram, Instagram, YouTube, App Store или Google Play ссылка",
+      advertise_filter_all: "Все",
       advertise_bid_placeholder: "Сумма ставки (сум)", advertise_submit: "Побороться за рейтинг",
       advertise_empty: "Пока нет ставок. Будьте первым!", advertise_you_badge: "Ваша",
       advertise_show_all: "Показать все ({count})", advertise_website_label: "Веб-сайт",
@@ -833,6 +850,7 @@
       advertise_top_prefix: "For TOP-1", advertise_rules: "Start from {min}. Each raise is at least {inc}.",
       advertise_url_placeholder: "Your brand's URL", advertise_brand_placeholder: "Brand name",
       advertise_url_hint: "Website, Telegram, Instagram, YouTube, App Store or Google Play URL",
+      advertise_filter_all: "All",
       advertise_bid_placeholder: "Bid amount (so'm)", advertise_submit: "Break the rating",
       advertise_empty: "No bids yet. Be the first!", advertise_you_badge: "Yours",
       advertise_show_all: "Show all ({count})", advertise_website_label: "Website",
@@ -905,6 +923,7 @@
       advertise_top_prefix: "TOP-1 үшін", advertise_rules: "{min} бастаңыз. Әр өсіру кемінде {inc}.",
       advertise_url_placeholder: "Брендіңіздің URL мекенжайы", advertise_brand_placeholder: "Бренд атауы",
       advertise_url_hint: "Веб-сайт, Telegram, Instagram, YouTube, App Store немесе Google Play сілтемесі",
+      advertise_filter_all: "Барлығы",
       advertise_bid_placeholder: "Ұсыныс сомасы (сўм)", advertise_submit: "Рейтинг үшін күресу",
       advertise_empty: "Әзірге ұсыныстар жоқ. Бірінші болыңыз!", advertise_you_badge: "Сіздікі",
       advertise_show_all: "Барлығын көрсету ({count})", advertise_website_label: "Веб-сайт",
@@ -969,6 +988,7 @@
       advertise_top_prefix: "Барои TOP-1", advertise_rules: "Аз {min} сар кунед. Ҳар боло баровардан ҳадди ақал {inc}.",
       advertise_url_placeholder: "Суроғаи URL-и бренди шумо", advertise_brand_placeholder: "Номи бренд",
       advertise_url_hint: "Сомона, Telegram, Instagram, YouTube, App Store ё Google Play пайванд",
+      advertise_filter_all: "Ҳама",
       advertise_bid_placeholder: "Маблағи пешниҳод (сўм)", advertise_submit: "Барои рейтинг мубориза бурдан",
       advertise_empty: "Ҳанӯз пешниҳод нест. Аввалин шавед!", advertise_you_badge: "Аз шумо",
       advertise_show_all: "Ҳамаро нишон додан ({count})", advertise_website_label: "Сомона",
@@ -1033,6 +1053,7 @@
       advertise_top_prefix: "TOP-1 үчүн", advertise_rules: "{min} баштаңыз. Ар бир көтөрүү кеминде {inc}.",
       advertise_url_placeholder: "Брендиңиздин URL дареги", advertise_brand_placeholder: "Бренддин аты",
       advertise_url_hint: "Веб-сайт, Telegram, Instagram, YouTube, App Store же Google Play шилтемеси",
+      advertise_filter_all: "Баары",
       advertise_bid_placeholder: "Сунуш суммасы (сом)", advertise_submit: "Рейтинг үчүн күрөшүү",
       advertise_empty: "Азырынча сунуштар жок. Биринчи болуңуз!", advertise_you_badge: "Сиздики",
       advertise_show_all: "Баарын көрсөтүү ({count})", advertise_website_label: "Веб-сайт",
@@ -1097,6 +1118,7 @@
       advertise_top_prefix: "TOP-1 üçin", advertise_rules: "{min} başlaň. Her ýokarlandyrma iň az {inc}.",
       advertise_url_placeholder: "Brendiňiziň URL salgysy", advertise_brand_placeholder: "Brend ady",
       advertise_url_hint: "Websahypa, Telegram, Instagram, YouTube, App Store ýa-da Google Play salgysy",
+      advertise_filter_all: "Ählisi",
       advertise_bid_placeholder: "Teklip mukdary (som)", advertise_submit: "Reýting üçin göreşmek",
       advertise_empty: "Heniz teklip ýok. Birinji boluň!", advertise_you_badge: "Siziňki",
       advertise_show_all: "Ählisini görkezmek ({count})", advertise_website_label: "Websahypa",
@@ -2721,6 +2743,7 @@
         inc: formatSom(data.min_increment),
       });
       var visibleCount = Math.min(ADVERTISE_PAGE_SIZE, data.bids.length);
+      var activeFilterCategory = null;
 
       var ADVERTISE_PLATFORM_EMOJI = {
         telegram: "✈️", instagram: "📷", youtube: "▶️",
@@ -2751,19 +2774,28 @@
 
       function renderList() {
         var listEl = document.getElementById("advertise-list");
-        var visibleBids = data.bids.slice(0, visibleCount);
+        var filteredBids = (activeFilterCategory
+          ? data.bids.filter(function (b) { return b.category === activeFilterCategory; })
+          : data.bids
+        ).map(function (b, i) {
+          var copy = {};
+          for (var k in b) copy[k] = b[k];
+          copy.rank = i + 1;
+          return copy;
+        });
+        var visibleBids = filteredBids.slice(0, visibleCount);
         var rowsHtml = visibleBids.length
           ? visibleBids.map(bidRowHtml).join("")
           : '<div class="empty-state">' + tr("advertise_empty") + "</div>";
-        var showAllHtml = data.bids.length > visibleCount
+        var showAllHtml = filteredBids.length > visibleCount
           ? '<button class="advertise-show-all-btn" id="advertise-show-all-btn">' +
-            trf("advertise_show_all", { count: String(data.bids.length) }) + "</button>"
+            trf("advertise_show_all", { count: String(filteredBids.length) }) + "</button>"
           : "";
         listEl.innerHTML = rowsHtml + showAllHtml;
         var showAllBtn = document.getElementById("advertise-show-all-btn");
         if (showAllBtn) {
           showAllBtn.addEventListener("click", function () {
-            visibleCount = data.bids.length;
+            visibleCount = filteredBids.length;
             renderList();
           });
         }
@@ -2784,6 +2816,16 @@
           '<span class="advertise-cat-row-icon">' + c.icon + "</span>" +
           '<span class="advertise-cat-row-label">' + escapeHtml(c.label) + "</span>" +
           '<span class="picker-radio"></span>' +
+          "</button>";
+      }).join("");
+
+      var FILTER_TABS = [{ key: "", label: tr("advertise_filter_all"), icon: ICONS.grid }].concat(
+        ADVERTISE_CATEGORIES.map(function (c) { return { key: c.key, label: c.label, icon: c.icon }; })
+      );
+      var filterTabsHtml = FILTER_TABS.map(function (t) {
+        return '<button type="button" class="advertise-filter-tab' + (t.key === "" ? " active" : "") + '" data-filter-cat="' + t.key + '">' +
+          '<span class="advertise-filter-tab-icon">' + t.icon + "</span>" +
+          "<span>" + escapeHtml(t.label) + "</span>" +
           "</button>";
       }).join("");
 
@@ -2815,10 +2857,22 @@
         '<div class="advertise-url-hint">' + escapeHtml(tr("advertise_url_hint")) + "</div>" +
         '<button class="card-btn" id="advertise-submit-btn">' + tr("advertise_submit") + "</button>" +
         "</div>" +
+        '<div class="advertise-filter-tabs">' + filterTabsHtml + "</div>" +
         '<div id="advertise-list"></div>' +
         "</div>";
 
       renderList();
+
+      document.querySelectorAll("[data-filter-cat]").forEach(function (tab) {
+        tab.addEventListener("click", function () {
+          activeFilterCategory = tab.getAttribute("data-filter-cat") || null;
+          visibleCount = ADVERTISE_PAGE_SIZE;
+          document.querySelectorAll(".advertise-filter-tab").forEach(function (t) {
+            t.classList.toggle("active", t === tab);
+          });
+          renderList();
+        });
+      });
 
       var advertiseCatTrigger = document.getElementById("advertise-cat-trigger");
       var advertiseCatTriggerLabel = document.getElementById("advertise-cat-trigger-label");
