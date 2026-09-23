@@ -449,8 +449,15 @@
     padding: 4px 10px; border-radius: 999px;
   }
   .leaderboard-info { flex: 1 1 auto; min-width: 0; }
-  .leaderboard-brand { font-weight: 700; font-size: 16px; color: var(--text); }
+  .leaderboard-brand {
+    font-weight: 700; font-size: 16px; color: var(--text);
+    overflow: hidden; text-overflow: ellipsis; white-space: nowrap;
+  }
   .leaderboard-you-badge { font-size: 12px; font-weight: 600; color: #1C93F3; }
+  .leaderboard-desc {
+    font-size: 12px; color: var(--hint); line-height: 1.3; margin-top: 1px;
+    display: -webkit-box; -webkit-line-clamp: 2; -webkit-box-orient: vertical; overflow: hidden;
+  }
   .leaderboard-url {
     display: block; font-size: 13px; color: var(--hint); text-decoration: none;
     overflow: hidden; text-overflow: ellipsis; white-space: nowrap;
@@ -458,14 +465,15 @@
   .leaderboard-amount { flex-shrink: 0; font-weight: 800; font-size: 18px; color: #FF9A1F; }
   .leaderboard-row-top3 {
     background: linear-gradient(180deg, #FFF3E0 0%, #FFEEDA 100%);
-    border: 1.5px solid #F5C88A; padding: 16px;
+    border: 1.5px solid #F5C88A; padding: 13px;
   }
-  .leaderboard-row-top3 .leaderboard-rank { font-size: 14px; padding: 5px 12px; }
-  .leaderboard-row-top3 .advertise-preview-thumb { width: 56px; height: 56px; border-radius: 14px; }
-  .leaderboard-row-top3 .advertise-preview-thumb-emoji { font-size: 26px; }
-  .leaderboard-row-top3 .leaderboard-brand { font-size: 18px; }
-  .leaderboard-row-top3 .leaderboard-url { font-size: 14px; }
-  .leaderboard-row-top3 .leaderboard-amount { font-size: 20px; }
+  .leaderboard-row-top3 .leaderboard-rank { font-size: 13px; padding: 4px 11px; }
+  .leaderboard-row-top3 .advertise-preview-thumb { width: 48px; height: 48px; border-radius: 12px; }
+  .leaderboard-row-top3 .advertise-preview-thumb-emoji { font-size: 22px; }
+  .leaderboard-row-top3 .leaderboard-brand { font-size: 15px; }
+  .leaderboard-row-top3 .leaderboard-desc { font-size: 12px; }
+  .leaderboard-row-top3 .leaderboard-url { font-size: 12px; }
+  .leaderboard-row-top3 .leaderboard-amount { font-size: 17px; }
   .leaderboard-row-flat {
     background: none; border: none; border-radius: 0; box-shadow: none;
     border-bottom: 1px solid var(--border); padding: 10px 2px; margin-bottom: 0;
@@ -2797,6 +2805,7 @@
           '<div class="leaderboard-brand">' + escapeHtml(b.brand_name) +
           (b.is_me ? ' <span class="leaderboard-you-badge">' + tr("advertise_you_badge") + "</span>" : "") +
           "</div>" +
+          (isTop3 && b.description ? '<div class="leaderboard-desc">' + escapeHtml(b.description) + "</div>" : "") +
           '<a class="leaderboard-url" href="' + escapeHtml(b.url) + '" target="_blank" rel="noopener">' + escapeHtml(b.url) + "</a>" +
           "</div>" +
           '<span class="leaderboard-amount">' + formatSom(b.bid_amount) + "</span>" +
@@ -2992,7 +3001,8 @@
         var hasFreshPreview = lastAdvertisePreviewUrl === url && lastAdvertisePreview;
         var brand = (hasFreshPreview && lastAdvertisePreview.title) ? lastAdvertisePreview.title : deriveBrandFromUrl(url);
         var photoUrl = hasFreshPreview ? lastAdvertisePreview.photo_url : null;
-        api("POST", "/api/ads/bid", { url: url, brand_name: brand, bid_amount: bidAmount, photo_url: photoUrl, category: selectedAdvertiseCategory })
+        var description = hasFreshPreview ? lastAdvertisePreview.description : null;
+        api("POST", "/api/ads/bid", { url: url, brand_name: brand, bid_amount: bidAmount, photo_url: photoUrl, category: selectedAdvertiseCategory, description: description })
           .then(function () {
             if (tg && tg.HapticFeedback) tg.HapticFeedback.notificationOccurred("success");
             var successOverlay = showSuccess(tr("advertise_success"), "🚀", "pop");
