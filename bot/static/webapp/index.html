@@ -555,6 +555,17 @@
   .advertise-refresh-btn:disabled { opacity: 0.6; }
   .advertise-refresh-btn.loading svg { animation: advertise-spin 0.8s linear infinite; }
   @keyframes advertise-spin { to { transform: rotate(360deg); } }
+  /* Pastda qisqa muddat chiqadigan xabar (sindr.uz'dagi "Reyting yangilandi" kabi). */
+  .snackbar {
+    position: fixed; left: 50%; bottom: calc(28px + env(safe-area-inset-bottom)); z-index: 1000;
+    display: flex; align-items: center; gap: 10px; max-width: calc(100% - 32px);
+    background: #1C1C1E; color: #FFFFFF; border-radius: 999px; padding: 12px 22px;
+    font-size: 15px; font-weight: 500; white-space: nowrap; box-shadow: 0 6px 20px rgba(0,0,0,0.18);
+    transform: translate(-50%, 16px); opacity: 0; transition: opacity 0.2s ease, transform 0.2s ease;
+    pointer-events: none;
+  }
+  .snackbar.visible { transform: translate(-50%, 0); opacity: 1; }
+  .snackbar svg { width: 18px; height: 18px; flex-shrink: 0; }
   .advertise-preview-card {
     display: flex; align-items: flex-start; gap: 10px; background: var(--bg);
     border: 1px solid var(--border); border-radius: 12px; padding: 10px; margin-top: 10px;
@@ -799,7 +810,7 @@
       advertise_url_hint: "Veb-sayt, Telegram, Instagram, YouTube, App Store yoki Google Play URL",
       advertise_filter_all: "Barchasi", advertise_top_n_label: "TOP {n}", advertise_submit: "Reytingni sindirish",
       advertise_empty: "Hozircha takliflar yo'q. Birinchi bo'ling!", advertise_you_badge: "Sizniki", advertise_clicks: "{count} klik", advertise_take_rank: "{n}-o'rinni olish", advertise_raise: "Taklifni oshirish", advertise_rank_prefix: "{n}-o'rin uchun", advertise_raise_confirm: "«{brand}» taklifini {amount}gacha oshirasizmi?",
-      advertise_refresh: "Yangilash",
+      advertise_refresh: "Yangilash", advertise_refreshed: "Reyting yangilandi",
       advertise_page_summary: "{from}–{to}, jami {total} ta loyiha", advertise_website_label: "Veb-sayt",
       advertise_category_placeholder: "Kategoriyani tanlang",
       advertise_cat_tech: "Texnologiya va startaplar", advertise_cat_trade: "Savdo va xizmatlar",
@@ -870,7 +881,7 @@
       advertise_url_hint: "Сайт, Telegram, Instagram, YouTube, App Store или Google Play ссылка",
       advertise_filter_all: "Все", advertise_top_n_label: "ТОП {n}", advertise_submit: "Побороться за рейтинг",
       advertise_empty: "Пока нет ставок. Будьте первым!", advertise_you_badge: "Ваша", advertise_clicks: "{count} кликов", advertise_take_rank: "Занять {n}-е место", advertise_raise: "Повысить ставку", advertise_rank_prefix: "За {n}-е место", advertise_raise_confirm: "Повысить ставку «{brand}» до {amount}?",
-      advertise_refresh: "Обновить",
+      advertise_refresh: "Обновить", advertise_refreshed: "Рейтинг обновлён",
       advertise_page_summary: "{from}–{to}, всего {total} проектов", advertise_website_label: "Веб-сайт",
       advertise_category_placeholder: "Выберите категорию",
       advertise_cat_tech: "Технологии и стартапы", advertise_cat_trade: "Торговля и услуги",
@@ -941,7 +952,7 @@
       advertise_url_hint: "Website, Telegram, Instagram, YouTube, App Store or Google Play URL",
       advertise_filter_all: "All", advertise_top_n_label: "TOP {n}", advertise_submit: "Break the rating",
       advertise_empty: "No bids yet. Be the first!", advertise_you_badge: "Yours", advertise_clicks: "{count} clicks", advertise_take_rank: "Take #{n}", advertise_raise: "Raise bid", advertise_rank_prefix: "For #{n}", advertise_raise_confirm: "Raise «{brand}» bid to {amount}?",
-      advertise_refresh: "Refresh",
+      advertise_refresh: "Refresh", advertise_refreshed: "Rating updated",
       advertise_page_summary: "{from}–{to} of {total} projects", advertise_website_label: "Website",
       advertise_category_placeholder: "Choose a category",
       advertise_cat_tech: "Tech & startups", advertise_cat_trade: "Trade & services",
@@ -1012,7 +1023,7 @@
       advertise_url_hint: "Веб-сайт, Telegram, Instagram, YouTube, App Store немесе Google Play сілтемесі",
       advertise_filter_all: "Барлығы", advertise_top_n_label: "ТОП {n}", advertise_submit: "Рейтинг үшін күресу",
       advertise_empty: "Әзірге ұсыныстар жоқ. Бірінші болыңыз!", advertise_you_badge: "Сіздікі", advertise_clicks: "{count} басу", advertise_take_rank: "{n}-орынды алу", advertise_raise: "Ұсынысты көтеру", advertise_rank_prefix: "{n}-орын үшін", advertise_raise_confirm: "«{brand}» ұсынысын {amount} дейін көтересіз бе?",
-      advertise_refresh: "Жаңарту",
+      advertise_refresh: "Жаңарту", advertise_refreshed: "Рейтинг жаңартылды",
       advertise_page_summary: "{from}–{to}, барлығы {total} жоба", advertise_website_label: "Веб-сайт",
       advertise_category_placeholder: "Санатты таңдаңыз",
       advertise_cat_tech: "Технология және стартаптар", advertise_cat_trade: "Сауда және қызметтер",
@@ -1075,7 +1086,7 @@
       advertise_url_hint: "Сомона, Telegram, Instagram, YouTube, App Store ё Google Play пайванд",
       advertise_filter_all: "Ҳама", advertise_top_n_label: "ТОП {n}", advertise_submit: "Барои рейтинг мубориза бурдан",
       advertise_empty: "Ҳанӯз пешниҳод нест. Аввалин шавед!", advertise_you_badge: "Аз шумо", advertise_clicks: "{count} клик", advertise_take_rank: "Ҷои {n}-ро гирифтан", advertise_raise: "Баланд бардоштан", advertise_rank_prefix: "Барои ҷои {n}", advertise_raise_confirm: "Пешниҳоди «{brand}»-ро то {amount} баланд мебардоред?",
-      advertise_refresh: "Навсозӣ",
+      advertise_refresh: "Навсозӣ", advertise_refreshed: "Рейтинг навсозӣ шуд",
       advertise_page_summary: "{from}–{to}, ҳамагӣ {total} лоиҳа", advertise_website_label: "Сомона",
       advertise_category_placeholder: "Категорияро интихоб кунед",
       advertise_cat_tech: "Технология ва старташҳо", advertise_cat_trade: "Савдо ва хидматҳо",
@@ -1138,7 +1149,7 @@
       advertise_url_hint: "Веб-сайт, Telegram, Instagram, YouTube, App Store же Google Play шилтемеси",
       advertise_filter_all: "Баары", advertise_top_n_label: "ТОП {n}", advertise_submit: "Рейтинг үчүн күрөшүү",
       advertise_empty: "Азырынча сунуштар жок. Биринчи болуңуз!", advertise_you_badge: "Сиздики", advertise_clicks: "{count} басуу", advertise_take_rank: "{n}-орунду алуу", advertise_raise: "Сунушту көтөрүү", advertise_rank_prefix: "{n}-орун үчүн", advertise_raise_confirm: "«{brand}» сунушун {amount} чейин көтөрөсүзбү?",
-      advertise_refresh: "Жаңылоо",
+      advertise_refresh: "Жаңылоо", advertise_refreshed: "Рейтинг жаңыланды",
       advertise_page_summary: "{from}–{to}, бардыгы {total} долбоор", advertise_website_label: "Веб-сайт",
       advertise_category_placeholder: "Категорияны тандаңыз",
       advertise_cat_tech: "Технология жана стартаптар", advertise_cat_trade: "Соода жана кызматтар",
@@ -1201,7 +1212,7 @@
       advertise_url_hint: "Websahypa, Telegram, Instagram, YouTube, App Store ýa-da Google Play salgysy",
       advertise_filter_all: "Ählisi", advertise_top_n_label: "TOP {n}", advertise_submit: "Reýting üçin göreşmek",
       advertise_empty: "Heniz teklip ýok. Birinji boluň!", advertise_you_badge: "Siziňki", advertise_clicks: "{count} basyş", advertise_take_rank: "{n}-nji orny almak", advertise_raise: "Teklibi ýokarlandyrmak", advertise_rank_prefix: "{n}-nji orun üçin", advertise_raise_confirm: "«{brand}» teklibini {amount} çenli ýokarlandyrýarsyňyzmy?",
-      advertise_refresh: "Täzele",
+      advertise_refresh: "Täzele", advertise_refreshed: "Reýting täzelendi",
       advertise_page_summary: "{from}–{to}, jemi {total} taslama", advertise_website_label: "Websahypa",
       advertise_category_placeholder: "Kategoriýany saýlaň",
       advertise_cat_tech: "Tehnologiýa we başlangyçlar", advertise_cat_trade: "Söwda we hyzmatlar",
@@ -1327,6 +1338,21 @@
 
   // Ekran markazida alohida oyna. app emas, body ichiga qo'yiladi —
   // shunda sahifa qayerga siljigan bo'lsa ham markazda turadi.
+  function showSnackbar(msg) {
+    var old = document.querySelector(".snackbar");
+    if (old) old.parentNode.removeChild(old);
+    var bar = document.createElement("div");
+    bar.className = "snackbar";
+    bar.innerHTML = '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round"><polyline points="20 6 9 17 4 12"></polyline></svg>' +
+      "<span>" + escapeHtml(msg) + "</span>";
+    document.body.appendChild(bar);
+    requestAnimationFrame(function () { bar.classList.add("visible"); });
+    setTimeout(function () {
+      bar.classList.remove("visible");
+      setTimeout(function () { if (bar.parentNode) bar.parentNode.removeChild(bar); }, 250);
+    }, 2200);
+  }
+
   function showSuccess(msg, emoji, emojiClass) {
     var overlay = document.createElement("div");
     overlay.className = "toast-overlay";
@@ -2902,6 +2928,7 @@
             data.min_increment = fresh.min_increment;
             if (bidTargetRank === 1) setBidTarget(1, fresh.next_top_bid);
             renderList();
+            showSnackbar(tr("advertise_refreshed"));
           })
           .catch(function () {
             if (btn) { btn.disabled = false; btn.classList.remove("loading"); }
