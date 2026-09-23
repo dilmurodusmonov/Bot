@@ -500,6 +500,7 @@
     border-bottom: 1px solid var(--border); padding: 12px 4px 12px 2px; margin-bottom: 0; gap: 9px;
   }
   .leaderboard-row-flat:last-child { border-bottom: none; }
+  .leaderboard-row-flat:has(+ .advertise-rank-divider) { border-bottom: none; }
   .leaderboard-row-flat.leaderboard-row-me { border-color: transparent; box-shadow: none; }
   .leaderboard-row-flat .advertise-preview-thumb { width: 42px; height: 42px; border-radius: 10px; }
   .leaderboard-row-flat .advertise-preview-thumb-emoji { font-size: 17px; }
@@ -762,7 +763,7 @@
       advertise_top_prefix: "TOP-1 uchun", advertise_rules: "{min}dan boshlang. Har bir oshirish kamida {inc}.",
       advertise_url_placeholder: "Brendingiz URL manzili",
       advertise_url_hint: "Veb-sayt, Telegram, Instagram, YouTube, App Store yoki Google Play URL",
-      advertise_filter_all: "Barchasi", advertise_top3_label: "TOP 3", advertise_submit: "Reytingni sindirish",
+      advertise_filter_all: "Barchasi", advertise_top3_label: "TOP 3", advertise_top10_label: "TOP 10", advertise_submit: "Reytingni sindirish",
       advertise_empty: "Hozircha takliflar yo'q. Birinchi bo'ling!", advertise_you_badge: "Sizniki", advertise_clicks: "{count} klik", advertise_take_rank: "{n}-o'rinni olish", advertise_raise: "Taklifni oshirish", advertise_rank_prefix: "{n}-o'rin uchun", advertise_raise_confirm: "«{brand}» taklifini {amount}gacha oshirasizmi?",
       advertise_show_all: "Barchasini ko'rsatish ({count})", advertise_website_label: "Veb-sayt",
       advertise_category_placeholder: "Kategoriyani tanlang",
@@ -832,7 +833,7 @@
       advertise_top_prefix: "За ТОП-1", advertise_rules: "Начните от {min}. Каждое повышение минимум {inc}.",
       advertise_url_placeholder: "URL вашего бренда",
       advertise_url_hint: "Сайт, Telegram, Instagram, YouTube, App Store или Google Play ссылка",
-      advertise_filter_all: "Все", advertise_top3_label: "ТОП 3", advertise_submit: "Побороться за рейтинг",
+      advertise_filter_all: "Все", advertise_top3_label: "ТОП 3", advertise_top10_label: "ТОП 10", advertise_submit: "Побороться за рейтинг",
       advertise_empty: "Пока нет ставок. Будьте первым!", advertise_you_badge: "Ваша", advertise_clicks: "{count} кликов", advertise_take_rank: "Занять {n}-е место", advertise_raise: "Повысить ставку", advertise_rank_prefix: "За {n}-е место", advertise_raise_confirm: "Повысить ставку «{brand}» до {amount}?",
       advertise_show_all: "Показать все ({count})", advertise_website_label: "Веб-сайт",
       advertise_category_placeholder: "Выберите категорию",
@@ -902,7 +903,7 @@
       advertise_top_prefix: "For TOP-1", advertise_rules: "Start from {min}. Each raise is at least {inc}.",
       advertise_url_placeholder: "Your brand's URL",
       advertise_url_hint: "Website, Telegram, Instagram, YouTube, App Store or Google Play URL",
-      advertise_filter_all: "All", advertise_top3_label: "TOP 3", advertise_submit: "Break the rating",
+      advertise_filter_all: "All", advertise_top3_label: "TOP 3", advertise_top10_label: "TOP 10", advertise_submit: "Break the rating",
       advertise_empty: "No bids yet. Be the first!", advertise_you_badge: "Yours", advertise_clicks: "{count} clicks", advertise_take_rank: "Take #{n}", advertise_raise: "Raise bid", advertise_rank_prefix: "For #{n}", advertise_raise_confirm: "Raise «{brand}» bid to {amount}?",
       advertise_show_all: "Show all ({count})", advertise_website_label: "Website",
       advertise_category_placeholder: "Choose a category",
@@ -972,7 +973,7 @@
       advertise_top_prefix: "TOP-1 үшін", advertise_rules: "{min} бастаңыз. Әр өсіру кемінде {inc}.",
       advertise_url_placeholder: "Брендіңіздің URL мекенжайы",
       advertise_url_hint: "Веб-сайт, Telegram, Instagram, YouTube, App Store немесе Google Play сілтемесі",
-      advertise_filter_all: "Барлығы", advertise_top3_label: "ТОП 3", advertise_submit: "Рейтинг үшін күресу",
+      advertise_filter_all: "Барлығы", advertise_top3_label: "ТОП 3", advertise_top10_label: "ТОП 10", advertise_submit: "Рейтинг үшін күресу",
       advertise_empty: "Әзірге ұсыныстар жоқ. Бірінші болыңыз!", advertise_you_badge: "Сіздікі", advertise_clicks: "{count} басу", advertise_take_rank: "{n}-орынды алу", advertise_raise: "Ұсынысты көтеру", advertise_rank_prefix: "{n}-орын үшін", advertise_raise_confirm: "«{brand}» ұсынысын {amount} дейін көтересіз бе?",
       advertise_show_all: "Барлығын көрсету ({count})", advertise_website_label: "Веб-сайт",
       advertise_category_placeholder: "Санатты таңдаңыз",
@@ -1034,7 +1035,7 @@
       advertise_top_prefix: "Барои TOP-1", advertise_rules: "Аз {min} сар кунед. Ҳар боло баровардан ҳадди ақал {inc}.",
       advertise_url_placeholder: "Суроғаи URL-и бренди шумо",
       advertise_url_hint: "Сомона, Telegram, Instagram, YouTube, App Store ё Google Play пайванд",
-      advertise_filter_all: "Ҳама", advertise_top3_label: "ТОП 3", advertise_submit: "Барои рейтинг мубориза бурдан",
+      advertise_filter_all: "Ҳама", advertise_top3_label: "ТОП 3", advertise_top10_label: "ТОП 10", advertise_submit: "Барои рейтинг мубориза бурдан",
       advertise_empty: "Ҳанӯз пешниҳод нест. Аввалин шавед!", advertise_you_badge: "Аз шумо", advertise_clicks: "{count} клик", advertise_take_rank: "Ҷои {n}-ро гирифтан", advertise_raise: "Баланд бардоштан", advertise_rank_prefix: "Барои ҷои {n}", advertise_raise_confirm: "Пешниҳоди «{brand}»-ро то {amount} баланд мебардоред?",
       advertise_show_all: "Ҳамаро нишон додан ({count})", advertise_website_label: "Сомона",
       advertise_category_placeholder: "Категорияро интихоб кунед",
@@ -1096,7 +1097,7 @@
       advertise_top_prefix: "TOP-1 үчүн", advertise_rules: "{min} баштаңыз. Ар бир көтөрүү кеминде {inc}.",
       advertise_url_placeholder: "Брендиңиздин URL дареги",
       advertise_url_hint: "Веб-сайт, Telegram, Instagram, YouTube, App Store же Google Play шилтемеси",
-      advertise_filter_all: "Баары", advertise_top3_label: "ТОП 3", advertise_submit: "Рейтинг үчүн күрөшүү",
+      advertise_filter_all: "Баары", advertise_top3_label: "ТОП 3", advertise_top10_label: "ТОП 10", advertise_submit: "Рейтинг үчүн күрөшүү",
       advertise_empty: "Азырынча сунуштар жок. Биринчи болуңуз!", advertise_you_badge: "Сиздики", advertise_clicks: "{count} басуу", advertise_take_rank: "{n}-орунду алуу", advertise_raise: "Сунушту көтөрүү", advertise_rank_prefix: "{n}-орун үчүн", advertise_raise_confirm: "«{brand}» сунушун {amount} чейин көтөрөсүзбү?",
       advertise_show_all: "Баарын көрсөтүү ({count})", advertise_website_label: "Веб-сайт",
       advertise_category_placeholder: "Категорияны тандаңыз",
@@ -1158,7 +1159,7 @@
       advertise_top_prefix: "TOP-1 üçin", advertise_rules: "{min} başlaň. Her ýokarlandyrma iň az {inc}.",
       advertise_url_placeholder: "Brendiňiziň URL salgysy",
       advertise_url_hint: "Websahypa, Telegram, Instagram, YouTube, App Store ýa-da Google Play salgysy",
-      advertise_filter_all: "Ählisi", advertise_top3_label: "TOP 3", advertise_submit: "Reýting üçin göreşmek",
+      advertise_filter_all: "Ählisi", advertise_top3_label: "TOP 3", advertise_top10_label: "TOP 10", advertise_submit: "Reýting üçin göreşmek",
       advertise_empty: "Heniz teklip ýok. Birinji boluň!", advertise_you_badge: "Siziňki", advertise_clicks: "{count} basyş", advertise_take_rank: "{n}-nji orny almak", advertise_raise: "Teklibi ýokarlandyrmak", advertise_rank_prefix: "{n}-nji orun üçin", advertise_raise_confirm: "«{brand}» teklibini {amount} çenli ýokarlandyrýarsyňyzmy?",
       advertise_show_all: "Ählisini görkezmek ({count})", advertise_website_label: "Websahypa",
       advertise_category_placeholder: "Kategoriýany saýlaň",
@@ -2844,6 +2845,10 @@
         });
       }
 
+      function rankDividerHtml(label) {
+        return '<div class="advertise-rank-divider"><span class="advertise-rank-divider-label">' + label + "</span></div>";
+      }
+
       function bidRowHtml(b, isTop3) {
         var emoji = ADVERTISE_PLATFORM_EMOJI[b.platform] || ADVERTISE_PLATFORM_EMOJI.website;
         var thumbHtml = b.photo_url
@@ -2891,8 +2896,13 @@
           var rest = visibleBids.slice(3);
           rowsHtml = top3.map(function (b) { return bidRowHtml(b, true); }).join("");
           if (rest.length) {
-            rowsHtml += '<div class="advertise-rank-divider"><span class="advertise-rank-divider-label">' + tr("advertise_top3_label") + "</span></div>" +
-              rest.map(function (b) { return bidRowHtml(b, false); }).join("");
+            // sindr.uz kabi: TOP 3 dan keyin va TOP 10 dan keyin ajratuvchi chiziq.
+            rowsHtml += rankDividerHtml(tr("advertise_top3_label")) +
+              rest.slice(0, 7).map(function (b) { return bidRowHtml(b, false); }).join("");
+            if (filteredBids.length > 10) {
+              rowsHtml += rankDividerHtml(tr("advertise_top10_label")) +
+                rest.slice(7).map(function (b) { return bidRowHtml(b, false); }).join("");
+            }
           }
         }
         var showAllHtml = filteredBids.length > visibleCount
