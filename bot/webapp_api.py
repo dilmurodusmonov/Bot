@@ -1024,7 +1024,15 @@ async def _fetch_image(url: str) -> Optional[tuple[bytes, str]]:
             ) as resp:
                 if resp.status != 200:
                     return None
-                body = await resp.content.read(_LOGO_MAX_BYTES)
+                # content.read(n) faqat kelgan birinchi bo'lakni qaytaradi —
+                # rasm to'liq o'qiladi (aks holda buzuq rasm beriladi).
+                chunks, size = [], 0
+                async for chunk in resp.content.iter_chunked(64 * 1024):
+                    size += len(chunk)
+                    if size > _LOGO_MAX_BYTES:
+                        return None
+                    chunks.append(chunk)
+                body = b"".join(chunks)
                 ctype = resp.headers.get("Content-Type", "").split(";")[0].strip().lower()
     except Exception:
         return None
@@ -1102,15 +1110,16 @@ async def _manifest_icons(html_text: str, base_url: str) -> list[str]:
     return [url for _, url in icons[:3]]
 
 
-async def _resolve_brand_logo(host: str) -> Optional[tuple[bytes, str]]:
+async def _resolve_brand_logo(host: str, trace: Optional[list] = None) -> Optional[tuple[bytes, str]]:
     """Brend logotipini universal qidiradi, birinchi ishlaydiganini qaytaradi:
     1) sahifadagi apple-touch-icon / katta icon / SVG (data: ham),
     2) manifest.json ikonkalari, 3) /apple-touch-icon.png,
     4) Google (gstatic, s2), DuckDuckGo, 5) kichik favicon.
     Natija xost bo'yicha keshlanadi."""
-    hit, cached = _logo_cache_get("host:" + host)
-    if hit:
-        return cached
+    if trace is None:
+        hit, cached = _logo_cache_get("host:" + host)
+        if hit:
+            return cached
 
     origin = f"https://{host}"
     site_allowed = await _resolve_is_public_host(host)
@@ -1148,6 +1157,8 @@ async def _resolve_brand_logo(host: str) -> Optional[tuple[bytes, str]]:
             break
     if not logo:
         logging.info("Logotip topilmadi: %s (html=%s) %s", host, bool(html_result), "; ".join(tried))
+    if trace is not None:
+        trace.append({"host": host, "site_allowed": site_allowed, "html": bool(html_result), "tried": tried})
     _logo_cache_put("host:" + host, logo)
     return logo
 
@@ -1156,7 +1167,7 @@ def _valid_host(host: str) -> bool:
     return bool(re.fullmatch(r"[a-z0-9-]+(\.[a-z0-9-]+)+", host)) and len(host) <= 253
 
 
-async def _resolve_logo_for_url(url: str) -> Optional[tuple[bytes, str]]:
+async def _resolve_logo_for_url(url: str, trace: Optional[list] = None) -> Optional[tuple[bytes, str]]:
     """Istalgan havola uchun logotip:
     - Telegram/Instagram/YouTube/App Store/Google Play — sahifaning og:image'i
       (profil/kanal/ilova rasmi), bo'lmasa platformaning o'z logotipi;
@@ -1168,9 +1179,10 @@ async def _resolve_logo_for_url(url: str) -> Optional[tuple[bytes, str]]:
         return None
     platform = _derive_ad_platform(url)
     key = "url:" + url
-    hit, cached = _logo_cache_get(key)
-    if hit:
-        return cached
+    if trace is None:
+        hit, cached = _logo_cache_get(key)
+        if hit:
+            return cached
 
     logo: Optional[tuple[bytes, str]] = None
     wb_nm_id, uzum_id = _wildberries_nm_id(url), _uzum_product_id(url)
@@ -1191,7 +1203,7 @@ async def _resolve_logo_for_url(url: str) -> Optional[tuple[bytes, str]]:
             if og_image:
                 logo = await _fetch_image(og_image)
         if not logo:
-            logo = await _resolve_brand_logo(host.removeprefix("www.").removeprefix("m."))
+            logo = await _resolve_brand_logo(host.removeprefix("www.").removeprefix("m."), trace)
     else:
         # Anti-bot boshqa saytga (masalan ya.ru) yuborgan bo'lsa — o'sha saytning
         # logotipi emas, asl domenniki olinadi.
@@ -1199,7 +1211,9 @@ async def _resolve_logo_for_url(url: str) -> Optional[tuple[bytes, str]]:
             (urlparse(fetched[1]).hostname or host).lower()
             if fetched and not _redirected_away(url, fetched[1]) else host
         )
-        logo = await _resolve_brand_logo(final_host.removeprefix("www."))
+        if trace is not None:
+            trace.append({"url": url, "final_url": fetched[1] if fetched else None})
+        logo = await _resolve_brand_logo(final_host.removeprefix("www."), trace)
 
     _logo_cache_put(key, logo)
     return logo
@@ -1210,17 +1224,24 @@ async def api_ads_logo(request: web.Request) -> web.Response:
     o'zi (server orqali), topilmasa 404 (sahifa emoji ko'rsatadi). Img so'rovi
     sarlavha yubora olmagani uchun autentifikatsiyasiz."""
     raw_url = (request.query.get("url") or "").strip()
+    # ?debug=1 — keshsiz qidirib, har bir manba natijasini JSON'da ko'rsatadi.
+    trace: Optional[list] = [] if request.query.get("debug") == "1" else None
     if raw_url:
         if not re.match(r"^https?://", raw_url, re.I):
             raw_url = "https://" + raw_url
         if len(raw_url) > 2000 or not _valid_host((urlparse(raw_url).hostname or "").lower()):
             raise web.HTTPBadRequest(text="invalid url")
-        logo = await _resolve_logo_for_url(raw_url)
+        logo = await _resolve_logo_for_url(raw_url, trace)
     else:
         host = (request.query.get("host") or "").strip().lower().removeprefix("www.")
         if not _valid_host(host):
             raise web.HTTPBadRequest(text="invalid host")
-        logo = await _resolve_brand_logo(host)
+        logo = await _resolve_brand_logo(host, trace)
+    if trace is not None:
+        return web.json_response({
+            "found": bool(logo), "bytes": len(logo[0]) if logo else 0,
+            "content_type": logo[1] if logo else None, "trace": trace,
+        })
     if not logo:
         raise web.HTTPNotFound(headers={"Cache-Control": "public, max-age=1800"})
     body, ctype = logo
