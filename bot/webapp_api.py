@@ -6,6 +6,7 @@ import json
 import logging
 import re
 import time
+import uuid
 from html import escape, unescape
 from typing import Any, Optional
 from urllib.parse import urljoin, urlparse
@@ -857,11 +858,11 @@ def _wb_base_url(basket: int, nm_id: int) -> str:
     return f"https://basket-{basket:02d}.wbbasket.ru/vol{nm_id // 100000}/part{nm_id // 1000}/{nm_id}"
 
 
-async def _fetch_json(url: str) -> Optional[Any]:
+async def _fetch_json(url: str, headers: Optional[dict] = None) -> Optional[Any]:
     try:
         async with aiohttp.ClientSession() as session:
             async with session.get(
-                url, timeout=aiohttp.ClientTimeout(total=5), headers=_BROWSER_HEADERS,
+                url, timeout=aiohttp.ClientTimeout(total=5), headers={**_BROWSER_HEADERS, **(headers or {})},
             ) as resp:
                 if resp.status != 200:
                     return None
@@ -896,17 +897,97 @@ async def _fetch_wildberries(nm_id: int) -> Optional[dict]:
     }
 
 
+# Qisqa havola xizmatlari — ular boshqa domenga yo'naltirishi tabiiy.
+_SHORTENER_DOMAINS = {
+    "bit.ly", "t.co", "goo.gl", "tinyurl.com", "cutt.ly", "is.gd", "clck.ru", "vk.cc",
+    "rb.gy", "shorturl.at", "ow.ly", "buff.ly", "lnkd.in", "s.id", "tiny.cc", "linktr.ee",
+}
+
+
+def _base_domain(host: str) -> str:
+    parts = host.lower().split(".")
+    if len(parts) >= 3 and parts[-2] in {"com", "co", "org", "net", "gov", "edu"}:
+        return ".".join(parts[-3:])
+    return ".".join(parts[-2:])
+
+
+def _redirected_away(requested_url: str, final_url: str) -> bool:
+    """Anti-bot himoyasi so'rovni butunlay boshqa saytga (masalan Uzum →
+    ya.ru) yuborganmi. Qisqa havolalar uchun boshqa domen — tabiiy."""
+    requested = _base_domain(urlparse(requested_url).hostname or "")
+    final = _base_domain(urlparse(final_url).hostname or "")
+    return bool(final) and requested != final and requested not in _SHORTENER_DOMAINS
+
+
 async def _fetch_best_html(url: str, platform: str) -> Optional[tuple[str, str]]:
     """Avval oddiy brauzer sifatida; sahifa bloklangan ko'rinsa (captcha,
-    og: yo'q) — havola-preview botlari sifatida qayta so'raladi."""
+    og: yo'q, boshqa saytga yo'naltirilgan) — havola-preview botlari sifatida
+    qayta so'raladi. Yaroqli sahifa bo'lmasa None."""
+    def usable(result: Optional[tuple[str, str]]) -> bool:
+        return bool(result) and not _looks_blocked(result[0]) and not _redirected_away(url, result[1])
+
     first = await _fetch_site_html(url, platform)
-    if first and not _looks_blocked(first[0]):
+    if usable(first):
         return first
     for agent in _PREVIEW_BOT_AGENTS:
         retry = await _fetch_site_html(url, platform, user_agent=agent)
-        if retry and not _looks_blocked(retry[0]):
+        if usable(retry):
             return retry
-    return first
+    return None
+
+
+# --- Uzum Market: tovar ma'lumoti saytning o'z API'sidan -----------------------
+_UZUM_HOST_RE = re.compile(r"(^|\.)uzum\.uz$")
+_UZUM_API_BASES = ("https://api.uzum.uz/api/v2/product/", "https://api.umarket.uz/api/v2/product/")
+
+
+def _uzum_product_id(url: str) -> Optional[int]:
+    """uzum.uz/product/2833011, uzum.uz/ru/product/smartfon-...-2833011."""
+    parsed = urlparse(url)
+    if not _UZUM_HOST_RE.search((parsed.hostname or "").lower()) or (parsed.hostname or "").startswith("api."):
+        return None
+    m = re.search(r"/product/(?:[^/?#]*?-)?(\d{3,12})(?:[/?#]|$)", parsed.path + "/")
+    return int(m.group(1)) if m else None
+
+
+def _strip_html(text: str) -> str:
+    return re.sub(r"\s+", " ", unescape(re.sub(r"<[^>]+>", " ", text or ""))).strip()
+
+
+async def _fetch_uzum(product_id: int) -> Optional[dict]:
+    """Uzum veb-ilovasi ishlatadigan ochiq mahsulot API'si: nom, tavsif, rasm."""
+    headers = {
+        "Authorization": "Basic YjJjLWZyb250OmNsaWVudFNlY3JldA==",  # veb-ilovaning ochiq kaliti
+        "x-iid": str(uuid.uuid4()),
+        "Accept": "application/json",
+        "Accept-Language": "uz-UZ,ru;q=0.9",
+    }
+    for base in _UZUM_API_BASES:
+        payload = await _fetch_json(base + str(product_id), headers)
+        data = ((payload or {}).get("payload") or {}).get("data") if isinstance(payload, dict) else None
+        if not isinstance(data, dict) or not data.get("title"):
+            continue
+        photo_url = None
+        for photo in data.get("photos") or []:
+            if not isinstance(photo, dict):
+                continue
+            sizes = photo.get("photo") or {}
+            for size in ("800", "720", "540", "480"):
+                high = (sizes.get(size) or {}).get("high") if isinstance(sizes, dict) else None
+                if high:
+                    photo_url = high
+                    break
+            if not photo_url and photo.get("photoKey"):
+                photo_url = f"https://images.uzum.uz/{photo['photoKey']}/t_product_540_high.jpg"
+            if photo_url:
+                break
+        return {
+            "platform": "website",
+            "title": str(data["title"]).strip()[:120],
+            "description": _strip_html(str(data.get("description") or ""))[:200],
+            "photo_url": photo_url,
+        }
+    return None
 
 
 def _is_content_page(url: str, html_text: str) -> bool:
@@ -1092,10 +1173,14 @@ async def _resolve_logo_for_url(url: str) -> Optional[tuple[bytes, str]]:
         return cached
 
     logo: Optional[tuple[bytes, str]] = None
-    wb_nm_id = _wildberries_nm_id(url)
-    if wb_nm_id:
-        wb = await _fetch_wildberries(wb_nm_id)
-        logo = await _fetch_image(wb["photo_url"]) if wb else None
+    wb_nm_id, uzum_id = _wildberries_nm_id(url), _uzum_product_id(url)
+    product = (
+        await _fetch_wildberries(wb_nm_id) if wb_nm_id
+        else await _fetch_uzum(uzum_id) if uzum_id
+        else None
+    )
+    if product and product.get("photo_url"):
+        logo = await _fetch_image(product["photo_url"])
         if logo:
             _logo_cache_put(key, logo)
             return logo
@@ -1108,7 +1193,12 @@ async def _resolve_logo_for_url(url: str) -> Optional[tuple[bytes, str]]:
         if not logo:
             logo = await _resolve_brand_logo(host.removeprefix("www.").removeprefix("m."))
     else:
-        final_host = (urlparse(fetched[1]).hostname or host).lower() if fetched else host
+        # Anti-bot boshqa saytga (masalan ya.ru) yuborgan bo'lsa — o'sha saytning
+        # logotipi emas, asl domenniki olinadi.
+        final_host = (
+            (urlparse(fetched[1]).hostname or host).lower()
+            if fetched and not _redirected_away(url, fetched[1]) else host
+        )
         logo = await _resolve_brand_logo(final_host.removeprefix("www."))
 
     _logo_cache_put(key, logo)
@@ -1201,6 +1291,11 @@ async def _fetch_ad_preview(bot: Bot, url: str) -> dict:
         wb = await _fetch_wildberries(wb_nm_id)
         if wb:
             return wb
+    uzum_id = _uzum_product_id(url)
+    if uzum_id:
+        uzum = await _fetch_uzum(uzum_id)
+        if uzum:
+            return uzum
 
     fetched = await _fetch_best_html(url, platform)
     if not fetched or _looks_blocked(fetched[0]):
