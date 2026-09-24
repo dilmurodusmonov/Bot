@@ -554,12 +554,23 @@
     animation: advertise-pending-glow 1.6s ease-in-out infinite;
   }
   .advertise-pending b { color: #D2453F; }
+  /* Qum soati kabi: turadi, ag'dariladi, yana turadi. */
+  .advertise-pending-icon {
+    display: inline-block; transform-origin: 50% 55%;
+    animation: advertise-hourglass 2.4s ease-in-out infinite;
+  }
+  @keyframes advertise-hourglass {
+    0%, 35% { transform: rotate(0deg); }
+    50%, 85% { transform: rotate(180deg); }
+    100% { transform: rotate(360deg); }
+  }
   @keyframes advertise-pending-glow {
     0%, 100% { border-color: #F5C4B9; box-shadow: 0 0 0 0 rgba(229, 72, 77, 0); }
     50% { border-color: #E5484D; box-shadow: 0 0 0 3px rgba(229, 72, 77, 0.18); }
   }
   @media (prefers-reduced-motion: reduce) {
     .advertise-pending { animation: none; border-color: #E5484D; }
+    .advertise-pending-icon { animation: none; }
   }
   .advertise-pending-row + .advertise-pending-row { margin-top: 4px; }
   /* To'lov (chek) sahifasi */
@@ -3347,7 +3358,7 @@
       function pendingBlockHtml(list) {
         return (list || []).length
           ? '<div class="advertise-pending">' + list.map(function (p) {
-              return '<div class="advertise-pending-row">⏳ <b>' + escapeHtml(tr("advertise_pending_label")) + "</b> · " +
+              return '<div class="advertise-pending-row"><span class="advertise-pending-icon">⏳</span> <b>' + escapeHtml(tr("advertise_pending_label")) + "</b> · " +
                 escapeHtml(p.brand_name) + " — " + escapeHtml(formatSom(p.amount)) + " (" +
                 escapeHtml(trf("advertise_pending_rank", { n: String(p.rank) })) + ")</div>";
             }).join("") + "</div>"
