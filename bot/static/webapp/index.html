@@ -420,6 +420,9 @@
   .advertise-cat-trigger-icon { display: flex; align-items: center; color: var(--hint); flex-shrink: 0; }
   .advertise-cat-trigger-icon svg { width: 18px; height: 18px; }
   .advertise-cat-trigger-label { flex: 1 1 auto; color: var(--hint); }
+  /* sindr.uz kabi ingichka kulrang ⌄ belgisi (▾ uchburchak o'rniga). */
+  .advertise-cat-chevron { display: flex; align-items: center; color: #636366; flex-shrink: 0; margin-left: 8px; }
+  .advertise-cat-chevron svg { width: 18px; height: 18px; }
   .advertise-cat-trigger.has-value .advertise-cat-trigger-label { color: var(--text); }
   .advertise-cat-row-icon { display: flex; align-items: center; color: var(--hint); flex-shrink: 0; }
   .advertise-cat-row-icon svg { width: 20px; height: 20px; }
@@ -3387,7 +3390,7 @@
         '<button type="button" id="advertise-cat-trigger" class="picker-trigger advertise-cat-trigger">' +
         '<span class="advertise-cat-trigger-icon">' + ICONS.grid + "</span>" +
         '<span id="advertise-cat-trigger-label" class="advertise-cat-trigger-label">' + escapeHtml(tr("advertise_category_placeholder")) + "</span>" +
-        '<span class="picker-trigger-chevron">▾</span>' +
+        '<span class="advertise-cat-chevron"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><polyline points="6 9 12 15 18 9"></polyline></svg></span>' +
         "</button>" +
         '<div id="advertise-cat-overlay" class="picker-overlay" hidden>' +
         '<div class="picker-sheet">' + catRowsHtml + "</div>" +
