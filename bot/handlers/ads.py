@@ -207,3 +207,34 @@ async def on_logo_debug(message: Message, command: CommandObject) -> None:
             await message.answer_document(BufferedInputFile(body, filename=f"logo.{ext}"), caption=ctype)
         except TelegramAPIError:
             pass
+
+
+@router.message(Command("preview"), F.from_user.id.in_(AD_ADMIN_IDS))
+async def on_preview_debug(message: Message, command: CommandObject) -> None:
+    """Admin uchun tashxis: /preview bank.uz — sayt har bir so'rovga (brauzer,
+    preview botlari) nima javob bergani va yakuniy nom/tavsif/rasm."""
+    from bot.webapp_api import _FETCH_TRACE, _AdPreviewError, _fetch_ad_preview  # aylanma importdan qochish
+
+    raw = (command.args or "").strip()
+    if not raw:
+        await message.answer("Foydalanish: /preview bank.uz")
+        return
+    await message.answer("🔎 Tekshirilmoqda...")
+    trace: list = []
+    token = _FETCH_TRACE.set(trace)
+    try:
+        result = await _fetch_ad_preview(message.bot, raw)
+    except _AdPreviewError as e:
+        result = {"xato": e.reason}
+    except Exception as e:  # tashxis — xatoni ham ko'rsatamiz
+        result = {"xato": repr(e)}
+    finally:
+        _FETCH_TRACE.reset(token)
+
+    lines = [f"<b>{escape(raw)}</b>", "", "<b>So'rovlar:</b>"]
+    lines += [f"• {escape(step)}" for step in trace] or ["• (sahifa so'ralmadi)"]
+    lines += ["", "<b>Natija:</b>"]
+    for key in ("title", "description", "photo_url", "xato"):
+        if key in result:
+            lines.append(f"{key}: {escape(str(result[key]) or '—')[:300]}")
+    await message.answer("\n".join(lines)[:4000], disable_web_page_preview=True)

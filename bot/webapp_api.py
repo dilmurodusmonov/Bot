@@ -1,6 +1,7 @@
 import asyncio
 import base64
 import binascii
+import contextvars
 import ipaddress
 import json
 import logging
@@ -673,7 +674,7 @@ def _extract_meta(html_text: str, *props: str) -> str:
             m.group(1).lower(): m.group(2) if m.group(2) is not None else (m.group(3) if m.group(3) is not None else m.group(4))
             for m in _ATTR_RE.finditer(tag)
         }
-        key = (attrs.get("property") or attrs.get("name") or "").lower()
+        key = (attrs.get("property") or attrs.get("name") or attrs.get("itemprop") or "").lower()
         if key and "content" in attrs and key not in found:
             found[key] = attrs["content"]
     for prop in props:
@@ -750,21 +751,38 @@ _PLATFORM_HEADERS = {
 }
 
 
+# /preview tashxisi uchun: har bir sahifa so'rovi natijasi shu ro'yxatga yoziladi.
+_FETCH_TRACE: contextvars.ContextVar[Optional[list]] = contextvars.ContextVar("fetch_trace", default=None)
+
+
 async def _fetch_site_html(
     url: str, platform: str = "website", user_agent: Optional[str] = None,
 ) -> Optional[tuple[str, str]]:
-    """Sahifa HTML'i va yakuniy (redirectdan keyingi) manzili."""
+    """Sahifa HTML'i va yakuniy (redirectdan keyingi) manzili. Xato holati
+    (4xx/5xx) — masalan anti-bot'ning "400"/"403" sahifasi — None."""
     headers = {**_BROWSER_HEADERS, "Accept": "text/html,application/xhtml+xml"}
     headers.update(_PLATFORM_HEADERS.get(platform, {}))
     if user_agent:
         headers["User-Agent"] = user_agent
+    trace = _FETCH_TRACE.get()
+    agent = (user_agent or "brauzer").split(" ")[0].split("/")[0]
     try:
         async with aiohttp.ClientSession() as session:
             async with session.get(
                 url, timeout=aiohttp.ClientTimeout(total=6), max_redirects=5, headers=headers,
             ) as resp:
-                return await resp.text(errors="ignore"), str(resp.url)
-    except Exception:
+                html_text, final_url = await resp.text(errors="ignore"), str(resp.url)
+                if trace is not None:
+                    trace.append(
+                        f"{agent}: HTTP {resp.status} → {final_url[:60]} · "
+                        f"title={_html_title(html_text)[:40]!r} og={_has_rich_meta(html_text)}"
+                    )
+                if resp.status >= 400:
+                    return None
+                return html_text, final_url
+    except Exception as e:
+        if trace is not None:
+            trace.append(f"{agent}: {type(e).__name__}")
         return None
 
 
@@ -779,7 +797,14 @@ _PREVIEW_BOT_AGENTS = (
 )
 _CHALLENGE_TITLE_RE = re.compile(
     r"верификац|проверка|just a moment|attention required|access denied|ddos-guard|"
-    r"captcha|security check|are you a robot|robot check|доступ ограничен|bot protection",
+    r"captcha|security check|are you a robot|robot check|доступ ограничен|bot protection|"
+    # Xato sahifalari: "400", "403 Forbidden", "404 - Not Found", "Error"...
+    # ("100 ta eng yaxshi..." kabi oddiy sarlavhalar tushib qolmasligi uchun
+    # faqat 4xx/5xx kodi yolg'iz yoki xato so'zi bilan, xato so'zi esa yolg'iz).
+    r"^\s*[45]\d\d\s*$|"
+    r"^\s*[45]\d\d\s*[-:–—|]?\s*(error|forbidden|not found|bad request|unauthorized|"
+    r"service unavailable|internal server error|ошибка|доступ запрещ)|"
+    r"^\s*(error|forbidden|not found|bad request|service unavailable|ошибка)\s*$",
     re.I,
 )
 
