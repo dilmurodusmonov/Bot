@@ -238,6 +238,7 @@ async def _migrate_ad_payments(conn: asyncpg.Connection) -> None:
                created_at TIMESTAMPTZ NOT NULL DEFAULT now()
            )"""
     )
+    await conn.execute("ALTER TABLE ad_payments ADD COLUMN IF NOT EXISTS reject_reason TEXT")
 
 
 async def _migrate_ad_bids_clicks(conn: asyncpg.Connection) -> None:
@@ -672,16 +673,20 @@ async def delete_ad_payment(payment_id: int) -> None:
                 )
 
 
-async def decide_ad_payment(payment_id: int, approve: bool, admin_id: int) -> Optional[dict[str, Any]]:
+async def decide_ad_payment(
+    payment_id: int, approve: bool, admin_id: int, reject_reason: Optional[str] = None,
+) -> Optional[dict[str, Any]]:
     """Admin qarori — atomik: faqat 'pending' to'lov bir marta hal qilinadi.
     Tasdiqlansa yangi reklama reytingga chiqadi yoki taklif summasi oshadi.
     Allaqachon hal qilingan bo'lsa None qaytadi."""
     async with _get_pool().acquire() as conn:
         async with conn.transaction():
             payment = await conn.fetchrow(
-                """UPDATE ad_payments SET status = $2, decided_by = $3, decided_at = now()
+                """UPDATE ad_payments SET status = $2, decided_by = $3, decided_at = now(),
+                                          reject_reason = $4
                    WHERE id = $1 AND status = 'pending' RETURNING *""",
                 payment_id, "approved" if approve else "rejected", admin_id,
+                None if approve else reject_reason,
             )
             if not payment:
                 return None
