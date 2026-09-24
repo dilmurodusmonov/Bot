@@ -51,6 +51,11 @@ async def on_ad_payment_decision(callback: CallbackQuery) -> None:
         pass
     await callback.answer("Tasdiqlandi" if approve else "Rad etildi")
 
+    # To'lovchining o'zi qaror qilgan admin bo'lsa, yuqoridagi xabarning
+    # holati yetarli — alohida bildirishnoma yuborilmaydi.
+    if payment["telegram_id"] == callback.from_user.id:
+        return
+
     user = await get_user(payment["telegram_id"])
     lang = (user or {}).get("language") or "uz"
     brand = escape(bid["brand_name"]) if bid else ""
