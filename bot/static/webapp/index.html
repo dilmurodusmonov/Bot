@@ -1423,15 +1423,15 @@
   // u ham topmasa — platforma emojisi.
   function brandFaviconUrl(siteUrl) {
     try {
-      var host = new URL(/^https?:\/\//i.test(siteUrl) ? siteUrl : "https://" + siteUrl).hostname.replace(/^www\./, "");
-      return host ? "/api/ads/logo?host=" + encodeURIComponent(host) : null;
+      var full = new URL(/^https?:\/\//i.test(siteUrl) ? siteUrl : "https://" + siteUrl);
+      return full.hostname ? "/api/ads/logo?url=" + encodeURIComponent(full.href) : null;
     } catch (e) {
       return null;
     }
   }
 
-  function brandThumbHtml(photoUrl, siteUrl, platform, emoji) {
-    var favicon = platform === "telegram" ? null : brandFaviconUrl(siteUrl || "");
+  function brandThumbHtml(photoUrl, siteUrl, emoji) {
+    var favicon = brandFaviconUrl(siteUrl || "");
     var src = photoUrl || favicon;
     var emojiHtml = '<span class="advertise-preview-thumb advertise-preview-thumb-emoji">' + emoji + "</span>";
     if (!src) return emojiHtml;
@@ -3174,7 +3174,7 @@
 
       function bidRowHtml(b, isTop3) {
         var emoji = ADVERTISE_PLATFORM_EMOJI[b.platform] || ADVERTISE_PLATFORM_EMOJI.website;
-        var thumbHtml = brandThumbHtml(b.photo_url, b.url, b.platform, emoji);
+        var thumbHtml = brandThumbHtml(b.photo_url, b.url, emoji);
         var rowClass = "leaderboard-row " + (isTop3 ? "leaderboard-row-top3 leaderboard-row-rank" + b.rank : "leaderboard-row-flat") +
           (b.is_me ? " leaderboard-row-me" : "");
         return '<div class="' + rowClass + '" data-bid-id="' + b.id + '" data-bid-url="' + escapeHtml(b.url) + '">' +
@@ -3399,7 +3399,7 @@
         if (!preview || (!preview.title && !preview.description)) { previewEl.innerHTML = ""; return; }
         var emoji = ADVERTISE_PLATFORM_EMOJI[preview.platform] || ADVERTISE_PLATFORM_EMOJI.website;
         var label = ADVERTISE_PLATFORM_LABEL[preview.platform] || ADVERTISE_PLATFORM_LABEL.website;
-        var thumbHtml = brandThumbHtml(preview.photo_url, siteUrl, preview.platform, emoji);
+        var thumbHtml = brandThumbHtml(preview.photo_url, siteUrl, emoji);
         previewEl.innerHTML =
           '<div class="advertise-preview-card">' +
           thumbHtml +

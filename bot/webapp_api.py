@@ -605,8 +605,9 @@ AD_MIN_INCREMENT = 100_000
 
 _AD_PLATFORM_HOSTS = {
     "t.me": "telegram", "telegram.me": "telegram", "telegram.dog": "telegram",
-    "instagram.com": "instagram", "www.instagram.com": "instagram",
-    "youtube.com": "youtube", "www.youtube.com": "youtube", "youtu.be": "youtube",
+    "instagram.com": "instagram", "www.instagram.com": "instagram", "m.instagram.com": "instagram",
+    "instagr.am": "instagram",
+    "youtube.com": "youtube", "www.youtube.com": "youtube", "m.youtube.com": "youtube", "youtu.be": "youtube",
     "apps.apple.com": "appstore",
     "play.google.com": "googleplay",
 }
@@ -726,13 +727,23 @@ _BROWSER_HEADERS = {
 }
 
 
-async def _fetch_site_html(url: str) -> Optional[tuple[str, str]]:
+# Platformaga xos sarlavhalar: Instagram oddiy so'rovga login sahifasini
+# qaytaradi, Facebook'ning havola-preview botiga esa profil og:image'ini
+# beradi; YouTube Yevropa serverlariga cookie-rozilik sahifasini ko'rsatadi.
+_PLATFORM_HEADERS = {
+    "instagram": {"User-Agent": "facebookexternalhit/1.1 (+http://www.facebook.com/externalhit_uatext.php)"},
+    "youtube": {"Cookie": "SOCS=CAI; CONSENT=YES+1"},
+}
+
+
+async def _fetch_site_html(url: str, platform: str = "website") -> Optional[tuple[str, str]]:
     """Sahifa HTML'i va yakuniy (redirectdan keyingi) manzili."""
+    headers = {**_BROWSER_HEADERS, "Accept": "text/html,application/xhtml+xml"}
+    headers.update(_PLATFORM_HEADERS.get(platform, {}))
     try:
         async with aiohttp.ClientSession() as session:
             async with session.get(
-                url, timeout=aiohttp.ClientTimeout(total=6), max_redirects=5,
-                headers={**_BROWSER_HEADERS, "Accept": "text/html,application/xhtml+xml"},
+                url, timeout=aiohttp.ClientTimeout(total=6), max_redirects=5, headers=headers,
             ) as resp:
                 return await resp.text(errors="ignore"), str(resp.url)
     except Exception:
@@ -819,16 +830,62 @@ async def _resolve_brand_logo(host: str) -> Optional[str]:
     return logo
 
 
+def _valid_host(host: str) -> bool:
+    return bool(re.fullmatch(r"[a-z0-9-]+(\.[a-z0-9-]+)+", host)) and len(host) <= 253
+
+
+async def _resolve_logo_for_url(url: str) -> Optional[str]:
+    """Istalgan havola uchun logotip:
+    - Telegram/Instagram/YouTube/App Store/Google Play — sahifaning og:image'i
+      (profil/kanal/ilova rasmi), bo'lmasa platformaning o'z logotipi;
+    - oddiy sayt — redirectdan keyingi (bit.ly kabi qisqa havolalar ham)
+      yakuniy domen bo'yicha universal qidiruv."""
+    parsed = urlparse(url)
+    host = (parsed.hostname or "").lower()
+    if not _valid_host(host):
+        return None
+    platform = _derive_ad_platform(url)
+    key = "url:" + url
+    now = time.monotonic()
+    cached = _LOGO_CACHE.get(key)
+    if cached and now < cached[1]:
+        return cached[0]
+
+    logo: Optional[str] = None
+    fetched = await _fetch_site_html(url, platform) if await _resolve_is_public_host(host) else None
+    if platform != "website":
+        if fetched:
+            og_image = _absolute_image_url(fetched[1], _extract_meta(fetched[0], "og:image", "twitter:image"))
+            if og_image and await _probe_image(og_image):
+                logo = og_image
+        if not logo:
+            logo = await _resolve_brand_logo(host.removeprefix("www.").removeprefix("m."))
+    else:
+        final_host = (urlparse(fetched[1]).hostname or host).lower() if fetched else host
+        logo = await _resolve_brand_logo(final_host.removeprefix("www."))
+
+    if len(_LOGO_CACHE) >= _LOGO_CACHE_MAX:
+        _LOGO_CACHE.clear()
+    _LOGO_CACHE[key] = (logo, now + (86400 if logo else 3600))
+    return logo
+
+
 async def api_ads_logo(request: web.Request) -> web.Response:
-    """<img src="/api/ads/logo?host=click.uz"> — topilgan logotipga redirect,
-    topilmasa 404 (sahifa emoji ko'rsatadi). Img so'rovi sarlavha yubora
-    olmagani uchun autentifikatsiyasiz."""
-    host = (request.query.get("host") or "").strip().lower()
-    if host.startswith("www."):
-        host = host[4:]
-    if not re.fullmatch(r"[a-z0-9-]+(\.[a-z0-9-]+)+", host) or len(host) > 253:
-        raise web.HTTPBadRequest(text="invalid host")
-    logo = await _resolve_brand_logo(host)
+    """<img src="/api/ads/logo?url=..."> (yoki ?host=...) — topilgan
+    logotipga redirect, topilmasa 404 (sahifa emoji ko'rsatadi). Img so'rovi
+    sarlavha yubora olmagani uchun autentifikatsiyasiz."""
+    raw_url = (request.query.get("url") or "").strip()
+    if raw_url:
+        if not re.match(r"^https?://", raw_url, re.I):
+            raw_url = "https://" + raw_url
+        if len(raw_url) > 2000 or not _valid_host((urlparse(raw_url).hostname or "").lower()):
+            raise web.HTTPBadRequest(text="invalid url")
+        logo = await _resolve_logo_for_url(raw_url)
+    else:
+        host = (request.query.get("host") or "").strip().lower().removeprefix("www.")
+        if not _valid_host(host):
+            raise web.HTTPBadRequest(text="invalid host")
+        logo = await _resolve_brand_logo(host)
     if not logo:
         raise web.HTTPNotFound(headers={"Cache-Control": "public, max-age=3600"})
     raise web.HTTPFound(logo, headers={"Cache-Control": "public, max-age=86400"})
@@ -857,21 +914,35 @@ async def _fetch_ad_preview(bot: Bot, url: str) -> dict:
 
     if platform == "telegram":
         username = parsed.path.strip("/").split("/")[0]
-        if not username or username.startswith("+") or username.lower() == "joinchat":
+        if not username:
             raise _AdPreviewError(400, "invalid telegram link")
-        try:
-            chat = await bot.get_chat("@" + username)
-        except TelegramAPIError:
+        if not username.startswith("+") and username.lower() != "joinchat":
+            try:
+                chat = await bot.get_chat("@" + username)
+            except TelegramAPIError:
+                chat = None
+            if chat:
+                title = chat.title or " ".join(filter(None, [chat.first_name, chat.last_name])) or username
+                description = chat.description or chat.bio or ""
+                photo_url = f"/api/photo/{chat.photo.small_file_id}" if chat.photo else None
+                return {"platform": "telegram", "title": title, "description": description, "photo_url": photo_url}
+        # Bot ko'ra olmaydigan foydalanuvchilar, yopiq guruh taklif havolalari:
+        # ochiq t.me sahifasidagi nom, bio va avatar.
+        fetched = await _fetch_site_html(f"https://t.me/{parsed.path.strip('/')}", "telegram")
+        title = _extract_meta(fetched[0], "og:title") if fetched else ""
+        if not title:
             raise _AdPreviewError(404, "chat_not_found")
-        title = chat.title or " ".join(filter(None, [chat.first_name, chat.last_name])) or username
-        description = chat.description or chat.bio or ""
-        photo_url = f"/api/photo/{chat.photo.small_file_id}" if chat.photo else None
-        return {"platform": "telegram", "title": title, "description": description, "photo_url": photo_url}
+        return {
+            "platform": "telegram",
+            "title": title[:120],
+            "description": _extract_meta(fetched[0], "og:description")[:200],
+            "photo_url": _absolute_image_url(fetched[1], _extract_meta(fetched[0], "og:image")),
+        }
 
     if not await _resolve_is_public_host(host):
         raise _AdPreviewError(400, "host_not_allowed")
 
-    fetched = await _fetch_site_html(url)
+    fetched = await _fetch_site_html(url, platform)
     if not fetched:
         return {"platform": platform, "title": "", "description": "", "photo_url": None}
     html_text, base_url = fetched
