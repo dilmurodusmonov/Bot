@@ -1003,6 +1003,16 @@ def _is_content_page(url: str, html_text: str) -> bool:
 _LOGO_MAX_BYTES = 512 * 1024
 
 
+# Oxirgi muvaffaqiyatsiz rasm so'rovlarining sababi (tashxis uchun: /logo).
+_IMAGE_ERRORS: dict[str, str] = {}
+
+
+def _image_error(url: str, reason: str) -> None:
+    if len(_IMAGE_ERRORS) > 500:
+        _IMAGE_ERRORS.clear()
+    _IMAGE_ERRORS[url] = reason
+
+
 async def _fetch_image(url: str) -> Optional[tuple[bytes, str]]:
     """Rasmni yuklab oladi va haqiqiy rasm ekanini tekshiradi: 200 status,
     rasm turi (yoki .ico/PNG/JPEG/SVG imzosi), bo'sh emas. data: URI ham.
@@ -1023,6 +1033,7 @@ async def _fetch_image(url: str) -> Optional[tuple[bytes, str]]:
                 headers={**_BROWSER_HEADERS, "Accept": "image/avif,image/webp,image/png,image/svg+xml,image/*,*/*;q=0.8"},
             ) as resp:
                 if resp.status != 200:
+                    _image_error(url, f"HTTP {resp.status}")
                     return None
                 # content.read(n) faqat kelgan birinchi bo'lakni qaytaradi —
                 # rasm to'liq o'qiladi (aks holda buzuq rasm beriladi).
@@ -1030,13 +1041,16 @@ async def _fetch_image(url: str) -> Optional[tuple[bytes, str]]:
                 async for chunk in resp.content.iter_chunked(64 * 1024):
                     size += len(chunk)
                     if size > _LOGO_MAX_BYTES:
+                        _image_error(url, "juda katta")
                         return None
                     chunks.append(chunk)
                 body = b"".join(chunks)
                 ctype = resp.headers.get("Content-Type", "").split(";")[0].strip().lower()
-    except Exception:
+    except Exception as e:
+        _image_error(url, type(e).__name__)
         return None
     if len(body) < 100:
+        _image_error(url, f"juda kichik ({len(body)} bayt)")
         return None
     if ctype.startswith("image/"):
         return body, ctype
@@ -1049,6 +1063,7 @@ async def _fetch_image(url: str) -> Optional[tuple[bytes, str]]:
         return body, "image/jpeg"
     if head.startswith(b"<svg") or (head.startswith(b"<?xml") and b"<svg" in body[:1024].lower()):
         return body, "image/svg+xml"
+    _image_error(url, f"rasm emas ({ctype or 'turi yo`q'})")
     return None
 
 
@@ -1151,7 +1166,7 @@ async def _resolve_brand_logo(host: str, trace: Optional[list] = None) -> Option
     tried: list[str] = []
     for url in ordered:
         result = fetched[url] if url in fetched else await _fetch_image(url)
-        tried.append(f"{url[:80]}={'ok' if result else 'no'}")
+        tried.append(f"{url[:80]} = {'ok' if result else _IMAGE_ERRORS.get(url, 'no')}")
         if result:
             logo = result
             break
