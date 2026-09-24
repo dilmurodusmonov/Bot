@@ -1429,10 +1429,14 @@
   // Brend logotipi: saqlangan rasm, bo'lmasa (yoki yuklanmasa) serverdagi
   // universal qidiruv (/api/ads/logo — sayt ikonkalari, Google, DuckDuckGo),
   // u ham topmasa — platforma emojisi.
+  var BRAND_LOGO_VERSION = "2";
+
   function brandFaviconUrl(siteUrl) {
     try {
       var full = new URL(/^https?:\/\//i.test(siteUrl) ? siteUrl : "https://" + siteUrl);
-      return full.hostname ? "/api/ads/logo?url=" + encodeURIComponent(full.href) : null;
+      // v= — oldingi (buzuq/topilmagan) javoblar WebView keshida 24 soatgacha
+      // qolmasligi uchun; logotip qidiruvi o'zgarsa oshiriladi.
+      return full.hostname ? "/api/ads/logo?v=" + BRAND_LOGO_VERSION + "&url=" + encodeURIComponent(full.href) : null;
     } catch (e) {
       return null;
     }
