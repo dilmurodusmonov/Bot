@@ -897,8 +897,7 @@
       advertise_pay_sent: "Chek yuborildi! Admin tasdiqlagach reklamangiz reytingga chiqadi.",
       advertise_pay_unavailable: "To'lov hozircha sozlanmagan. Birozdan so'ng urinib ko'ring.",
       advertise_pending_label: "Tekshirilmoqda",
-      advertise_pending_new: "yangi reklama",
-      advertise_pending_raise: "taklifni oshirish",
+      advertise_pending_rank: "#{n} reyting uchun",
       settings_title: "Umumiy sozlamalar", language_label: "Til", notifications_label: "Bildirishnomalar",
       add_to_home_title: "Ehsonni bir urinishda oching",
       add_to_home_desc: "Ilovani bir zumda ochish uchun Ehsonni bosh ekranga qo'shing.",
@@ -985,8 +984,7 @@
       advertise_pay_sent: "Чек отправлен! После подтверждения админом реклама появится в рейтинге.",
       advertise_pay_unavailable: "Оплата пока не настроена. Попробуйте позже.",
       advertise_pending_label: "На проверке",
-      advertise_pending_new: "новая реклама",
-      advertise_pending_raise: "повышение ставки",
+      advertise_pending_rank: "за #{n} место в рейтинге",
       settings_title: "Общие настройки", language_label: "Язык", notifications_label: "Уведомления",
       add_to_home_title: "Открывайте Ehson в один клик",
       add_to_home_desc: "Чтобы открывать приложение мгновенно, добавьте Ehson на главный экран.",
@@ -1073,8 +1071,7 @@
       advertise_pay_sent: "Receipt sent! Your ad will appear in the rating after admin confirmation.",
       advertise_pay_unavailable: "Payment is not set up yet. Please try again later.",
       advertise_pending_label: "Under review",
-      advertise_pending_new: "new ad",
-      advertise_pending_raise: "bid raise",
+      advertise_pending_rank: "for rank #{n}",
       settings_title: "General settings", language_label: "Language", notifications_label: "Notifications",
       add_to_home_title: "Open Ehson in one tap",
       add_to_home_desc: "Add Ehson to your home screen to open the app instantly.",
@@ -1161,8 +1158,7 @@
       advertise_pay_sent: "Чек жіберілді! Әкімші растағаннан кейін жарнамаңыз рейтингке шығады.",
       advertise_pay_unavailable: "Төлем әзірге бапталмаған. Кейінірек көріңіз.",
       advertise_pending_label: "Тексерілуде",
-      advertise_pending_new: "жаңа жарнама",
-      advertise_pending_raise: "ұсынысты көтеру",
+      advertise_pending_rank: "рейтингтегі #{n} орын үшін",
       settings_title: "Жалпы баптаулар", language_label: "Тіл", notifications_label: "Хабарландырулар",
       add_to_home_title: "Ehson-ды бір басуда ашыңыз",
       add_to_home_desc: "Қосымшаны лезде ашу үшін Ehson-ды басты экранға қосыңыз.",
@@ -1241,8 +1237,7 @@
       advertise_pay_sent: "Чек фиристода шуд! Пас аз тасдиқи админ реклама ба рейтинг мебарояд.",
       advertise_pay_unavailable: "Пардохт ҳоло танзим нашудааст. Баъдтар кӯшиш кунед.",
       advertise_pending_label: "Дар санҷиш",
-      advertise_pending_new: "рекламаи нав",
-      advertise_pending_raise: "баланд бардоштани пешниҳод",
+      advertise_pending_rank: "барои ҷои #{n} дар рейтинг",
       settings_title: "Танзимоти умумӣ", language_label: "Забон", notifications_label: "Огоҳиномаҳо",
       add_to_home_title: "Ehson-ро бо як зарба кушоед",
       add_to_home_desc: "Барои дарҳол кушодани барнома, Ehson-ро ба экрани асосӣ илова кунед.",
@@ -1321,8 +1316,7 @@
       advertise_pay_sent: "Чек жөнөтүлдү! Админ тастыктагандан кийин жарнамаңыз рейтингге чыгат.",
       advertise_pay_unavailable: "Төлөм азырынча жөндөлгөн эмес. Кийинчерээк аракет кылыңыз.",
       advertise_pending_label: "Текшерилүүдө",
-      advertise_pending_new: "жаңы жарнама",
-      advertise_pending_raise: "сунушту көтөрүү",
+      advertise_pending_rank: "рейтингдеги #{n} орун үчүн",
       settings_title: "Жалпы жөндөөлөр", language_label: "Тил", notifications_label: "Билдирүүлөр",
       add_to_home_title: "Ehson-ду бир басуу менен ачыңыз",
       add_to_home_desc: "Колдонмону дароо ачуу үчүн Ehson-ду башкы экранга кошуңуз.",
@@ -1401,8 +1395,7 @@
       advertise_pay_sent: "Çek iberildi! Admin tassyklandan soň mahabatyňyz reýtinge çykar.",
       advertise_pay_unavailable: "Töleg entek sazlanmady. Soňrak synanyşyň.",
       advertise_pending_label: "Barlanýar",
-      advertise_pending_new: "täze mahabat",
-      advertise_pending_raise: "teklibi ýokarlandyrmak",
+      advertise_pending_rank: "reýtingde #{n} orun üçin",
       settings_title: "Umumy sazlamalar", language_label: "Dil", notifications_label: "Bildirişler",
       add_to_home_title: "Ehson-y bir basyşda açyň",
       add_to_home_desc: "Programmany haýal etmän açmak üçin Ehson-y baş ekrana goşuň.",
@@ -3313,7 +3306,7 @@
         ? '<div class="advertise-pending">' + data.my_pending.map(function (p) {
             return '<div class="advertise-pending-row">⏳ <b>' + escapeHtml(tr("advertise_pending_label")) + "</b> · " +
               escapeHtml(p.brand_name) + " — " + escapeHtml(formatSom(p.amount)) + " (" +
-              escapeHtml(tr(p.kind === "raise" ? "advertise_pending_raise" : "advertise_pending_new")) + ")</div>";
+              escapeHtml(trf("advertise_pending_rank", { n: String(p.rank) })) + ")</div>";
           }).join("") + "</div>"
         : "";
 

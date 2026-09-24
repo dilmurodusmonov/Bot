@@ -1035,10 +1035,21 @@ async def api_ads_leaderboard(request: web.Request) -> web.Response:
             "holder": AD_CARD_HOLDER,
         },
         "my_pending": [
-            {"kind": p["kind"], "amount": p["amount"], "brand_name": p["brand_name"]}
+            {
+                "kind": p["kind"], "amount": p["amount"], "brand_name": p["brand_name"],
+                "rank": _projected_ad_rank(bids, p),
+            }
             for p in await get_pending_ad_payments(telegram_id)
         ],
     })
+
+
+def _projected_ad_rank(approved_bids: list[dict], pending: dict) -> int:
+    """To'lov tasdiqlansa reklama nechanchi o'ringa chiqadi — "#N reyting
+    uchun". Teng summada avvalgi takliflar oldinda turadi."""
+    target = pending["amount"] if pending["kind"] == "new" else pending["bid_amount"] + pending["amount"]
+    ahead = sum(1 for b in approved_bids if b["id"] != pending["bid_id"] and b["bid_amount"] >= target)
+    return ahead + 1
 
 
 def _ad_payments_enabled() -> bool:
