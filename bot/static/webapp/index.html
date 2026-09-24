@@ -408,12 +408,16 @@
     border-bottom: 1.5px dashed #D2551F; background: transparent; color: #D2551F;
     font: inherit; font-size: min(25px, 6.8vw); font-weight: 600; text-align: center; outline: none;
   }
+  /* "Reytingni sindirish" tugmasidek: ingichka to'q chegara va pastida 3D qirra. */
   .advertise-top-plus {
-    display: inline-flex; width: 24px; height: 24px; border-radius: 50%; background: #D2551F; color: #fff;
+    display: inline-flex; width: 24px; height: 24px; border-radius: 50%; color: #fff;
+    background: linear-gradient(135deg, var(--accent1), var(--accent2));
+    border: 1px solid #D2453F; box-shadow: 0 2px 0 #C23A3F;
     align-items: center; justify-content: center; vertical-align: middle; margin-left: 6px;
-    border: none; padding: 0; cursor: pointer; -webkit-tap-highlight-color: transparent;
+    padding: 0; cursor: pointer; -webkit-tap-highlight-color: transparent;
+    position: relative; top: -1px;
   }
-  .advertise-top-plus:active { transform: scale(0.9); }
+  .advertise-top-plus:active { transform: translateY(2px); box-shadow: 0 0 0 #C23A3F; }
   /* To'ldirilmagan maydon: qizg'ish rangda yonib-o'chadi, to'ldirilguncha qizil chegara. */
   @keyframes advertise-field-warn {
     0%, 100% { border-color: #E5484D; box-shadow: 0 0 0 0 rgba(229, 72, 77, 0); }
@@ -430,7 +434,7 @@
   .advertise-field-warn {
     border-color: #E5484D !important; animation: advertise-field-warn 0.6s ease-in-out 4;
   }
-  .advertise-top-plus svg { width: 12px; height: 12px; }
+  .advertise-top-plus svg { width: 12px; height: 12px; stroke-width: 3; }
   .advertise-rules-hint { color: var(--hint); font-size: 10.5px; margin: 0 6px 14px; line-height: 1.4; text-align: center; }
   .advertise-input-icon-wrap { position: relative; margin-bottom: 10px; }
   .advertise-input-icon-wrap .advertise-url-input {
