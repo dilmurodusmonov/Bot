@@ -614,7 +614,7 @@ _AD_PLATFORM_HOSTS = {
     "play.google.com": "googleplay",
 }
 
-_AD_CATEGORY_KEYS = {"tech", "trade", "people", "education", "marketing", "lifestyle", "other"}
+_AD_CATEGORY_KEYS = {"tech", "fintech", "ai", "trade", "people", "education", "marketing", "lifestyle", "other"}
 
 
 async def _resolve_is_public_host(hostname: str) -> bool:
