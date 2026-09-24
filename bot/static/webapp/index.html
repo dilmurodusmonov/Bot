@@ -401,9 +401,26 @@
     border-bottom: 1.5px dashed #D2551F; padding-bottom: 3px;
   }
   .advertise-top-amount-unit { font-size: min(16px, 4.3vw); font-weight: 600; color: #D2551F; margin-left: 3px; }
+  .advertise-top-amount { cursor: pointer; }
+  /* Summani qo'lda kiritish (N,N mln): uziq chiziqli summaga bosilganda. */
+  .advertise-top-amount-input {
+    width: 4ch; min-width: 2.5ch; padding: 0 0 3px; margin-left: 6px; border: none; border-radius: 0;
+    border-bottom: 1.5px dashed #D2551F; background: transparent; color: #D2551F;
+    font: inherit; font-size: min(25px, 6.8vw); font-weight: 600; text-align: center; outline: none;
+  }
   .advertise-top-plus {
     display: inline-flex; width: 24px; height: 24px; border-radius: 50%; background: #D2551F; color: #fff;
     align-items: center; justify-content: center; vertical-align: middle; margin-left: 6px;
+    border: none; padding: 0; cursor: pointer; -webkit-tap-highlight-color: transparent;
+  }
+  .advertise-top-plus:active { transform: scale(0.9); }
+  /* To'ldirilmagan maydon: qizg'ish rangda yonib-o'chadi, to'ldirilguncha qizil chegara. */
+  @keyframes advertise-field-warn {
+    0%, 100% { border-color: #E5484D; box-shadow: 0 0 0 0 rgba(229, 72, 77, 0); }
+    50% { border-color: #E5484D; box-shadow: 0 0 0 4px rgba(229, 72, 77, 0.22); background-color: #FFF1F1; }
+  }
+  .advertise-field-warn {
+    border-color: #E5484D !important; animation: advertise-field-warn 0.6s ease-in-out 4;
   }
   .advertise-top-plus svg { width: 12px; height: 12px; }
   .advertise-rules-hint { color: var(--hint); font-size: 10.5px; margin: 0 6px 14px; line-height: 1.4; text-align: center; }
@@ -3177,6 +3194,21 @@
         document.getElementById("advertise-top-amount-unit").textContent = parts.unit;
       }
 
+      // Qo'lda kiritilgan/oshirilgan summa: reytingdagi o'rni hisoblanadi
+      // (teng summali taklif oldinda qoladi).
+      var bidTargetManual = false;
+      function projectedRank(amount) {
+        return 1 + (data.bids || []).filter(function (b) { return b.bid_amount >= amount; }).length;
+      }
+      function setManualBid(amount) {
+        amount = Math.max(data.min_starting_bid, Math.min(Math.round(amount / 10000) * 10000, 100000000000));
+        bidTargetManual = true;
+        setBidTarget(projectedRank(amount), amount);
+      }
+      function mlnText(amount) {
+        return (amount / 1000000).toFixed(2).replace(/0+$/, "").replace(/\.$/, "").replace(".", ",");
+      }
+
       // To'lov sahifasiga o'tish: kartaga o'tkazma + chek, admin tasdiqlaydi.
       function openAdPayment(params) {
         if (!data.payment || !data.payment.enabled) { showError(tr("advertise_pay_unavailable")); return; }
@@ -3215,7 +3247,8 @@
         data.next_top_bid = fresh.next_top_bid;
         data.min_increment = fresh.min_increment;
         data.my_pending = fresh.my_pending || [];
-        if (bidTargetRank === 1) setBidTarget(1, fresh.next_top_bid);
+        if (bidTargetManual) setBidTarget(projectedRank(bidTargetAmount), bidTargetAmount);
+        else if (bidTargetRank === 1) setBidTarget(1, fresh.next_top_bid);
         renderList();
         var wrap = document.getElementById("advertise-pending-wrap");
         if (wrap) wrap.innerHTML = pendingBlockHtml(data.my_pending);
@@ -3373,6 +3406,7 @@
         });
         Array.prototype.forEach.call(listEl.querySelectorAll("[data-take-rank]"), function (btn) {
           btn.addEventListener("click", function () {
+            bidTargetManual = false;
             setBidTarget(Number(btn.getAttribute("data-take-rank")), Number(btn.getAttribute("data-take-amount")));
             var heroEl = document.querySelector(".advertise-hero-card");
             if (heroEl) heroEl.scrollIntoView({ behavior: "smooth", block: "start" });
@@ -3448,7 +3482,7 @@
         '<span class="advertise-top-label" id="advertise-top-label">' + escapeHtml(tr("advertise_top_prefix")) + "</span>" +
         '<span class="advertise-top-amount" id="advertise-top-amount">' + escapeHtml(topAmountParts.value) + "</span>" +
         '<span class="advertise-top-amount-unit" id="advertise-top-amount-unit">' + escapeHtml(topAmountParts.unit) + "</span>" +
-        '<span class="advertise-top-plus">' + ICONS.plus + "</span>" +
+        '<button type="button" class="advertise-top-plus" id="advertise-top-plus" aria-label="+">' + ICONS.plus + "</button>" +
         "</div>" +
         '<div class="advertise-rules-hint">' + rulesHtml + "</div>" +
         '<div class="advertise-input-icon-wrap">' +
@@ -3520,8 +3554,72 @@
           var chosen = ADVERTISE_CATEGORIES.filter(function (c) { return c.key === selectedAdvertiseCategory; })[0];
           advertiseCatTriggerLabel.textContent = chosen ? chosen.label : tr("advertise_category_placeholder");
           advertiseCatTrigger.classList.toggle("has-value", !!chosen);
+          if (chosen) advertiseCatTrigger.classList.remove("advertise-field-warn");
           advertiseCatOverlay.hidden = true;
         });
+      });
+
+      // Uziq chiziqli summaga bosilganda — N,N (mln so'm) ko'rinishida kiritish.
+      var topAmountEl = document.getElementById("advertise-top-amount");
+      var topAmountUnitEl = document.getElementById("advertise-top-amount-unit");
+      function startAmountEdit() {
+        if (document.getElementById("advertise-top-amount-input")) return;
+        var input = document.createElement("input");
+        input.id = "advertise-top-amount-input";
+        input.className = "advertise-top-amount-input";
+        input.type = "text";
+        input.inputMode = "decimal";
+        input.autocomplete = "off";
+        input.value = mlnText(bidTargetAmount);
+        function fit() { input.style.width = Math.max(2, input.value.length + 0.3) + "ch"; }
+        fit();
+        topAmountEl.style.display = "none";
+        topAmountEl.parentNode.insertBefore(input, topAmountEl.nextSibling);
+        topAmountUnitEl.textContent = "mln so'm";
+        input.addEventListener("input", function () {
+          // Faqat raqam va bitta vergul, verguldan keyin 2 ta raqam.
+          var v = input.value.replace(/\./g, ",").replace(/[^0-9,]/g, "");
+          var i = v.indexOf(",");
+          if (i !== -1) v = v.slice(0, i + 1) + v.slice(i + 1).replace(/,/g, "").slice(0, 2);
+          v = v.replace(/^0+(?=\d)/, "").slice(0, 8);
+          if (v !== input.value) input.value = v;
+          fit();
+          // Yozish davomida o'rin ham yangilanadi ("2-o'rin uchun").
+          var typed = parseFloat(v.replace(",", ".")) * 1000000;
+          if (isFinite(typed) && typed >= data.min_starting_bid) {
+            var r = projectedRank(Math.round(typed / 10000) * 10000);
+            document.getElementById("advertise-top-label").textContent =
+              r === 1 ? tr("advertise_top_prefix") : trf("advertise_rank_prefix", { n: String(r) });
+          }
+        });
+        var done = false;
+        function commit() {
+          if (done) return;
+          done = true;
+          var mln = parseFloat(input.value.replace(",", "."));
+          input.remove();
+          topAmountEl.style.display = "";
+          if (isFinite(mln) && mln > 0) {
+            var amount = mln * 1000000;
+            if (amount < data.min_starting_bid) showSnackbar(rulesHtml.replace(/<[^>]+>/g, ""));
+            setManualBid(amount);
+          } else {
+            setBidTarget(bidTargetRank, bidTargetAmount);
+          }
+        }
+        input.addEventListener("blur", commit);
+        input.addEventListener("keydown", function (e) { if (e.key === "Enter") input.blur(); });
+        input.focus();
+        input.select();
+      }
+      topAmountEl.addEventListener("click", startAmountEdit);
+      // "+" — summa 100 ming so'mga oshadi.
+      document.getElementById("advertise-top-plus").addEventListener("click", function (e) {
+        e.preventDefault();
+        var editing = document.getElementById("advertise-top-amount-input");
+        if (editing) editing.blur();
+        setManualBid(bidTargetAmount + data.min_increment);
+        if (tg && tg.HapticFeedback && tg.HapticFeedback.selectionChanged) tg.HapticFeedback.selectionChanged();
       });
 
       var lastAdvertisePreview = null;
@@ -3578,6 +3676,7 @@
         if (advertisePreviewTimer) clearTimeout(advertisePreviewTimer);
         var urlInput = document.getElementById("advertise-url-input");
         var value = urlInput.value.trim();
+        if (value) urlInput.classList.remove("advertise-field-warn");
         lastAdvertisePreview = null;
         lastAdvertisePreviewUrl = "";
         if (!value) { renderAdvertisePreview(null); return; }
@@ -3606,8 +3705,22 @@
       });
 
       document.getElementById("advertise-submit-btn").addEventListener("click", function () {
-        var url = document.getElementById("advertise-url-input").value.trim();
-        if (!url) { showError(tr("fill_all")); return; }
+        var urlInputEl = document.getElementById("advertise-url-input");
+        var url = urlInputEl.value.trim();
+        // To'ldirilmagan maydonlar qizg'ish yonib-o'chadi; hammasi to'lganda to'lovga.
+        var missing = [];
+        if (!url) missing.push(urlInputEl);
+        if (!selectedAdvertiseCategory) missing.push(advertiseCatTrigger);
+        if (missing.length) {
+          missing.forEach(function (el) {
+            el.classList.remove("advertise-field-warn");
+            void el.offsetWidth;   // animatsiya qayta boshlanishi uchun
+            el.classList.add("advertise-field-warn");
+          });
+          missing[0].scrollIntoView({ behavior: "smooth", block: "center" });
+          if (tg && tg.HapticFeedback && tg.HapticFeedback.notificationOccurred) tg.HapticFeedback.notificationOccurred("error");
+          return;
+        }
         var bidAmount = bidTargetAmount;
         var hasFreshPreview = lastAdvertisePreviewUrl === url && lastAdvertisePreview;
         var brand = (hasFreshPreview && lastAdvertisePreview.title) ? lastAdvertisePreview.title : deriveBrandFromUrl(url);
