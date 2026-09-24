@@ -239,6 +239,9 @@ async def _migrate_ad_payments(conn: asyncpg.Connection) -> None:
            )"""
     )
     await conn.execute("ALTER TABLE ad_payments ADD COLUMN IF NOT EXISTS reject_reason TEXT")
+    await conn.execute(
+        "ALTER TABLE ad_payments ADD COLUMN IF NOT EXISTS rejection_seen BOOLEAN NOT NULL DEFAULT FALSE"
+    )
 
 
 async def _migrate_ad_bids_clicks(conn: asyncpg.Connection) -> None:
@@ -718,6 +721,30 @@ async def get_pending_ad_payments(telegram_id: int) -> list[dict[str, Any]]:
         telegram_id,
     )
     return [dict(row) for row in rows]
+
+
+async def get_recent_rejected_ad_payments(telegram_id: int) -> list[dict[str, Any]]:
+    """Oxirgi 7 kunda rad etilgan, foydalanuvchi hali yopmagan to'lovlar —
+    ilovada "Rad etildi · Sabab" bloki uchun."""
+    rows = await _get_pool().fetch(
+        """SELECT p.id, p.kind, p.amount, p.reject_reason, b.brand_name
+           FROM ad_payments p JOIN ad_bids b ON b.id = p.bid_id
+           WHERE p.telegram_id = $1 AND p.status = 'rejected' AND NOT p.rejection_seen
+             AND p.decided_at > now() - interval '7 days'
+           ORDER BY p.decided_at DESC
+           LIMIT 5""",
+        telegram_id,
+    )
+    return [dict(row) for row in rows]
+
+
+async def dismiss_ad_payment_rejection(payment_id: int, telegram_id: int) -> bool:
+    result = await _get_pool().execute(
+        """UPDATE ad_payments SET rejection_seen = TRUE
+           WHERE id = $1 AND telegram_id = $2 AND status = 'rejected'""",
+        payment_id, telegram_id,
+    )
+    return result != "UPDATE 0"
 
 
 async def increment_ad_bid_clicks(bid_id: int) -> Optional[int]:

@@ -576,6 +576,17 @@
     .advertise-pending-icon { animation: none; }
   }
   .advertise-pending-row + .advertise-pending-row { margin-top: 4px; }
+  /* Rad etilgan to'lov: sabab bilan, × bilan yopiladi. */
+  .advertise-rejected {
+    position: relative; margin: 12px 6px 0; padding: 10px 34px 10px 12px; border-radius: 12px;
+    background: #FFF1F0; border: 1.5px solid #F3B7B4; color: #3A3A3C; font-size: 12.5px; line-height: 1.4;
+  }
+  .advertise-rejected b { color: #D2453F; }
+  .advertise-rejected-reason { margin-top: 3px; color: #1C1C1E; font-weight: 500; }
+  .advertise-rejected-close {
+    position: absolute; top: 6px; right: 6px; width: 24px; height: 24px; border-radius: 50%;
+    border: none; background: none; color: #8E8E93; font-size: 18px; line-height: 24px; padding: 0; cursor: pointer;
+  }
   /* To'lov (chek) sahifasi */
   .adpay { padding: 8px 6px 20px; }
   .adpay-amount-label { text-align: center; color: var(--hint); font-size: 12.5px; }
@@ -914,6 +925,7 @@
       advertise_pay_unavailable: "To'lov hozircha sozlanmagan. Birozdan so'ng urinib ko'ring.",
       advertise_pending_label: "Tekshirilmoqda",
       advertise_pending_rank: "#{n} reyting uchun",
+      advertise_rejected_label: "Rad etildi", advertise_rejected_reason: "Sabab: {reason}", advertise_rejected_close: "Yopish",
       settings_title: "Umumiy sozlamalar", language_label: "Til", notifications_label: "Bildirishnomalar",
       add_to_home_title: "Ehsonni bir urinishda oching",
       add_to_home_desc: "Ilovani bir zumda ochish uchun Ehsonni bosh ekranga qo'shing.",
@@ -1001,6 +1013,7 @@
       advertise_pay_unavailable: "Оплата пока не настроена. Попробуйте позже.",
       advertise_pending_label: "На проверке",
       advertise_pending_rank: "за #{n} место в рейтинге",
+      advertise_rejected_label: "Отклонено", advertise_rejected_reason: "Причина: {reason}", advertise_rejected_close: "Закрыть",
       settings_title: "Общие настройки", language_label: "Язык", notifications_label: "Уведомления",
       add_to_home_title: "Открывайте Ehson в один клик",
       add_to_home_desc: "Чтобы открывать приложение мгновенно, добавьте Ehson на главный экран.",
@@ -1088,6 +1101,7 @@
       advertise_pay_unavailable: "Payment is not set up yet. Please try again later.",
       advertise_pending_label: "Under review",
       advertise_pending_rank: "for rank #{n}",
+      advertise_rejected_label: "Rejected", advertise_rejected_reason: "Reason: {reason}", advertise_rejected_close: "Close",
       settings_title: "General settings", language_label: "Language", notifications_label: "Notifications",
       add_to_home_title: "Open Ehson in one tap",
       add_to_home_desc: "Add Ehson to your home screen to open the app instantly.",
@@ -1175,6 +1189,7 @@
       advertise_pay_unavailable: "Төлем әзірге бапталмаған. Кейінірек көріңіз.",
       advertise_pending_label: "Тексерілуде",
       advertise_pending_rank: "рейтингтегі #{n} орын үшін",
+      advertise_rejected_label: "Қабылданбады", advertise_rejected_reason: "Себебі: {reason}", advertise_rejected_close: "Жабу",
       settings_title: "Жалпы баптаулар", language_label: "Тіл", notifications_label: "Хабарландырулар",
       add_to_home_title: "Ehson-ды бір басуда ашыңыз",
       add_to_home_desc: "Қосымшаны лезде ашу үшін Ehson-ды басты экранға қосыңыз.",
@@ -1254,6 +1269,7 @@
       advertise_pay_unavailable: "Пардохт ҳоло танзим нашудааст. Баъдтар кӯшиш кунед.",
       advertise_pending_label: "Дар санҷиш",
       advertise_pending_rank: "барои ҷои #{n} дар рейтинг",
+      advertise_rejected_label: "Рад шуд", advertise_rejected_reason: "Сабаб: {reason}", advertise_rejected_close: "Пӯшидан",
       settings_title: "Танзимоти умумӣ", language_label: "Забон", notifications_label: "Огоҳиномаҳо",
       add_to_home_title: "Ehson-ро бо як зарба кушоед",
       add_to_home_desc: "Барои дарҳол кушодани барнома, Ehson-ро ба экрани асосӣ илова кунед.",
@@ -1333,6 +1349,7 @@
       advertise_pay_unavailable: "Төлөм азырынча жөндөлгөн эмес. Кийинчерээк аракет кылыңыз.",
       advertise_pending_label: "Текшерилүүдө",
       advertise_pending_rank: "рейтингдеги #{n} орун үчүн",
+      advertise_rejected_label: "Четке кагылды", advertise_rejected_reason: "Себеби: {reason}", advertise_rejected_close: "Жабуу",
       settings_title: "Жалпы жөндөөлөр", language_label: "Тил", notifications_label: "Билдирүүлөр",
       add_to_home_title: "Ehson-ду бир басуу менен ачыңыз",
       add_to_home_desc: "Колдонмону дароо ачуу үчүн Ehson-ду башкы экранга кошуңуз.",
@@ -1412,6 +1429,7 @@
       advertise_pay_unavailable: "Töleg entek sazlanmady. Soňrak synanyşyň.",
       advertise_pending_label: "Barlanýar",
       advertise_pending_rank: "reýtingde #{n} orun üçin",
+      advertise_rejected_label: "Ret edildi", advertise_rejected_reason: "Sebäbi: {reason}", advertise_rejected_close: "Ýapmak",
       settings_title: "Umumy sazlamalar", language_label: "Dil", notifications_label: "Bildirişler",
       add_to_home_title: "Ehson-y bir basyşda açyň",
       add_to_home_desc: "Programmany haýal etmän açmak üçin Ehson-y baş ekrana goşuň.",
@@ -3143,6 +3161,23 @@
 
       // "Yangilash": reyting ro'yxati serverdan qayta olinadi; tanlangan
       // kategoriya va sahifa saqlanadi, TOP-1 narxi ham yangilanadi.
+      function rejectedBlockHtml(list) {
+        return (list || []).map(function (r) {
+          return '<div class="advertise-rejected">' +
+            '<button type="button" class="advertise-rejected-close" data-dismiss-rejected="' + r.id + '" aria-label="' +
+            escapeHtml(tr("advertise_rejected_close")) + '">×</button>' +
+            "<div>❌ <b>" + escapeHtml(tr("advertise_rejected_label")) + "</b> · " +
+            escapeHtml(r.brand_name) + " — " + escapeHtml(formatSom(r.amount)) + "</div>" +
+            (r.reason ? '<div class="advertise-rejected-reason">' + escapeHtml(trf("advertise_rejected_reason", { reason: r.reason })) + "</div>" : "") +
+            "</div>";
+        }).join("");
+      }
+
+      function renderRejectedBlock() {
+        var wrap = document.getElementById("advertise-rejected-wrap");
+        if (wrap) wrap.innerHTML = rejectedBlockHtml(data.my_rejected);
+      }
+
       function applyFreshLeaderboard(fresh) {
         data.bids = fresh.bids;
         data.next_top_bid = fresh.next_top_bid;
@@ -3152,6 +3187,8 @@
         renderList();
         var wrap = document.getElementById("advertise-pending-wrap");
         if (wrap) wrap.innerHTML = pendingBlockHtml(data.my_pending);
+        data.my_rejected = fresh.my_rejected || [];
+        renderRejectedBlock();
       }
 
       function pendingKey(list) {
@@ -3398,6 +3435,7 @@
         '<div class="advertise-url-hint">' + escapeHtml(tr("advertise_url_hint")) + "</div>" +
         '<button class="card-btn" id="advertise-submit-btn">' + tr("advertise_submit") + "</button>" +
         '<div id="advertise-pending-wrap">' + pendingBlockHtml(data.my_pending) + "</div>" +
+        '<div id="advertise-rejected-wrap">' + rejectedBlockHtml(data.my_rejected) + "</div>" +
         "</div>" +
         '<div class="advertise-filter-tabs">' + filterTabsHtml + "</div>" +
         '<div id="advertise-list"></div>' +
@@ -3405,6 +3443,16 @@
 
       renderList();
       watchPendingPayments();
+
+      // "Rad etildi" blokini yopish: serverda ko'rildi deb belgilanadi.
+      document.getElementById("advertise-rejected-wrap").addEventListener("click", function (e) {
+        var btn = e.target.closest("[data-dismiss-rejected]");
+        if (!btn) return;
+        var id = Number(btn.getAttribute("data-dismiss-rejected"));
+        data.my_rejected = (data.my_rejected || []).filter(function (r) { return r.id !== id; });
+        renderRejectedBlock();
+        api("POST", "/api/ads/payments/" + id + "/dismiss").catch(function () {});
+      });
 
       document.querySelectorAll("[data-filter-cat]").forEach(function (tab) {
         tab.addEventListener("click", function () {
