@@ -1214,11 +1214,19 @@ async def _resolve_brand_logo(host: str, trace: Optional[list] = None) -> Option
         small_icons.append(f"{origin}/favicon.ico")
 
     ordered = big_icons[:3] + manifest + (touch_icons if site_allowed else []) + fallbacks + small_icons[:3]
-    # Oxirgi chora: sayt bizni to'sgan bo'lsa — Microlink (haqiqiy brauzer).
+    # Sayt bizni to'sgan bo'lsa — Microlink (haqiqiy brauzer). Sahifadagi
+    # logotip topilsa Google/DuckDuckGo ikonkasidan oldin; sayt faviconi
+    # Next.js standarti bo'lsa, ular (o'sha uchburchak) umuman olinmaydi.
     if site_allowed and not html_result:
         microlink = await _fetch_microlink(origin + "/")
-        if microlink and microlink.get("logo"):
-            ordered.append(microlink["logo"])
+        if microlink:
+            if microlink.get("favicon_default"):
+                ordered = [u for u in ordered if u not in fallbacks]
+            if microlink.get("logo"):
+                if microlink.get("logo_strong"):
+                    ordered.insert(len(touch_icons), microlink["logo"])
+                else:
+                    ordered.append(microlink["logo"])
     logo: Optional[tuple[bytes, str]] = None
     tried: list[str] = []
     for url in ordered:
@@ -1343,8 +1351,49 @@ _MICROLINK_LOGO_RULES = "&" + "&".join(
          'img[class*="logo" i], img[src*="logo" i], img[alt*="logo" i], header a[href="/"] img'),
         ("data.brandLogo.attr", "src"),
         ("data.brandLogo.type", "url"),
+        # Logotip ko'pincha sahifaga to'g'ridan-to'g'ri chizilgan <svg> bo'ladi.
+        ("data.svgLogo.selector",
+         '[class*="logo" i]:has(svg), [id*="logo" i]:has(svg), '
+         'header a[href="/"]:has(svg), a[href="/"]:has(svg)'),
+        ("data.svgLogo.attr", "html"),
+        # Barcha rasmlar: fayl nomida brend nomi bor rasm (masalan /img/islom.png).
+        ("data.imgs.selectorAll", "img"),
+        ("data.imgs.attr", "src"),
     )
 )
+
+_NOT_LOGO_IMG_RE = re.compile(r"banner|header_|/bg|background|slide|cover|poster|hero", re.I)
+
+
+def _svg_data_uri(markup: Any) -> Optional[str]:
+    """Sahifadagi <svg> logotipni data: URI'ga aylantiradi (/api/ads/logo beradi)."""
+    if not isinstance(markup, str):
+        return None
+    m = re.search(r"<svg\b[\s\S]*?</svg>", markup, re.I)
+    if not m:
+        return None
+    svg = m.group(0)
+    if len(svg) > 200_000 or not re.search(r"<(path|circle|rect|polygon|ellipse|text|image)\b", svg, re.I):
+        return None   # bo'sh yoki faqat <use href="#sprite"> — alohida ko'rsatib bo'lmaydi
+    if "xmlns=" not in svg[:300]:
+        svg = svg.replace("<svg", '<svg xmlns="http://www.w3.org/2000/svg"', 1)
+    return "data:image/svg+xml;base64," + base64.b64encode(svg.encode()).decode()
+
+
+def _brand_named_img(imgs: Any, page_url: str) -> Optional[str]:
+    """Fayl nomida sayt nomi (islom.uz → "islom") bo'lgan birinchi rasm."""
+    host = (urlparse(page_url).hostname or "").lower().removeprefix("www.")
+    label = host.split(".")[0]
+    if len(label) < 3:
+        return None
+    for src in imgs if isinstance(imgs, list) else [imgs]:
+        if not isinstance(src, str) or not src.strip() or src.startswith("data:"):
+            continue
+        full = urljoin(page_url, src.strip())
+        name = urlparse(full).path.rsplit("/", 1)[-1].lower()
+        if label in name and not _NOT_LOGO_IMG_RE.search(name) and not _is_default_favicon(full):
+            return full
+    return None
 
 
 async def _fetch_microlink(url: str) -> Optional[dict]:
@@ -1382,29 +1431,38 @@ async def _fetch_microlink(url: str) -> Optional[dict]:
             image_url = image.get("url") or None
             iw, ih = image.get("width") or 0, image.get("height") or 0
             wide_image = bool(iw and ih and iw / ih > 2)   # keng banner — logotip emas
+            page_url = str(data.get("url") or url)
             header_logo = data.get("brandLogo")
             if isinstance(header_logo, dict):
                 header_logo = header_logo.get("url")
             header_logo = header_logo.strip() if isinstance(header_logo, str) else ""
             if header_logo and not header_logo.startswith("data:"):
-                header_logo = urljoin(str(data.get("url") or url), header_logo)
+                header_logo = urljoin(page_url, header_logo)
             if not header_logo.startswith(("http://", "https://")) or _is_default_favicon(header_logo):
                 header_logo = None
+            page_logo = (header_logo or _svg_data_uri(data.get("svgLogo"))
+                         or _brand_named_img(data.get("imgs"), page_url))
             if not weak_logo:
                 best_logo = logo_url
             else:
                 # Keng banner logotip sifatida olinmaydi — u holda kartadagi
                 # rasm /api/ads/logo universal qidiruvidan (Google ikonkasi...).
-                best_logo = header_logo or (None if wide_image else image_url) or logo_url
+                best_logo = page_logo or (None if wide_image else image_url) or logo_url
             result = {
                 "title": title,
                 "description": str(data.get("description") or "").strip(),
                 "logo": best_logo,
+                "logo_strong": bool(not weak_logo or page_logo),
+                # Sayt faviconi Next.js standarti — Google/DuckDuckGo ham shu
+                # uchburchakni qaytaradi, ular ishlatilmaydi.
+                "favicon_default": _is_default_favicon(logo.get("url")),
                 "image": image_url,
                 "image_wide": wide_image,
                 "diag": (
                     f"microlink: logo={str(logo.get('url') or '-')[:60]} ({logo.get('width')}px) · "
-                    f"sarlavha_logo={str(data.get('brandLogo') or '-')[:60]} · "
+                    f"sarlavha_logo={str(header_logo or '-')[:60]} · "
+                    f"svg={'bor' if _svg_data_uri(data.get('svgLogo')) else 'yoq'} · "
+                    f"rasmlar={len(data['imgs']) if isinstance(data.get('imgs'), list) else 0} · "
                     f"image={str(image_url or '-')[:60]} ({iw}x{ih}) → {str(best_logo or '-')[:60]}"
                 ),
             }
@@ -1426,7 +1484,10 @@ def _microlink_trace(result: Optional[dict], cached: bool = False) -> None:
 def _microlink_photo(microlink: dict) -> Optional[str]:
     """Kartadagi rasm: logotip, bo'lmasa keng bo'lmagan asosiy rasm. None —
     frontend /api/ads/logo universal qidiruvini ishlatadi."""
-    return microlink["logo"] or (None if microlink.get("image_wide") else microlink["image"])
+    logo = microlink["logo"]
+    if logo and logo.startswith("data:"):
+        return None   # sahifadagi <svg> — /api/ads/logo orqali beriladi
+    return logo or (None if microlink.get("image_wide") else microlink["image"])
 
 
 class _AdPreviewError(Exception):
