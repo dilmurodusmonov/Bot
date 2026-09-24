@@ -10,7 +10,7 @@ import time
 import uuid
 from html import escape, unescape
 from typing import Any, Optional
-from urllib.parse import urljoin, urlparse
+from urllib.parse import quote, urljoin, urlparse
 
 import aiohttp
 from aiogram import Bot
@@ -798,6 +798,8 @@ _PREVIEW_BOT_AGENTS = (
 _CHALLENGE_TITLE_RE = re.compile(
     r"верификац|проверка|just a moment|attention required|access denied|ddos-guard|"
     r"captcha|security check|are you a robot|robot check|доступ ограничен|bot protection|"
+    # Vercel/Cloudflare/DDoS-Guard kabi hosting himoyasi sahifalari.
+    r"security checkpoint|checking your browser|checking if the site|один момент|подождите|"
     # Xato sahifalari: "400", "403 Forbidden", "404 - Not Found", "Error"...
     # ("100 ta eng yaxshi..." kabi oddiy sarlavhalar tushib qolmasligi uchun
     # faqat 4xx/5xx kodi yolg'iz yoki xato so'zi bilan, xato so'zi esa yolg'iz).
@@ -1190,6 +1192,9 @@ async def _resolve_brand_logo(host: str, trace: Optional[list] = None) -> Option
     big_icons: list[str] = []
     small_icons: list[str] = []
     manifest: list[str] = []
+    # Himoya sahifasining ikonkasi (masalan Vercel uchburchagi) sayt logotipi emas.
+    if html_result and _is_challenge(html_result[0]):
+        html_result = None
     if html_result:
         for score, url in _site_icon_candidates(*html_result):
             (big_icons if score >= 96 else small_icons).append(url)
@@ -1198,6 +1203,11 @@ async def _resolve_brand_logo(host: str, trace: Optional[list] = None) -> Option
         small_icons.append(f"{origin}/favicon.ico")
 
     ordered = big_icons[:3] + manifest + (touch_icons if site_allowed else []) + fallbacks + small_icons[:3]
+    # Oxirgi chora: sayt bizni to'sgan bo'lsa — Microlink (haqiqiy brauzer).
+    if site_allowed and not html_result:
+        microlink = await _fetch_microlink(origin + "/")
+        if microlink and microlink.get("logo"):
+            ordered.append(microlink["logo"])
     logo: Optional[tuple[bytes, str]] = None
     tried: list[str] = []
     for url in ordered:
@@ -1307,6 +1317,35 @@ async def api_ads_logo(request: web.Request) -> web.Response:
     )
 
 
+# --- Microlink: sayt serverimizni to'sganda (Vercel/Cloudflare himoyasi,
+# geo-bloklash) sahifani haqiqiy brauzerda ochib, nom/tavsif/logotip beradi.
+# Bepul tarif kuniga ~50 so'rov — faqat kerak bo'lganda va keshlanib ishlatiladi.
+_MICROLINK_CACHE: dict[str, tuple[Optional[dict], float]] = {}
+
+
+async def _fetch_microlink(url: str) -> Optional[dict]:
+    now = time.monotonic()
+    cached = _MICROLINK_CACHE.get(url)
+    if cached and now < cached[1]:
+        return cached[0]
+    payload = await _fetch_json("https://api.microlink.io/?url=" + quote(url, safe=""))
+    result: Optional[dict] = None
+    if isinstance(payload, dict) and payload.get("status") == "success" and isinstance(payload.get("data"), dict):
+        data = payload["data"]
+        title = str(data.get("title") or "").strip()
+        if not _CHALLENGE_TITLE_RE.search(title):
+            result = {
+                "title": title,
+                "description": str(data.get("description") or "").strip(),
+                "logo": ((data.get("logo") or {}).get("url") if isinstance(data.get("logo"), dict) else None),
+                "image": ((data.get("image") or {}).get("url") if isinstance(data.get("image"), dict) else None),
+            }
+    if len(_MICROLINK_CACHE) > 500:
+        _MICROLINK_CACHE.clear()
+    _MICROLINK_CACHE[url] = (result, now + (86400 if result else 3600))
+    return result
+
+
 class _AdPreviewError(Exception):
     def __init__(self, status: int, reason: str):
         super().__init__(reason)
@@ -1371,8 +1410,17 @@ async def _fetch_ad_preview(bot: Bot, url: str) -> dict:
 
     fetched = await _fetch_best_html(url, platform)
     if not fetched:
-        # Captcha sahifasining "Верификация" sarlavhasi brend nomi bo'lib
-        # qolmasin — sahifa domen nomini ishlatadi, logotip /api/ads/logo'dan.
+        # Sayt serverimizni to'sdi (captcha, "Верификация", Vercel himoyasi...):
+        # Microlink orqali urinib ko'riladi. Bo'lmasa bo'sh — sahifa domen
+        # nomini, logotipni esa /api/ads/logo'dan ko'rsatadi.
+        microlink = await _fetch_microlink(url) if platform == "website" else None
+        if microlink and microlink["title"]:
+            return {
+                "platform": platform,
+                "title": microlink["title"][:120],
+                "description": microlink["description"][:200],
+                "photo_url": microlink["image"] if _is_content_page(url, "") else (microlink["logo"] or microlink["image"]),
+            }
         return {"platform": platform, "title": "", "description": "", "photo_url": None}
     html_text, base_url = fetched
     product = _json_ld_product(html_text) or {}
@@ -1398,6 +1446,14 @@ async def _fetch_ad_preview(bot: Bot, url: str) -> dict:
         photo_url = icon or og_image
     else:
         photo_url = og_image or icon
+
+    # Tavsif yo'q (ko'pincha JS bilan yig'iladigan saytlar) — Microlink'dan.
+    if platform == "website" and not description:
+        microlink = await _fetch_microlink(url)
+        if microlink:
+            description = microlink["description"]
+            title = title or microlink["title"]
+            photo_url = photo_url or microlink["logo"] or microlink["image"]
 
     return {
         "platform": platform,
