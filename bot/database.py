@@ -699,6 +699,11 @@ async def decide_ad_payment(payment_id: int, approve: bool, admin_id: int) -> Op
     return {"payment": dict(payment), "bid": dict(bid) if bid else None}
 
 
+async def get_ad_payment(payment_id: int) -> Optional[dict[str, Any]]:
+    row = await _get_pool().fetchrow("SELECT * FROM ad_payments WHERE id = $1", payment_id)
+    return dict(row) if row else None
+
+
 async def get_pending_ad_payments(telegram_id: int) -> list[dict[str, Any]]:
     rows = await _get_pool().fetch(
         """SELECT p.id, p.kind, p.amount, b.brand_name

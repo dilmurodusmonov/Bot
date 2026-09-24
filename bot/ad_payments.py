@@ -9,7 +9,7 @@ from aiogram import Bot
 from aiogram.exceptions import TelegramAPIError
 from aiogram.types import BufferedInputFile, InlineKeyboardButton, InlineKeyboardMarkup
 
-from bot.config import AD_ADMIN_IDS
+from bot.config import AD_ADMIN_IDS, BASE_URL
 
 CALLBACK_PREFIX = "adpay"
 
@@ -18,11 +18,28 @@ def format_som(amount: int) -> str:
     return f"{amount:,}".replace(",", " ") + " so'm"
 
 
-def admin_keyboard(payment_id: int) -> InlineKeyboardMarkup:
-    return InlineKeyboardMarkup(inline_keyboard=[[
-        InlineKeyboardButton(text="✅ Tasdiqlash", callback_data=f"{CALLBACK_PREFIX}:ok:{payment_id}"),
-        InlineKeyboardButton(text="❌ Rad etish", callback_data=f"{CALLBACK_PREFIX}:no:{payment_id}"),
-    ]])
+def receipt_button(payment_id: int, receipt_file_id: Optional[str]) -> InlineKeyboardButton:
+    """"Chekni ko'rish": chek chatga katta rasm bo'lib tushmaydi — tugma
+    uni Telegram ichidagi brauzerda ochadi (BASE_URL bo'lmasa, bosilganda
+    bot rasmni yuboradi)."""
+    if BASE_URL and receipt_file_id:
+        return InlineKeyboardButton(text="🧾 Chekni ko'rish", url=f"{BASE_URL}/api/photo/{receipt_file_id}")
+    return InlineKeyboardButton(text="🧾 Chekni ko'rish", callback_data=f"{CALLBACK_PREFIX}:view:{payment_id}")
+
+
+def admin_keyboard(payment_id: int, receipt_file_id: Optional[str]) -> InlineKeyboardMarkup:
+    return InlineKeyboardMarkup(inline_keyboard=[
+        [receipt_button(payment_id, receipt_file_id)],
+        [
+            InlineKeyboardButton(text="✅ Tasdiqlash", callback_data=f"{CALLBACK_PREFIX}:ok:{payment_id}"),
+            InlineKeyboardButton(text="❌ Rad etish", callback_data=f"{CALLBACK_PREFIX}:no:{payment_id}"),
+        ],
+    ])
+
+
+def decided_keyboard(payment_id: int, receipt_file_id: Optional[str]) -> InlineKeyboardMarkup:
+    """Qaror qabul qilingach tasdiqlash tugmalari olinadi, chek qoladi."""
+    return InlineKeyboardMarkup(inline_keyboard=[[receipt_button(payment_id, receipt_file_id)]])
 
 
 def admin_caption(payment_id: int, kind: str, amount: int, bid: dict, telegram_id: int) -> str:
@@ -45,17 +62,37 @@ def admin_caption(payment_id: int, kind: str, amount: int, bid: dict, telegram_i
 async def send_receipt_to_admins(
     bot: Bot, photo_bytes: bytes, filename: str, caption: str, payment_id: int,
 ) -> Optional[str]:
-    """Chekni har bir adminga yuboradi va rasmning file_id'sini qaytaradi.
-    Birorta adminga ham yetib bormasa None."""
+    """Adminlarga ixcham matnli xabar + inline tugmalar yuboradi va chek
+    rasmining file_id'sini qaytaradi. file_id olishning yagona yo'li —
+    rasmni yuborish, shuning uchun u birinchi adminga yuborilib, darhol
+    o'chiriladi (file_id amal qilishda davom etadi). Birorta adminga ham
+    yetib bormasa None."""
     file_id: Optional[str] = None
     for admin_id in AD_ADMIN_IDS:
-        photo = file_id or BufferedInputFile(photo_bytes, filename=filename)
         try:
             sent = await bot.send_photo(
-                chat_id=admin_id, photo=photo, caption=caption,
-                reply_markup=admin_keyboard(payment_id),
+                chat_id=admin_id, photo=BufferedInputFile(photo_bytes, filename=filename),
+                disable_notification=True,
             )
         except TelegramAPIError:
             continue
-        file_id = file_id or sent.photo[-1].file_id
-    return file_id
+        file_id = sent.photo[-1].file_id
+        try:
+            await bot.delete_message(chat_id=admin_id, message_id=sent.message_id)
+        except TelegramAPIError:
+            pass
+        break
+    if not file_id:
+        return None
+
+    delivered = False
+    for admin_id in AD_ADMIN_IDS:
+        try:
+            await bot.send_message(
+                chat_id=admin_id, text=caption, reply_markup=admin_keyboard(payment_id, file_id),
+                disable_web_page_preview=True,
+            )
+            delivered = True
+        except TelegramAPIError:
+            continue
+    return file_id if delivered else None
