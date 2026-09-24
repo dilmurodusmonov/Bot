@@ -1408,6 +1408,8 @@
   var state = { screen: "loading", params: {}, me: { language: null, role: null }, lang: "uz" };
   var navStack = [];
   var adTimer = null;
+  // Reklama sahifasida admin qarorini kutish ("Tekshirilmoqda" bo'lsa).
+  var advertisePendingTimer = null;
   var ad2Timer = null;
   var AD_COUNT = 4;
   var AD_INTERVAL_MS = 7000;
@@ -3123,16 +3125,52 @@
 
       // "Yangilash": reyting ro'yxati serverdan qayta olinadi; tanlangan
       // kategoriya va sahifa saqlanadi, TOP-1 narxi ham yangilanadi.
+      function applyFreshLeaderboard(fresh) {
+        data.bids = fresh.bids;
+        data.next_top_bid = fresh.next_top_bid;
+        data.min_increment = fresh.min_increment;
+        data.my_pending = fresh.my_pending || [];
+        if (bidTargetRank === 1) setBidTarget(1, fresh.next_top_bid);
+        renderList();
+        var wrap = document.getElementById("advertise-pending-wrap");
+        if (wrap) wrap.innerHTML = pendingBlockHtml(data.my_pending);
+      }
+
+      function pendingKey(list) {
+        return JSON.stringify((list || []).map(function (p) { return [p.kind, p.brand_name, p.amount, p.rank]; }));
+      }
+
+      // "Tekshirilmoqda" turganda har 8 soniyada server tekshiriladi: admin
+      // tasdiqlasa/rad etsa sahifa o'zi yangilanadi (qayta ochish shart emas).
+      function watchPendingPayments() {
+        if (advertisePendingTimer || !(data.my_pending || []).length) return;
+        advertisePendingTimer = setInterval(function () {
+          if (state.screen !== "advertise" || document.hidden) return;
+          api("GET", "/api/ads/leaderboard").then(function (fresh) {
+            if (state.screen !== "advertise") return;
+            var before = (data.my_pending || []).length;
+            if (pendingKey(fresh.my_pending) === pendingKey(data.my_pending)) return;
+            if (!(fresh.my_pending || []).length && advertisePendingTimer) {
+              clearInterval(advertisePendingTimer);
+              advertisePendingTimer = null;
+            }
+            applyFreshLeaderboard(fresh);
+            if ((fresh.my_pending || []).length < before) {
+              showSnackbar(tr("advertise_refreshed"));
+              if (tg && tg.HapticFeedback && typeof tg.HapticFeedback.notificationOccurred === "function") {
+                tg.HapticFeedback.notificationOccurred("success");
+              }
+            }
+          }).catch(function () {});
+        }, 8000);
+      }
+
       function refreshLeaderboard() {
         var btn = document.getElementById("advertise-refresh-btn");
         if (btn) { btn.disabled = true; btn.classList.add("loading"); }
         api("GET", "/api/ads/leaderboard")
           .then(function (fresh) {
-            data.bids = fresh.bids;
-            data.next_top_bid = fresh.next_top_bid;
-            data.min_increment = fresh.min_increment;
-            if (bidTargetRank === 1) setBidTarget(1, fresh.next_top_bid);
-            renderList();
+            applyFreshLeaderboard(fresh);
             showSnackbar(tr("advertise_refreshed"));
           })
           .catch(function () {
@@ -3306,13 +3344,15 @@
 
       var topAmountParts = splitSomUnit(formatSom(data.next_top_bid));
       // Cheki yuborilgan, admin hali tasdiqlamagan to'lovlar.
-      var pendingHtml = (data.my_pending || []).length
-        ? '<div class="advertise-pending">' + data.my_pending.map(function (p) {
-            return '<div class="advertise-pending-row">⏳ <b>' + escapeHtml(tr("advertise_pending_label")) + "</b> · " +
-              escapeHtml(p.brand_name) + " — " + escapeHtml(formatSom(p.amount)) + " (" +
-              escapeHtml(trf("advertise_pending_rank", { n: String(p.rank) })) + ")</div>";
-          }).join("") + "</div>"
-        : "";
+      function pendingBlockHtml(list) {
+        return (list || []).length
+          ? '<div class="advertise-pending">' + list.map(function (p) {
+              return '<div class="advertise-pending-row">⏳ <b>' + escapeHtml(tr("advertise_pending_label")) + "</b> · " +
+                escapeHtml(p.brand_name) + " — " + escapeHtml(formatSom(p.amount)) + " (" +
+                escapeHtml(trf("advertise_pending_rank", { n: String(p.rank) })) + ")</div>";
+            }).join("") + "</div>"
+          : "";
+      }
 
       app.innerHTML =
         '<div class="advertise-page">' +
@@ -3339,13 +3379,14 @@
         "</div>" +
         '<div class="advertise-url-hint">' + escapeHtml(tr("advertise_url_hint")) + "</div>" +
         '<button class="card-btn" id="advertise-submit-btn">' + tr("advertise_submit") + "</button>" +
-        pendingHtml +
+        '<div id="advertise-pending-wrap">' + pendingBlockHtml(data.my_pending) + "</div>" +
         "</div>" +
         '<div class="advertise-filter-tabs">' + filterTabsHtml + "</div>" +
         '<div id="advertise-list"></div>' +
         "</div>";
 
       renderList();
+      watchPendingPayments();
 
       document.querySelectorAll("[data-filter-cat]").forEach(function (tab) {
         tab.addEventListener("click", function () {
@@ -3706,6 +3747,7 @@
 
   function render() {
     if (adTimer) { clearInterval(adTimer); adTimer = null; }
+    if (advertisePendingTimer) { clearInterval(advertisePendingTimer); advertisePendingTimer = null; }
     if (ad2Timer) { ad2Timer.stop(); ad2Timer = null; }
     var fn = screens[state.screen] || renderHome;
     document.documentElement.classList.toggle("page-white", state.screen === "advertise" || state.screen === "advertise_pay");
