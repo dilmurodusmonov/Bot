@@ -787,12 +787,15 @@ def _html_title(html_text: str) -> str:
     return unescape(m.group(1)).strip() if m else ""
 
 
-def _looks_blocked(html_text: str) -> bool:
-    """Captcha/"Верификация" sahifasi yoki hech qanday og: ma'lumoti yo'q."""
+def _is_challenge(html_text: str) -> bool:
+    """Captcha / "Верификация" / "Just a moment" kabi anti-bot sahifa."""
     title = _extract_meta(html_text, "og:title") or _html_title(html_text)
-    if _CHALLENGE_TITLE_RE.search(title or ""):
-        return True
-    return not (_extract_meta(html_text, "og:title", "og:image") or _json_ld_product(html_text))
+    return bool(_CHALLENGE_TITLE_RE.search(title or ""))
+
+
+def _has_rich_meta(html_text: str) -> bool:
+    """og:title/og:image yoki schema.org Product bor — to'liq preview."""
+    return bool(_extract_meta(html_text, "og:title", "og:image") or _json_ld_product(html_text))
 
 
 def _json_ld_product(html_text: str) -> Optional[dict]:
@@ -923,17 +926,23 @@ async def _fetch_best_html(url: str, platform: str) -> Optional[tuple[str, str]]
     """Avval oddiy brauzer sifatida; sahifa bloklangan ko'rinsa (captcha,
     og: yo'q, boshqa saytga yo'naltirilgan) — havola-preview botlari sifatida
     qayta so'raladi. Yaroqli sahifa bo'lmasa None."""
-    def usable(result: Optional[tuple[str, str]]) -> bool:
-        return bool(result) and not _looks_blocked(result[0]) and not _redirected_away(url, result[1])
+    def genuine(result: Optional[tuple[str, str]]) -> bool:
+        return bool(result) and not _is_challenge(result[0]) and not _redirected_away(url, result[1])
 
+    # og: tag'lari bo'lmagan oddiy sahifa (Google, Mail.ru bosh sahifasi)
+    # ham yaroqli — <title> va description ishlatiladi; faqat to'liqroq
+    # ma'lumot uchun preview botlari bilan qayta urinib ko'riladi.
     first = await _fetch_site_html(url, platform)
-    if usable(first):
+    if genuine(first) and _has_rich_meta(first[0]):
         return first
+    fallback = first if genuine(first) else None
     for agent in _PREVIEW_BOT_AGENTS:
         retry = await _fetch_site_html(url, platform, user_agent=agent)
-        if usable(retry):
-            return retry
-    return None
+        if genuine(retry):
+            if _has_rich_meta(retry[0]):
+                return retry
+            fallback = fallback or retry
+    return fallback
 
 
 # --- Uzum Market: tovar ma'lumoti saytning o'z API'sidan -----------------------
@@ -1334,7 +1343,7 @@ async def _fetch_ad_preview(bot: Bot, url: str) -> dict:
             return uzum
 
     fetched = await _fetch_best_html(url, platform)
-    if not fetched or _looks_blocked(fetched[0]):
+    if not fetched:
         # Captcha sahifasining "Верификация" sarlavhasi brend nomi bo'lib
         # qolmasin — sahifa domen nomini ishlatadi, logotip /api/ads/logo'dan.
         return {"platform": platform, "title": "", "description": "", "photo_url": None}

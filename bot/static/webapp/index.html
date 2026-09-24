@@ -3456,7 +3456,13 @@
       function renderAdvertisePreview(preview, siteUrl) {
         var previewEl = document.getElementById("advertise-preview");
         if (!previewEl) return;
-        if (!preview || (!preview.title && !preview.description)) { previewEl.innerHTML = ""; return; }
+        if (!preview) { previewEl.innerHTML = ""; return; }
+        if (!preview.title && !preview.description) {
+          // Sayt serverimizga ma'lumot bermadi (anti-bot) — baribir domen nomi
+          // va logotip bilan karta ko'rsatiladi.
+          if (!siteUrl || siteUrl.indexOf(".") === -1) { previewEl.innerHTML = ""; return; }
+          preview = { platform: preview.platform, title: deriveBrandFromUrl(siteUrl), description: "", photo_url: preview.photo_url };
+        }
         var emoji = ADVERTISE_PLATFORM_EMOJI[preview.platform] || ADVERTISE_PLATFORM_EMOJI.website;
         var label = ADVERTISE_PLATFORM_LABEL[preview.platform] || ADVERTISE_PLATFORM_LABEL.website;
         var thumbHtml = brandThumbHtml(preview.photo_url, siteUrl, emoji);
