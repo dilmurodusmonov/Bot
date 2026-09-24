@@ -1351,6 +1351,7 @@ async def _fetch_microlink(url: str) -> Optional[dict]:
     now = time.monotonic()
     cached = _MICROLINK_CACHE.get(url)
     if cached and now < cached[1]:
+        _microlink_trace(cached[0], cached=True)
         return cached[0]
     # Microlink sahifani haqiqiy brauzerda ochadi — 5–10 soniya ketishi mumkin.
     # Qo'shimcha qoida: sayt sarlavhasidagi logotip rasmi (<img ...logo...>) —
@@ -1392,19 +1393,40 @@ async def _fetch_microlink(url: str) -> Optional[dict]:
             if not weak_logo:
                 best_logo = logo_url
             else:
-                best_logo = (header_logo or (None if wide_image else image_url)
-                             or logo_url or image_url)
+                # Keng banner logotip sifatida olinmaydi — u holda kartadagi
+                # rasm /api/ads/logo universal qidiruvidan (Google ikonkasi...).
+                best_logo = header_logo or (None if wide_image else image_url) or logo_url
             result = {
                 "title": title,
                 "description": str(data.get("description") or "").strip(),
                 "logo": best_logo,
                 "image": image_url,
+                "image_wide": wide_image,
+                "diag": (
+                    f"microlink: logo={str(logo.get('url') or '-')[:60]} ({logo.get('width')}px) · "
+                    f"sarlavha_logo={str(data.get('brandLogo') or '-')[:60]} · "
+                    f"image={str(image_url or '-')[:60]} ({iw}x{ih}) → {str(best_logo or '-')[:60]}"
+                ),
             }
     if len(_MICROLINK_CACHE) > 500:
         _MICROLINK_CACHE.clear()
     # Muvaffaqiyatsiz natija qisqa keshlanadi (vaqtinchalik xato bo'lishi mumkin).
     _MICROLINK_CACHE[url] = (result, now + (86400 if result else 600))
+    _microlink_trace(result)
     return result
+
+
+def _microlink_trace(result: Optional[dict], cached: bool = False) -> None:
+    trace = _FETCH_TRACE.get()
+    if trace is not None:
+        line = result["diag"] if result else "microlink: natija yo'q"
+        trace.append(line + (" (kesh)" if cached else ""))
+
+
+def _microlink_photo(microlink: dict) -> Optional[str]:
+    """Kartadagi rasm: logotip, bo'lmasa keng bo'lmagan asosiy rasm. None —
+    frontend /api/ads/logo universal qidiruvini ishlatadi."""
+    return microlink["logo"] or (None if microlink.get("image_wide") else microlink["image"])
 
 
 class _AdPreviewError(Exception):
@@ -1480,7 +1502,7 @@ async def _fetch_ad_preview(bot: Bot, url: str) -> dict:
                 "platform": platform,
                 "title": microlink["title"][:120],
                 "description": microlink["description"][:200],
-                "photo_url": microlink["image"] if _is_content_page(url, "") else (microlink["logo"] or microlink["image"]),
+                "photo_url": microlink["image"] if _is_content_page(url, "") else _microlink_photo(microlink),
             }
         return {"platform": platform, "title": "", "description": "", "photo_url": None}
     html_text, base_url = fetched
@@ -1514,7 +1536,7 @@ async def _fetch_ad_preview(bot: Bot, url: str) -> dict:
         if microlink:
             description = microlink["description"]
             title = title or microlink["title"]
-            photo_url = photo_url or microlink["logo"] or microlink["image"]
+            photo_url = photo_url or _microlink_photo(microlink)
 
     return {
         "platform": platform,
