@@ -52,6 +52,8 @@ from bot.database import (
     create_ad_payment_raise,
     delete_ad_payment,
     get_pending_ad_payments,
+    get_recent_rejected_ad_payments,
+    dismiss_ad_payment_rejection,
     set_ad_payment_receipt,
     increment_ad_views,
     increment_donation_share,
@@ -1455,7 +1457,35 @@ async def api_ads_leaderboard(request: web.Request) -> web.Response:
             }
             for p in await get_pending_ad_payments(telegram_id)
         ],
+        "my_rejected": await _my_rejected_payments(telegram_id),
     })
+
+
+async def _my_rejected_payments(telegram_id: int) -> list[dict]:
+    """Rad etilgan to'lovlar sababi bilan; tayyor sabablar (ad_reject_*)
+    foydalanuvchi tiliga o'giriladi, admin yozgan matn o'zgarishsiz."""
+    rejected = await get_recent_rejected_ad_payments(telegram_id)
+    if not rejected:
+        return []
+    lang = await _lang_for(telegram_id)
+    result = []
+    for p in rejected:
+        reason = p["reject_reason"] or ""
+        if reason.startswith("ad_reject_"):
+            reason = t(lang, reason)
+        result.append({
+            "id": p["id"], "kind": p["kind"], "amount": p["amount"],
+            "brand_name": p["brand_name"], "reason": reason,
+        })
+    return result
+
+
+async def api_ads_dismiss_rejection(request: web.Request) -> web.Response:
+    """"Rad etildi" blokini yopish (×) — keyin ko'rsatilmaydi."""
+    telegram_id = await _require_user_id(request)
+    if not await dismiss_ad_payment_rejection(int(request.match_info["id"]), telegram_id):
+        raise web.HTTPNotFound()
+    return web.json_response({"ok": True})
 
 
 def _projected_ad_rank(approved_bids: list[dict], pending: dict) -> int:
@@ -1977,6 +2007,7 @@ def setup_api_routes(app: web.Application) -> None:
     app.router.add_get("/api/ads/logo", api_ads_logo)
     app.router.add_get("/api/ads/leaderboard", api_ads_leaderboard)
     app.router.add_post("/api/ads/payment", api_ads_payment)
+    app.router.add_post("/api/ads/payments/{id:\\d+}/dismiss", api_ads_dismiss_rejection)
     app.router.add_post("/api/ads/{id:\\d+}/click", api_ads_click)
     app.router.add_get("/api/categories", api_categories)
     app.router.add_get("/api/donations", api_donations)
