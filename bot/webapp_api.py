@@ -824,6 +824,78 @@ def _json_ld_image(product: dict) -> str:
     return image if isinstance(image, str) else ""
 
 
+# --- Wildberries: mahsulot kartasi ochiq CDN'dagi card.json'da ---------------
+# Sayt brauzerda yig'iladigan ilova va datacenter so'rovlariga anti-bot sahifa
+# beradi; har bir tovarning nomi/tavsifi/brendi esa
+# basket-NN.wbbasket.ru/vol{V}/part{P}/{nm}/info/ru/card.json da, rasmlari
+# o'sha papkadagi images/big/1.webp da.
+_WB_HOST_RE = re.compile(r"(^|\.)(wildberries\.(ru|uz|kz|by|am|kg|ge|tj)|wb\.ru)$")
+_WB_BASKET_VOL_LIMITS = (
+    143, 287, 431, 719, 1007, 1061, 1115, 1169, 1313, 1601, 1655, 1919, 2045, 2189,
+    2405, 2621, 2837, 3053, 3269, 3485, 3701, 3917, 4133, 4349, 4565, 4877, 5189,
+    5501, 5813, 6125, 6437,
+)
+_WB_MAX_BASKET = 40
+
+
+def _wildberries_nm_id(url: str) -> Optional[int]:
+    parsed = urlparse(url)
+    if not _WB_HOST_RE.search((parsed.hostname or "").lower()):
+        return None
+    m = re.search(r"/catalog/(\d{4,12})(?:/|$)", parsed.path)
+    return int(m.group(1)) if m else None
+
+
+def _wb_basket_guess(vol: int) -> int:
+    for i, limit in enumerate(_WB_BASKET_VOL_LIMITS, start=1):
+        if vol <= limit:
+            return i
+    return len(_WB_BASKET_VOL_LIMITS) + 1
+
+
+def _wb_base_url(basket: int, nm_id: int) -> str:
+    return f"https://basket-{basket:02d}.wbbasket.ru/vol{nm_id // 100000}/part{nm_id // 1000}/{nm_id}"
+
+
+async def _fetch_json(url: str) -> Optional[Any]:
+    try:
+        async with aiohttp.ClientSession() as session:
+            async with session.get(
+                url, timeout=aiohttp.ClientTimeout(total=5), headers=_BROWSER_HEADERS,
+            ) as resp:
+                if resp.status != 200:
+                    return None
+                return json.loads(await resp.text(errors="ignore"))
+    except Exception:
+        return None
+
+
+async def _fetch_wildberries(nm_id: int) -> Optional[dict]:
+    """Tovar nomi (brend bilan), tavsifi va asosiy rasmi. Savat (basket)
+    raqami jadvaldan taxmin qilinadi, bo'lmasa hammasi parallel sinaladi."""
+    guess = _wb_basket_guess(nm_id // 100000)
+    base, card = _wb_base_url(guess, nm_id), None
+    card = await _fetch_json(base + "/info/ru/card.json")
+    if not isinstance(card, dict):
+        baskets = [b for b in range(1, _WB_MAX_BASKET + 1) if b != guess]
+        results = await asyncio.gather(*(_fetch_json(_wb_base_url(b, nm_id) + "/info/ru/card.json") for b in baskets))
+        for basket, result in zip(baskets, results):
+            if isinstance(result, dict):
+                base, card = _wb_base_url(basket, nm_id), result
+                break
+    if not isinstance(card, dict) or not card.get("imt_name"):
+        return None
+    brand = ((card.get("selling") or {}).get("brand_name") or "").strip()
+    name = str(card["imt_name"]).strip()
+    title = f"{brand} / {name}" if brand and brand.lower() not in name.lower() else name
+    return {
+        "platform": "website",
+        "title": title[:120],
+        "description": str(card.get("description") or "").strip()[:200],
+        "photo_url": base + "/images/big/1.webp",
+    }
+
+
 async def _fetch_best_html(url: str, platform: str) -> Optional[tuple[str, str]]:
     """Avval oddiy brauzer sifatida; sahifa bloklangan ko'rinsa (captcha,
     og: yo'q) — havola-preview botlari sifatida qayta so'raladi."""
@@ -1020,6 +1092,13 @@ async def _resolve_logo_for_url(url: str) -> Optional[tuple[bytes, str]]:
         return cached
 
     logo: Optional[tuple[bytes, str]] = None
+    wb_nm_id = _wildberries_nm_id(url)
+    if wb_nm_id:
+        wb = await _fetch_wildberries(wb_nm_id)
+        logo = await _fetch_image(wb["photo_url"]) if wb else None
+        if logo:
+            _logo_cache_put(key, logo)
+            return logo
     fetched = await _fetch_site_html(url, platform) if await _resolve_is_public_host(host) else None
     if platform != "website":
         if fetched:
@@ -1116,6 +1195,12 @@ async def _fetch_ad_preview(bot: Bot, url: str) -> dict:
 
     if not await _resolve_is_public_host(host):
         raise _AdPreviewError(400, "host_not_allowed")
+
+    wb_nm_id = _wildberries_nm_id(url)
+    if wb_nm_id:
+        wb = await _fetch_wildberries(wb_nm_id)
+        if wb:
+            return wb
 
     fetched = await _fetch_best_html(url, platform)
     if not fetched or _looks_blocked(fetched[0]):
