@@ -1905,7 +1905,13 @@ async def api_ads_payment(request: web.Request) -> web.Response:
             raise web.HTTPNotFound()
         if existing["telegram_id"] != telegram_id:
             raise web.HTTPForbidden(text="not_owner")
-        amount = AD_MIN_INCREMENT
+        # Oshirish summasi foydalanuvchi kiritgani (N,N mln), kamida AD_MIN_INCREMENT.
+        try:
+            amount = int(fields.get("amount") or AD_MIN_INCREMENT)
+        except ValueError:
+            raise web.HTTPBadRequest(text="invalid amount")
+        if amount < AD_MIN_INCREMENT or amount > 100_000_000_000:
+            raise web.HTTPBadRequest(text="amount_out_of_range")
         payment_id = await create_ad_payment_raise(bid_id, telegram_id, amount)
     else:
         raise web.HTTPBadRequest(text="invalid kind")

@@ -642,7 +642,15 @@
   /* To'lov (chek) sahifasi */
   .adpay { padding: 8px 6px 20px; }
   .adpay-amount-label { text-align: center; color: var(--hint); font-size: 12.5px; }
-  .adpay-amount { text-align: center; font-size: 30px; font-weight: 700; color: #E5484D; margin-top: 2px; }
+  .adpay-amount { text-align: center; font-size: 30px; font-weight: 700; color: #E5484D; margin-top: 2px; white-space: nowrap; }
+  /* "Taklifni oshirish": uziq chiziqli summaga bosib N,N (mln) kiritiladi. */
+  .adpay-amount-editable { border-bottom: 2px dashed #E5484D; padding-bottom: 2px; cursor: pointer; }
+  .adpay-amount-input {
+    width: 3ch; min-width: 2ch; padding: 0 0 2px; border: none; border-radius: 0; border-bottom: 2px dashed #E5484D;
+    background: transparent; color: #E5484D; font: inherit; font-size: 30px; font-weight: 700;
+    text-align: center; outline: none;
+  }
+  .adpay-raise-result { text-align: center; color: var(--hint); font-size: 12.5px; margin: -12px 0 16px; }
   .adpay-subject {
     text-align: center; color: #3A3A3C; font-size: 13px; margin: 4px 0 18px;
     overflow: hidden; text-overflow: ellipsis; white-space: nowrap;
@@ -984,6 +992,8 @@
       advertise_pay_amount_label: "To'lov summasi",
       advertise_pay_new_subject: "Reklama: {brand}",
       advertise_pay_raise_subject: "Taklifni oshirish: {brand}",
+      advertise_pay_raise_result: "Yangi taklif: {amount} · {n}-o'rin",
+      advertise_raise_min: "Eng kam oshirish: {min}",
       advertise_pay_card_label: "Karta raqami",
       advertise_pay_holder_label: "Karta egasi",
       advertise_pay_copy: "Nusxa",
@@ -1076,6 +1086,8 @@
       advertise_pay_amount_label: "Сумма оплаты",
       advertise_pay_new_subject: "Реклама: {brand}",
       advertise_pay_raise_subject: "Повышение ставки: {brand}",
+      advertise_pay_raise_result: "Новая ставка: {amount} · {n}-е место",
+      advertise_raise_min: "Минимальное повышение: {min}",
       advertise_pay_card_label: "Номер карты",
       advertise_pay_holder_label: "Владелец карты",
       advertise_pay_copy: "Копировать",
@@ -1168,6 +1180,8 @@
       advertise_pay_amount_label: "Amount to pay",
       advertise_pay_new_subject: "Ad: {brand}",
       advertise_pay_raise_subject: "Raise bid: {brand}",
+      advertise_pay_raise_result: "New bid: {amount} · #{n}",
+      advertise_raise_min: "Minimum raise: {min}",
       advertise_pay_card_label: "Card number",
       advertise_pay_holder_label: "Card holder",
       advertise_pay_copy: "Copy",
@@ -1260,6 +1274,8 @@
       advertise_pay_amount_label: "Төлем сомасы",
       advertise_pay_new_subject: "Жарнама: {brand}",
       advertise_pay_raise_subject: "Ұсынысты көтеру: {brand}",
+      advertise_pay_raise_result: "Жаңа ұсыныс: {amount} · {n}-орын",
+      advertise_raise_min: "Ең аз көтеру: {min}",
       advertise_pay_card_label: "Карта нөмірі",
       advertise_pay_holder_label: "Карта иесі",
       advertise_pay_copy: "Көшіру",
@@ -1344,6 +1360,8 @@
       advertise_pay_amount_label: "Маблағи пардохт",
       advertise_pay_new_subject: "Реклама: {brand}",
       advertise_pay_raise_subject: "Баланд бардоштани пешниҳод: {brand}",
+      advertise_pay_raise_result: "Пешниҳоди нав: {amount} · ҷои {n}",
+      advertise_raise_min: "Ҳадди ақали баландбардорӣ: {min}",
       advertise_pay_card_label: "Рақами корт",
       advertise_pay_holder_label: "Соҳиби корт",
       advertise_pay_copy: "Нусха",
@@ -1428,6 +1446,8 @@
       advertise_pay_amount_label: "Төлөм суммасы",
       advertise_pay_new_subject: "Жарнама: {brand}",
       advertise_pay_raise_subject: "Сунушту көтөрүү: {brand}",
+      advertise_pay_raise_result: "Жаңы сунуш: {amount} · {n}-орун",
+      advertise_raise_min: "Эң аз көтөрүү: {min}",
       advertise_pay_card_label: "Карта номери",
       advertise_pay_holder_label: "Карта ээси",
       advertise_pay_copy: "Көчүрүү",
@@ -1512,6 +1532,8 @@
       advertise_pay_amount_label: "Töleg mukdary",
       advertise_pay_new_subject: "Mahabat: {brand}",
       advertise_pay_raise_subject: "Teklibi ýokarlandyrmak: {brand}",
+      advertise_pay_raise_result: "Täze teklip: {amount} · {n}-nji orun",
+      advertise_raise_min: "Iň az ýokarlandyrma: {min}",
       advertise_pay_card_label: "Kart belgisi",
       advertise_pay_holder_label: "Kartyň eýesi",
       advertise_pay_copy: "Göçür",
@@ -3268,7 +3290,11 @@
       }
 
       function confirmRaise(bid) {
-        openAdPayment({ kind: "raise", bidId: bid.id, amount: data.min_increment, brand: bid.brand_name });
+        openAdPayment({
+          kind: "raise", bidId: bid.id, amount: data.min_increment, brand: bid.brand_name,
+          minIncrement: data.min_increment, currentAmount: bid.bid_amount,
+          otherAmounts: (data.bids || []).filter(function (b) { return b.id !== bid.id; }).map(function (b) { return b.bid_amount; }),
+        });
       }
 
       var REFRESH_ICON = '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polyline points="23 4 23 10 17 10"></polyline><polyline points="1 20 1 14 7 14"></polyline><path d="M3.51 9a9 9 0 0 1 14.85-3.36L23 10M1 14l4.64 4.36A9 9 0 0 0 20.49 15"></path></svg>';
@@ -3847,11 +3873,18 @@
   function renderAdvertisePay() {
     var p = state.params || {};
     var cardFormatted = (p.card || "").replace(/(\d{4})(?=\d)/g, "$1 ");
+    var isRaise = p.kind === "raise";
+    function adpayAmountHtml() {
+      var parts = splitSomUnit(formatSom(p.amount));
+      return '<span class="' + (isRaise ? "adpay-amount-editable" : "") + '" id="adpay-amount-value">' + escapeHtml(parts.value) + "</span> " +
+        '<span id="adpay-amount-unit">' + escapeHtml(parts.unit) + "</span>";
+    }
     app.innerHTML =
       '<div class="advertise-page"><div class="adpay">' +
       '<div class="adpay-amount-label">' + escapeHtml(tr("advertise_pay_amount_label")) + "</div>" +
-      '<div class="adpay-amount">' + escapeHtml(formatSom(p.amount)) + "</div>" +
+      '<div class="adpay-amount" id="adpay-amount">' + adpayAmountHtml() + "</div>" +
       '<div class="adpay-subject">' + escapeHtml(trf(p.kind === "raise" ? "advertise_pay_raise_subject" : "advertise_pay_new_subject", { brand: p.brand || "" })) + "</div>" +
+      (isRaise && p.currentAmount ? '<div class="adpay-raise-result" id="adpay-raise-result"></div>' : "") +
       '<div class="adpay-card">' +
       '<div class="adpay-card-label">' + escapeHtml(tr("advertise_pay_card_label")) + "</div>" +
       '<div class="adpay-card-row"><span class="adpay-card-number">' + escapeHtml(cardFormatted) + "</span>" +
@@ -3870,6 +3903,72 @@
       '<label for="adpay-photo-input" class="adpay-upload" id="adpay-upload"></label>' +
       '<button class="card-btn" id="advertise-pay-btn" disabled>' + escapeHtml(tr("advertise_pay_send")) + "</button>" +
       "</div></div>";
+
+    // "Taklifni oshirish": uziq chiziqli summaga bosib N,N (mln so'm) kiritish.
+    function raiseResultText(amount) {
+      if (!p.currentAmount) return "";
+      var total = p.currentAmount + amount;
+      var rank = 1 + (p.otherAmounts || []).filter(function (a) { return a >= total; }).length;
+      return trf("advertise_pay_raise_result", { amount: formatSom(total), n: String(rank) });
+    }
+    function renderRaiseResult(amount) {
+      var el = document.getElementById("adpay-raise-result");
+      if (el) el.textContent = raiseResultText(amount);
+    }
+    if (isRaise) {
+      var minRaise = p.minIncrement || 100000;
+      renderRaiseResult(p.amount);
+      var amountWrap = document.getElementById("adpay-amount");
+      amountWrap.addEventListener("click", function () {
+        var valueEl = document.getElementById("adpay-amount-value");
+        if (!valueEl || document.getElementById("adpay-amount-input")) return;
+        var input = document.createElement("input");
+        input.id = "adpay-amount-input";
+        input.className = "adpay-amount-input";
+        input.type = "text";
+        input.inputMode = "decimal";
+        input.autocomplete = "off";
+        input.value = (p.amount / 1000000).toFixed(2).replace(/0+$/, "").replace(/\.$/, "").replace(".", ",");
+        function fit() { input.style.width = Math.max(2, input.value.length + 0.3) + "ch"; }
+        fit();
+        valueEl.style.display = "none";
+        amountWrap.insertBefore(input, valueEl);
+        document.getElementById("adpay-amount-unit").textContent = "mln so'm";
+        function typedAmount() {
+          var mln = parseFloat(input.value.replace(",", "."));
+          return isFinite(mln) && mln > 0 ? Math.max(minRaise, Math.min(Math.round(mln * 100) * 10000, 100000000000)) : null;
+        }
+        input.addEventListener("input", function () {
+          var v = input.value.replace(/\./g, ",").replace(/[^0-9,]/g, "");
+          var i = v.indexOf(",");
+          if (i !== -1) v = v.slice(0, i + 1) + v.slice(i + 1).replace(/,/g, "").slice(0, 2);
+          v = v.replace(/^0+(?=\d)/, "").slice(0, 8);
+          if (v !== input.value) input.value = v;
+          fit();
+          var a = typedAmount();
+          if (a) renderRaiseResult(a);
+        });
+        var done = false;
+        function commit() {
+          if (done) return;
+          done = true;
+          var a = typedAmount();
+          if (a) {
+            if (a === minRaise && parseFloat(input.value.replace(",", ".")) * 1000000 < minRaise) {
+              showSnackbar(trf("advertise_raise_min", { min: formatSom(minRaise) }));
+            }
+            p.amount = a;
+            saveNavState();
+          }
+          amountWrap.innerHTML = adpayAmountHtml();
+          renderRaiseResult(p.amount);
+        }
+        input.addEventListener("blur", commit);
+        input.addEventListener("keydown", function (e) { if (e.key === "Enter") input.blur(); });
+        input.focus();
+        input.select();
+      });
+    }
 
     var receiptFile = null;
     var uploadEl = document.getElementById("adpay-upload");
@@ -3905,6 +4004,7 @@
         fd.append("kind", p.kind);
         if (p.kind === "raise") {
           fd.append("bid_id", String(p.bidId));
+          fd.append("amount", String(p.amount));
         } else {
           fd.append("bid_amount", String(p.amount));
           fd.append("url", p.url || "");
