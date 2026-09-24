@@ -547,9 +547,19 @@
   .advertise-pager-btn:disabled { color: #C7C7CC; cursor: default; }
   .advertise-pager-gap { color: #8E8E93; font-size: 15px; padding: 0 2px; }
   .advertise-pager-summary { text-align: center; color: var(--hint); font-size: 12.5px; margin-bottom: 14px; }
+  /* "Tekshirilmoqda": #1 kartochka fonida, qizg'ish chegara yonib-o'chib turadi. */
   .advertise-pending {
-    margin: 12px 6px 0; padding: 10px 12px; border-radius: 12px; background: #FFF8E6;
-    border: 1px solid #F5DDA0; color: #8A6516; font-size: 12.5px; line-height: 1.4;
+    margin: 12px 6px 0; padding: 10px 12px; border-radius: 12px; background: #FFF3F1;
+    border: 1.5px solid #F0A99C; color: #3A3A3C; font-size: 12.5px; line-height: 1.4;
+    animation: advertise-pending-glow 1.6s ease-in-out infinite;
+  }
+  .advertise-pending b { color: #D2453F; }
+  @keyframes advertise-pending-glow {
+    0%, 100% { border-color: #F5C4B9; box-shadow: 0 0 0 0 rgba(229, 72, 77, 0); }
+    50% { border-color: #E5484D; box-shadow: 0 0 0 3px rgba(229, 72, 77, 0.18); }
+  }
+  @media (prefers-reduced-motion: reduce) {
+    .advertise-pending { animation: none; border-color: #E5484D; }
   }
   .advertise-pending-row + .advertise-pending-row { margin-top: 4px; }
   /* To'lov (chek) sahifasi */
