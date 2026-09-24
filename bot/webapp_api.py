@@ -1334,13 +1334,31 @@ async def api_ads_logo(request: web.Request) -> web.Response:
 _MICROLINK_CACHE: dict[str, tuple[Optional[dict], float]] = {}
 
 
+# Microlink MQL qoidasi: sahifadagi birinchi logotip rasmi (odatda sarlavhada).
+_MICROLINK_LOGO_RULES = "&" + "&".join(
+    k + "=" + quote(v, safe="")
+    for k, v in (
+        ("data.brandLogo.selector",
+         'header img[src*="logo" i], header img[alt*="logo" i], [class*="logo" i] img, '
+         'img[class*="logo" i], img[src*="logo" i], img[alt*="logo" i], header a[href="/"] img'),
+        ("data.brandLogo.attr", "src"),
+        ("data.brandLogo.type", "url"),
+    )
+)
+
+
 async def _fetch_microlink(url: str) -> Optional[dict]:
     now = time.monotonic()
     cached = _MICROLINK_CACHE.get(url)
     if cached and now < cached[1]:
         return cached[0]
     # Microlink sahifani haqiqiy brauzerda ochadi — 5–10 soniya ketishi mumkin.
-    payload = await _fetch_json("https://api.microlink.io/?url=" + quote(url, safe=""), timeout=20)
+    # Qo'shimcha qoida: sayt sarlavhasidagi logotip rasmi (<img ...logo...>) —
+    # favicon standart/kichik, og:image esa keng banner bo'lgan saytlar uchun.
+    base = "https://api.microlink.io/?url=" + quote(url, safe="")
+    payload = await _fetch_json(base + _MICROLINK_LOGO_RULES, timeout=20)
+    if not (isinstance(payload, dict) and payload.get("status") == "success"):
+        payload = await _fetch_json(base, timeout=20)
     result: Optional[dict] = None
     if isinstance(payload, dict) and payload.get("status") == "success" and isinstance(payload.get("data"), dict):
         data = payload["data"]
@@ -1360,12 +1378,27 @@ async def _fetch_microlink(url: str) -> Optional[dict]:
             )
             if _is_default_favicon(logo_url):
                 logo_url = None
-            best_logo = (image.get("url") or logo_url) if weak_logo else logo_url
+            image_url = image.get("url") or None
+            iw, ih = image.get("width") or 0, image.get("height") or 0
+            wide_image = bool(iw and ih and iw / ih > 2)   # keng banner — logotip emas
+            header_logo = data.get("brandLogo")
+            if isinstance(header_logo, dict):
+                header_logo = header_logo.get("url")
+            header_logo = header_logo.strip() if isinstance(header_logo, str) else ""
+            if header_logo and not header_logo.startswith("data:"):
+                header_logo = urljoin(str(data.get("url") or url), header_logo)
+            if not header_logo.startswith(("http://", "https://")) or _is_default_favicon(header_logo):
+                header_logo = None
+            if not weak_logo:
+                best_logo = logo_url
+            else:
+                best_logo = (header_logo or (None if wide_image else image_url)
+                             or logo_url or image_url)
             result = {
                 "title": title,
                 "description": str(data.get("description") or "").strip(),
-                "logo": best_logo or logo_url,
-                "image": image.get("url") or None,
+                "logo": best_logo,
+                "image": image_url,
             }
     if len(_MICROLINK_CACHE) > 500:
         _MICROLINK_CACHE.clear()
