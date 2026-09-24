@@ -656,20 +656,27 @@ def _sanitize_ad_description(description: Any) -> Optional[str]:
     return description[:200] or None
 
 
+_META_TAG_RE = re.compile(r"""<meta\b(?:[^>"']|"[^"]*"|'[^']*')*>""", re.I)
+_ATTR_RE = re.compile(r"""([\w:.-]+)\s*=\s*(?:"([^"]*)"|'([^']*)'|([^\s>]+))""")
+
+
 def _extract_meta(html_text: str, *props: str) -> str:
+    """<meta property|name="..." content="..."> qiymati. Qo'shtirnoq ichidagi
+    apostrof ("Zo'r", "o'yna") matnni kesmasligi uchun atributlar to'liq
+    tahlil qilinadi."""
+    found: dict[str, str] = {}
+    for tag in _META_TAG_RE.findall(html_text):
+        attrs = {
+            m.group(1).lower(): m.group(2) if m.group(2) is not None else (m.group(3) if m.group(3) is not None else m.group(4))
+            for m in _ATTR_RE.finditer(tag)
+        }
+        key = (attrs.get("property") or attrs.get("name") or "").lower()
+        if key and "content" in attrs and key not in found:
+            found[key] = attrs["content"]
     for prop in props:
-        escaped = re.escape(prop)
-        m = re.search(
-            r'<meta[^>]+(?:property|name)=["\']' + escaped + r'["\'][^>]+content=["\']([^"\']*)["\']',
-            html_text, re.I,
-        )
-        if not m:
-            m = re.search(
-                r'<meta[^>]+content=["\']([^"\']*)["\'][^>]+(?:property|name)=["\']' + escaped + r'["\']',
-                html_text, re.I,
-            )
-        if m:
-            return unescape(m.group(1)).strip()
+        value = found.get(prop.lower())
+        if value:
+            return unescape(value).strip()
     return ""
 
 
@@ -740,10 +747,14 @@ _PLATFORM_HEADERS = {
 }
 
 
-async def _fetch_site_html(url: str, platform: str = "website") -> Optional[tuple[str, str]]:
+async def _fetch_site_html(
+    url: str, platform: str = "website", user_agent: Optional[str] = None,
+) -> Optional[tuple[str, str]]:
     """Sahifa HTML'i va yakuniy (redirectdan keyingi) manzili."""
     headers = {**_BROWSER_HEADERS, "Accept": "text/html,application/xhtml+xml"}
     headers.update(_PLATFORM_HEADERS.get(platform, {}))
+    if user_agent:
+        headers["User-Agent"] = user_agent
     try:
         async with aiohttp.ClientSession() as session:
             async with session.get(
@@ -752,6 +763,88 @@ async def _fetch_site_html(url: str, platform: str = "website") -> Optional[tupl
                 return await resp.text(errors="ignore"), str(resp.url)
     except Exception:
         return None
+
+
+# Marketplace'lar (Uzum, Wildberries, Ozon...) datacenter so'rovlariga
+# "Верификация"/captcha sahifasini beradi, lekin havola-preview botlariga
+# (Telegram, Facebook, Twitter) mahsulot og:tag'larini beradi — aks holda
+# Telegram'da havola preview'i chiqmasdi.
+_PREVIEW_BOT_AGENTS = (
+    "TelegramBot (like TwitterBot)",
+    "facebookexternalhit/1.1 (+http://www.facebook.com/externalhit_uatext.php)",
+    "Twitterbot/1.0",
+)
+_CHALLENGE_TITLE_RE = re.compile(
+    r"верификац|проверка|just a moment|attention required|access denied|ddos-guard|"
+    r"captcha|security check|are you a robot|robot check|доступ ограничен|bot protection",
+    re.I,
+)
+
+
+def _html_title(html_text: str) -> str:
+    m = re.search(r"<title[^>]*>([^<]*)</title>", html_text, re.I)
+    return unescape(m.group(1)).strip() if m else ""
+
+
+def _looks_blocked(html_text: str) -> bool:
+    """Captcha/"Верификация" sahifasi yoki hech qanday og: ma'lumoti yo'q."""
+    title = _extract_meta(html_text, "og:title") or _html_title(html_text)
+    if _CHALLENGE_TITLE_RE.search(title or ""):
+        return True
+    return not (_extract_meta(html_text, "og:title", "og:image") or _json_ld_product(html_text))
+
+
+def _json_ld_product(html_text: str) -> Optional[dict]:
+    """schema.org Product (JSON-LD) — og:tag'lari yo'q marketplace sahifalari uchun."""
+    for raw in re.findall(r'<script[^>]+application/ld\+json[^>]*>(.*?)</script>', html_text, re.I | re.S):
+        try:
+            data = json.loads(raw.strip())
+        except ValueError:
+            continue
+        stack = [data]
+        while stack:
+            node = stack.pop()
+            if isinstance(node, list):
+                stack.extend(node)
+            elif isinstance(node, dict):
+                types = node.get("@type")
+                types = types if isinstance(types, list) else [types]
+                if "Product" in types and node.get("name"):
+                    return node
+                stack.extend(v for k, v in node.items() if k == "@graph" or isinstance(v, (dict, list)))
+    return None
+
+
+def _json_ld_image(product: dict) -> str:
+    image = product.get("image")
+    if isinstance(image, list):
+        image = image[0] if image else ""
+    if isinstance(image, dict):
+        image = image.get("url") or image.get("contentUrl") or ""
+    return image if isinstance(image, str) else ""
+
+
+async def _fetch_best_html(url: str, platform: str) -> Optional[tuple[str, str]]:
+    """Avval oddiy brauzer sifatida; sahifa bloklangan ko'rinsa (captcha,
+    og: yo'q) — havola-preview botlari sifatida qayta so'raladi."""
+    first = await _fetch_site_html(url, platform)
+    if first and not _looks_blocked(first[0]):
+        return first
+    for agent in _PREVIEW_BOT_AGENTS:
+        retry = await _fetch_site_html(url, platform, user_agent=agent)
+        if retry and not _looks_blocked(retry[0]):
+            return retry
+    return first
+
+
+def _is_content_page(url: str, html_text: str) -> bool:
+    """Mahsulot/maqola sahifasimi (og:image — aynan shu narsaning rasmi) yoki
+    saytning bosh sahifasimi (og:image ko'pincha banner — logotip afzal)."""
+    og_type = _extract_meta(html_text, "og:type").lower()
+    if og_type.startswith(("product", "article", "video", "music", "book")) or _json_ld_product(html_text):
+        return True
+    segments = [seg for seg in urlparse(url).path.split("/") if seg]
+    return len(segments) >= 2 or any(re.search(r"\d{3,}", seg) for seg in segments)
 
 
 _LOGO_MAX_BYTES = 512 * 1024
@@ -1024,21 +1117,35 @@ async def _fetch_ad_preview(bot: Bot, url: str) -> dict:
     if not await _resolve_is_public_host(host):
         raise _AdPreviewError(400, "host_not_allowed")
 
-    fetched = await _fetch_site_html(url, platform)
-    if not fetched:
+    fetched = await _fetch_best_html(url, platform)
+    if not fetched or _looks_blocked(fetched[0]):
+        # Captcha sahifasining "Верификация" sarlavhasi brend nomi bo'lib
+        # qolmasin — sahifa domen nomini ishlatadi, logotip /api/ads/logo'dan.
         return {"platform": platform, "title": "", "description": "", "photo_url": None}
     html_text, base_url = fetched
+    product = _json_ld_product(html_text) or {}
 
-    title = _extract_meta(html_text, "og:title", "twitter:title")
-    if not title:
-        m = re.search(r"<title[^>]*>([^<]*)</title>", html_text, re.I)
-        title = unescape(m.group(1)).strip() if m else ""
-    description = _extract_meta(html_text, "og:description", "twitter:description", "description")
-    og_image = _absolute_image_url(base_url, _extract_meta(html_text, "og:image", "twitter:image"))
+    title = (
+        _extract_meta(html_text, "og:title", "twitter:title")
+        or str(product.get("name") or "").strip()
+        or _html_title(html_text)
+    )
+    description = (
+        _extract_meta(html_text, "og:description", "twitter:description")
+        or unescape(str(product.get("description") or "")).strip()
+        or _extract_meta(html_text, "description")
+    )
+    og_image = _absolute_image_url(
+        base_url, _extract_meta(html_text, "og:image", "twitter:image") or _json_ld_image(product)
+    )
     icon = _extract_site_icon(html_text, base_url)
-    # Oddiy saytlarda og:image ko'pincha keng banner — logotip (ikonka) afzal.
-    # Instagram/YouTube/do'konlarda esa og:image aynan profil/ilova rasmi.
-    photo_url = (icon or og_image) if platform == "website" else (og_image or icon)
+    # Bosh sahifada og:image ko'pincha keng banner — logotip afzal. Mahsulot/
+    # maqola sahifasida (marketplace tovari) va Instagram/YouTube/do'konlarda
+    # esa og:image aynan shu narsaning rasmi.
+    if platform == "website" and not _is_content_page(base_url, html_text):
+        photo_url = icon or og_image
+    else:
+        photo_url = og_image or icon
 
     return {
         "platform": platform,
