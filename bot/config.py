@@ -25,6 +25,18 @@ MINI_APP_SHORT_NAME = os.getenv("MINI_APP_SHORT_NAME", "app")
 # kanalga e'lon qilish butunlay o'chiriladi.
 CHANNEL_ID = os.getenv("CHANNEL_ID", "@ehsonli_qollar").strip()
 
+# Reklama to'lovi (hozircha kartaga o'tkazma + chek, admin qo'lda tasdiqlaydi).
+# Karta ma'lumotlari kodda saqlanmaydi — hosting Environment Variables'da:
+#   AD_CARD_NUMBER=8600...   AD_CARD_HOLDER=ISM FAMILIYA
+#   AD_ADMIN_IDS=123456789,987654321  (chekni tasdiqlovchi adminlarning
+#   Telegram ID'lari; ular botga /start bosgan bo'lishi kerak)
+AD_CARD_NUMBER = "".join(ch for ch in os.getenv("AD_CARD_NUMBER", "") if ch.isdigit())
+AD_CARD_HOLDER = os.getenv("AD_CARD_HOLDER", "").strip()
+AD_ADMIN_IDS = [
+    int(part) for part in os.getenv("AD_ADMIN_IDS", "").replace(" ", "").split(",")
+    if part.lstrip("-").isdigit()
+]
+
 if not BOT_TOKEN:
     raise RuntimeError(
         "BOT_TOKEN topilmadi. .env faylini yarating (.env.example asosida) "

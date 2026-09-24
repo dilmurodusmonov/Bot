@@ -404,6 +404,48 @@ TEXTS = {
 }
 
 
+# Reklama to'lovi (chek) bo'yicha admin qarori haqida foydalanuvchiga xabar.
+_AD_PAYMENT_TEXTS = {
+    "uz": {
+        "ad_payment_approved_new": "✅ To'lovingiz tasdiqlandi! «{brand}» reklamasi reytingga chiqdi ({amount}).",
+        "ad_payment_approved_raise": "✅ To'lovingiz tasdiqlandi! «{brand}» taklifi {amount}ga oshirildi.",
+        "ad_payment_rejected": "❌ «{brand}» uchun to'lov tasdiqlanmadi. Chek noto'g'ri yoki summa kartaga tushmagan bo'lishi mumkin. Savollar bo'lsa, admin bilan bog'laning.",
+    },
+    "ru": {
+        "ad_payment_approved_new": "✅ Оплата подтверждена! Реклама «{brand}» появилась в рейтинге ({amount}).",
+        "ad_payment_approved_raise": "✅ Оплата подтверждена! Ставка «{brand}» повышена на {amount}.",
+        "ad_payment_rejected": "❌ Оплата для «{brand}» не подтверждена. Возможно, чек неверный или сумма не поступила на карту. По вопросам свяжитесь с администратором.",
+    },
+    "en": {
+        "ad_payment_approved_new": "✅ Payment confirmed! The «{brand}» ad is now in the rating ({amount}).",
+        "ad_payment_approved_raise": "✅ Payment confirmed! The «{brand}» bid was raised by {amount}.",
+        "ad_payment_rejected": "❌ Payment for «{brand}» was not confirmed. The receipt may be wrong or the amount did not arrive. Please contact the admin if you have questions.",
+    },
+    "kk": {
+        "ad_payment_approved_new": "✅ Төлем расталды! «{brand}» жарнамасы рейтингке шықты ({amount}).",
+        "ad_payment_approved_raise": "✅ Төлем расталды! «{brand}» ұсынысы {amount} көтерілді.",
+        "ad_payment_rejected": "❌ «{brand}» үшін төлем расталмады. Чек қате немесе сома картаға түспеген болуы мүмкін. Сұрақтар болса, әкімшімен байланысыңыз.",
+    },
+    "tg": {
+        "ad_payment_approved_new": "✅ Пардохт тасдиқ шуд! Рекламаи «{brand}» ба рейтинг баромад ({amount}).",
+        "ad_payment_approved_raise": "✅ Пардохт тасдиқ шуд! Пешниҳоди «{brand}» ба {amount} зиёд карда шуд.",
+        "ad_payment_rejected": "❌ Пардохт барои «{brand}» тасдиқ нашуд. Шояд чек нодуруст аст ё маблағ ба корт нарасидааст. Барои саволҳо бо админ тамос гиред.",
+    },
+    "ky": {
+        "ad_payment_approved_new": "✅ Төлөм тастыкталды! «{brand}» жарнамасы рейтингге чыкты ({amount}).",
+        "ad_payment_approved_raise": "✅ Төлөм тастыкталды! «{brand}» сунушу {amount} көтөрүлдү.",
+        "ad_payment_rejected": "❌ «{brand}» үчүн төлөм тастыкталган жок. Чек туура эмес же сумма картага түшкөн эмес болушу мүмкүн. Суроолор болсо, админ менен байланышыңыз.",
+    },
+    "tk": {
+        "ad_payment_approved_new": "✅ Tölegiňiz tassyklandy! «{brand}» mahabaty reýtinge çykdy ({amount}).",
+        "ad_payment_approved_raise": "✅ Tölegiňiz tassyklandy! «{brand}» teklibi {amount} ýokarlandyryldy.",
+        "ad_payment_rejected": "❌ «{brand}» üçin töleg tassyklanmady. Çek nädogry ýa-da mukdar karta gelmedik bolmagy mümkin. Soraglaryňyz bolsa, admin bilen habarlaşyň.",
+    },
+}
+for _lang, _extra in _AD_PAYMENT_TEXTS.items():
+    TEXTS[_lang].update(_extra)
+
+
 def t(lang: str, key: str, **kwargs) -> str:
     lang = lang if lang in TEXTS else "uz"
     template = TEXTS[lang].get(key) or TEXTS["uz"].get(key, key)

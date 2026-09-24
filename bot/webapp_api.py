@@ -19,8 +19,17 @@ from aiogram.types import (
 )
 from aiohttp import web
 
+from bot.ad_payments import admin_caption, send_receipt_to_admins
 from bot.collage import build_collage
-from bot.config import BASE_URL, CHANNEL_ID, MINI_APP_SHORT_NAME, WEBAPP_URL
+from bot.config import (
+    AD_ADMIN_IDS,
+    AD_CARD_HOLDER,
+    AD_CARD_NUMBER,
+    BASE_URL,
+    CHANNEL_ID,
+    MINI_APP_SHORT_NAME,
+    WEBAPP_URL,
+)
 from bot.database import (
     cancel_reservation,
     count_pending_receive,
@@ -34,8 +43,12 @@ from bot.database import (
     fill_ad_bid_preview,
     get_ad_bids_ranked,
     increment_ad_bid_clicks,
-    get_ad_bid_owner,
-    raise_ad_bid,
+    get_ad_bid,
+    create_ad_payment_new,
+    create_ad_payment_raise,
+    delete_ad_payment,
+    get_pending_ad_payments,
+    set_ad_payment_receipt,
     increment_ad_views,
     increment_donation_share,
     get_active_reservation_for_donation,
@@ -57,7 +70,6 @@ from bot.database import (
     set_user_language,
     set_user_role,
     toggle_donation_like,
-    insert_ad_bid,
 )
 from bot.notify import send_tracked_message as _send_tracked_message
 from bot.texts import (
@@ -832,37 +844,77 @@ async def api_ads_leaderboard(request: web.Request) -> web.Response:
         "min_starting_bid": AD_MIN_STARTING_BID,
         "min_increment": AD_MIN_INCREMENT,
         "next_top_bid": top_amount + AD_MIN_INCREMENT if bids else AD_MIN_STARTING_BID,
+        "payment": {
+            "enabled": _ad_payments_enabled(),
+            "card": AD_CARD_NUMBER,
+            "holder": AD_CARD_HOLDER,
+        },
+        "my_pending": [
+            {"kind": p["kind"], "amount": p["amount"], "brand_name": p["brand_name"]}
+            for p in await get_pending_ad_payments(telegram_id)
+        ],
     })
 
 
-async def api_ads_bid(request: web.Request) -> web.Response:
+def _ad_payments_enabled() -> bool:
+    return bool(AD_CARD_NUMBER and AD_ADMIN_IDS)
+
+
+async def api_ads_payment(request: web.Request) -> web.Response:
+    """Reklama to'lovi cheki: yangi reklama (kind=new) yoki "Taklifni
+    oshirish" (kind=raise). Chek adminlarga yuboriladi; admin tasdiqlaguncha
+    reklama reytingda ko'rinmaydi / summa oshmaydi."""
     telegram_id = await _require_user_id(request)
-    body = await request.json()
-    brand_name = (body.get("brand_name") or "").strip()
-    url = (body.get("url") or "").strip()
-    bid_amount = body.get("bid_amount")
+    if not _ad_payments_enabled():
+        raise web.HTTPServiceUnavailable(text="payments_not_configured")
+    fields, photo_bytes, filename = await _read_multipart_photo(request)
+    kind = fields.get("kind")
 
-    if not brand_name or not url:
-        raise web.HTTPBadRequest(text="missing fields")
-    if not re.match(r"^https?://", url):
-        url = "https://" + url
-    if not isinstance(bid_amount, (int, float)) or bid_amount <= 0:
-        raise web.HTTPBadRequest(text="invalid bid_amount")
-    bid_amount = int(bid_amount)
+    if kind == "new":
+        brand_name = (fields.get("brand_name") or "").strip()
+        url = (fields.get("url") or "").strip()
+        if not brand_name or not url:
+            raise web.HTTPBadRequest(text="missing fields")
+        if not re.match(r"^https?://", url):
+            url = "https://" + url
+        try:
+            bid_amount = int(fields.get("bid_amount") or 0)
+        except ValueError:
+            raise web.HTTPBadRequest(text="invalid bid_amount")
+        if bid_amount < AD_MIN_STARTING_BID:
+            raise web.HTTPConflict(text="bid_too_low")
+        # Platforma URL manzilidan serverda aniqlanadi (klientga ishonilmaydi).
+        category = fields.get("category")
+        bid_id, payment_id = await create_ad_payment_new(
+            telegram_id, brand_name[:80], url, bid_amount, _derive_ad_platform(url),
+            _sanitize_ad_photo_url(fields.get("photo_url")),
+            category if category in _AD_CATEGORY_KEYS else None,
+            _sanitize_ad_description(fields.get("description")),
+        )
+        amount = bid_amount
+    elif kind == "raise":
+        try:
+            bid_id = int(fields.get("bid_id") or 0)
+        except ValueError:
+            raise web.HTTPBadRequest(text="invalid bid_id")
+        existing = await get_ad_bid(bid_id)
+        if not existing or existing["status"] != "approved":
+            raise web.HTTPNotFound()
+        if existing["telegram_id"] != telegram_id:
+            raise web.HTTPForbidden(text="not_owner")
+        amount = AD_MIN_INCREMENT
+        payment_id = await create_ad_payment_raise(bid_id, telegram_id, amount)
+    else:
+        raise web.HTTPBadRequest(text="invalid kind")
 
-    if bid_amount < AD_MIN_STARTING_BID:
-        raise web.HTTPConflict(text="bid_too_low")
-
-    # Platforma URL manzilidan serverda aniqlanadi (klientga ishonilmaydi),
-    # rasm URL'i esa /api/ads/preview orqali oldindan olingan bo'lsa shundan
-    # olinadi — top 10 reytingda ham preview kartadagi kabi rasm chiqishi uchun.
-    platform = _derive_ad_platform(url)
-    photo_url = _sanitize_ad_photo_url(body.get("photo_url"))
-    category = body.get("category")
-    category = category if category in _AD_CATEGORY_KEYS else None
-    description = _sanitize_ad_description(body.get("description"))
-    await insert_ad_bid(telegram_id, brand_name[:80], url, bid_amount, platform, photo_url, category, description)
-    return web.json_response({"ok": True})
+    bid = await get_ad_bid(bid_id)
+    caption = admin_caption(payment_id, kind, amount, bid, telegram_id)
+    file_id = await send_receipt_to_admins(request.app["bot"], photo_bytes, filename, caption, payment_id)
+    if not file_id:
+        await delete_ad_payment(payment_id)
+        raise web.HTTPBadGateway(text="admin_unreachable")
+    await set_ad_payment_receipt(payment_id, file_id)
+    return web.json_response({"ok": True, "payment_id": payment_id})
 
 
 async def api_ads_click(request: web.Request) -> web.Response:
@@ -871,19 +923,6 @@ async def api_ads_click(request: web.Request) -> web.Response:
     if clicks is None:
         raise web.HTTPNotFound()
     return web.json_response({"clicks": clicks})
-
-
-async def api_ads_raise(request: web.Request) -> web.Response:
-    """sindr.uz'dagi "Taklifni oshirish": taklif eng kam qadamga oshiriladi.
-    Faqat taklif egasi oshira oladi."""
-    telegram_id = await _require_user_id(request)
-    bid_id = int(request.match_info["id"])
-    bid_amount = await raise_ad_bid(bid_id, telegram_id, AD_MIN_INCREMENT)
-    if bid_amount is None:
-        if await get_ad_bid_owner(bid_id) is None:
-            raise web.HTTPNotFound()
-        raise web.HTTPForbidden(text="not_owner")
-    return web.json_response({"bid_amount": bid_amount})
 
 
 async def api_badges(request: web.Request) -> web.Response:
@@ -1326,9 +1365,8 @@ def setup_api_routes(app: web.Application) -> None:
     app.router.add_post("/api/ad-view", api_ad_view)
     app.router.add_get("/api/ads/preview", api_ads_preview)
     app.router.add_get("/api/ads/leaderboard", api_ads_leaderboard)
-    app.router.add_post("/api/ads/bid", api_ads_bid)
+    app.router.add_post("/api/ads/payment", api_ads_payment)
     app.router.add_post("/api/ads/{id:\\d+}/click", api_ads_click)
-    app.router.add_post("/api/ads/{id:\\d+}/raise", api_ads_raise)
     app.router.add_get("/api/categories", api_categories)
     app.router.add_get("/api/donations", api_donations)
     app.router.add_get("/api/donation/{id}", api_donation)

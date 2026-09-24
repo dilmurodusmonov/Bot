@@ -547,6 +547,56 @@
   .advertise-pager-btn:disabled { color: #C7C7CC; cursor: default; }
   .advertise-pager-gap { color: #8E8E93; font-size: 15px; padding: 0 2px; }
   .advertise-pager-summary { text-align: center; color: var(--hint); font-size: 12.5px; margin-bottom: 14px; }
+  .advertise-pending {
+    margin: 12px 6px 0; padding: 10px 12px; border-radius: 12px; background: #FFF8E6;
+    border: 1px solid #F5DDA0; color: #8A6516; font-size: 12.5px; line-height: 1.4;
+  }
+  .advertise-pending-row + .advertise-pending-row { margin-top: 4px; }
+  /* To'lov (chek) sahifasi */
+  .adpay { padding: 8px 6px 20px; }
+  .adpay-amount-label { text-align: center; color: var(--hint); font-size: 12.5px; }
+  .adpay-amount { text-align: center; font-size: 30px; font-weight: 700; color: #E5484D; margin-top: 2px; }
+  .adpay-subject {
+    text-align: center; color: #3A3A3C; font-size: 13px; margin: 4px 0 18px;
+    overflow: hidden; text-overflow: ellipsis; white-space: nowrap;
+  }
+  .adpay-card {
+    border-radius: 16px; padding: 14px 16px; background: #FFF3F1; border: 1.5px solid #F5C4B9;
+  }
+  .adpay-card-label { font-size: 11.5px; color: #8E8E93; }
+  .adpay-card-row { display: flex; align-items: center; justify-content: space-between; gap: 10px; margin-top: 2px; }
+  .adpay-card-number { font-size: 20px; font-weight: 700; letter-spacing: 0.5px; color: #1C1C1E; }
+  .adpay-card-holder { font-size: 15px; font-weight: 600; color: #1C1C1E; margin-top: 2px; }
+  .adpay-card-divider { height: 1px; background: #F5C4B9; margin: 12px 0; }
+  .adpay-copy-btn {
+    flex-shrink: 0; display: inline-flex; align-items: center; gap: 5px; padding: 6px 12px; border-radius: 999px;
+    background: #FFFFFF; border: 1px solid #F5C4B9; color: #D2453F; font-family: inherit;
+    font-size: 12px; font-weight: 600; cursor: pointer;
+  }
+  .adpay-copy-btn svg { width: 14px; height: 14px; }
+  .adpay-steps { margin: 16px 2px; padding: 0; list-style: none; counter-reset: adpay; }
+  .adpay-steps li {
+    counter-increment: adpay; position: relative; padding-left: 28px; margin-bottom: 8px;
+    font-size: 13px; line-height: 1.4; color: #3A3A3C;
+  }
+  .adpay-steps li::before {
+    content: counter(adpay); position: absolute; left: 0; top: 0; width: 20px; height: 20px; border-radius: 50%;
+    background: linear-gradient(135deg, var(--accent1), var(--accent2)); color: #fff;
+    font-size: 11px; font-weight: 700; display: flex; align-items: center; justify-content: center;
+  }
+  .adpay-upload {
+    display: flex; flex-direction: column; align-items: center; justify-content: center; gap: 8px;
+    min-height: 120px; border: 1.5px dashed #F0A99C; border-radius: 16px; background: #FFFBFA;
+    color: #D2453F; font-size: 14px; font-weight: 600; cursor: pointer; padding: 12px; text-align: center;
+  }
+  .adpay-upload svg { width: 28px; height: 28px; }
+  .adpay-upload img { max-width: 100%; max-height: 260px; border-radius: 10px; object-fit: contain; }
+  .adpay-upload-change { font-size: 12.5px; font-weight: 500; color: #8E8E93; }
+  #advertise-pay-btn {
+    border: 1px solid #D2453F; border-radius: 14px; box-shadow: 0 4px 0 #C23A3F; margin: 18px 0 4px;
+  }
+  #advertise-pay-btn:active { transform: translateY(2px); box-shadow: 0 2px 0 #C23A3F; }
+  #advertise-pay-btn:disabled { opacity: 0.5; }
   .advertise-refresh-wrap { display: flex; justify-content: center; margin: 26px 0 10px; }
   /* sindr.uz'dagi "Yangilash" o'lchamlari: ~34px balandlik, 16px oddiy shrift. */
   .advertise-refresh-btn {
@@ -812,7 +862,7 @@
       advertise_url_placeholder: "Brendingiz URL manzili",
       advertise_url_hint: "Veb-sayt, Telegram, Instagram, YouTube, App Store yoki Google Play URL",
       advertise_filter_all: "Barchasi", advertise_top_n_label: "TOP {n}", advertise_submit: "Reytingni sindirish",
-      advertise_empty: "Hozircha takliflar yo'q. Birinchi bo'ling!", advertise_you_badge: "Sizniki", advertise_clicks: "{count} klik", advertise_take_rank: "{n}-o'rinni olish", advertise_raise: "Taklifni oshirish", advertise_rank_prefix: "{n}-o'rin uchun", advertise_raise_confirm: "«{brand}» taklifini {amount}gacha oshirasizmi?",
+      advertise_empty: "Hozircha takliflar yo'q. Birinchi bo'ling!", advertise_you_badge: "Sizniki", advertise_clicks: "{count} klik", advertise_take_rank: "{n}-o'rinni olish", advertise_raise: "Taklifni oshirish", advertise_rank_prefix: "{n}-o'rin uchun",
       advertise_refresh: "Yangilash", advertise_refreshed: "Reyting yangilandi",
       advertise_page_summary: "{from}–{to}, jami {total} ta loyiha", advertise_website_label: "Veb-sayt",
       advertise_category_placeholder: "Kategoriyani tanlang",
@@ -821,7 +871,24 @@
       advertise_cat_marketing: "Marketing va kreativ", advertise_cat_lifestyle: "Layfstayl va ko'ngilochar",
       advertise_cat_other: "Boshqalar",
       advertise_bid_too_low: "Taklif juda past. Kamida {amount} kiriting.",
-      advertise_success: "Taklifingiz qabul qilindi!",
+      advertise_pay_amount_label: "To'lov summasi",
+      advertise_pay_new_subject: "Reklama: {brand}",
+      advertise_pay_raise_subject: "Taklifni oshirish: {brand}",
+      advertise_pay_card_label: "Karta raqami",
+      advertise_pay_holder_label: "Karta egasi",
+      advertise_pay_copy: "Nusxa",
+      advertise_copied: "Nusxa olindi",
+      advertise_pay_step1: "Ko'rsatilgan summani shu kartaga o'tkazing.",
+      advertise_pay_step2: "To'lov chekini (skrinshot) yuklang.",
+      advertise_pay_step3: "Admin tekshirib tasdiqlagach, reklamangiz reytingga chiqadi va botga xabar keladi.",
+      advertise_pay_upload: "Chek rasmini yuklang",
+      advertise_pay_change: "Boshqa rasm tanlash",
+      advertise_pay_send: "Chekni yuborish",
+      advertise_pay_sent: "Chek yuborildi! Admin tasdiqlagach reklamangiz reytingga chiqadi.",
+      advertise_pay_unavailable: "To'lov hozircha sozlanmagan. Birozdan so'ng urinib ko'ring.",
+      advertise_pending_label: "Tekshirilmoqda",
+      advertise_pending_new: "yangi reklama",
+      advertise_pending_raise: "taklifni oshirish",
       settings_title: "Umumiy sozlamalar", language_label: "Til", notifications_label: "Bildirishnomalar",
       add_to_home_title: "Ehsonni bir urinishda oching",
       add_to_home_desc: "Ilovani bir zumda ochish uchun Ehsonni bosh ekranga qo'shing.",
@@ -883,7 +950,7 @@
       advertise_url_placeholder: "URL вашего бренда",
       advertise_url_hint: "Сайт, Telegram, Instagram, YouTube, App Store или Google Play ссылка",
       advertise_filter_all: "Все", advertise_top_n_label: "ТОП {n}", advertise_submit: "Побороться за рейтинг",
-      advertise_empty: "Пока нет ставок. Будьте первым!", advertise_you_badge: "Ваша", advertise_clicks: "{count} кликов", advertise_take_rank: "Занять {n}-е место", advertise_raise: "Повысить ставку", advertise_rank_prefix: "За {n}-е место", advertise_raise_confirm: "Повысить ставку «{brand}» до {amount}?",
+      advertise_empty: "Пока нет ставок. Будьте первым!", advertise_you_badge: "Ваша", advertise_clicks: "{count} кликов", advertise_take_rank: "Занять {n}-е место", advertise_raise: "Повысить ставку", advertise_rank_prefix: "За {n}-е место",
       advertise_refresh: "Обновить", advertise_refreshed: "Рейтинг обновлён",
       advertise_page_summary: "{from}–{to}, всего {total} проектов", advertise_website_label: "Веб-сайт",
       advertise_category_placeholder: "Выберите категорию",
@@ -892,7 +959,24 @@
       advertise_cat_marketing: "Маркетинг и креатив", advertise_cat_lifestyle: "Лайфстайл и развлечения",
       advertise_cat_other: "Другое",
       advertise_bid_too_low: "Ставка слишком мала. Введите минимум {amount}.",
-      advertise_success: "Ваша ставка принята!",
+      advertise_pay_amount_label: "Сумма оплаты",
+      advertise_pay_new_subject: "Реклама: {brand}",
+      advertise_pay_raise_subject: "Повышение ставки: {brand}",
+      advertise_pay_card_label: "Номер карты",
+      advertise_pay_holder_label: "Владелец карты",
+      advertise_pay_copy: "Копировать",
+      advertise_copied: "Скопировано",
+      advertise_pay_step1: "Переведите указанную сумму на эту карту.",
+      advertise_pay_step2: "Загрузите чек об оплате (скриншот).",
+      advertise_pay_step3: "После проверки админом реклама появится в рейтинге, а бот пришлёт уведомление.",
+      advertise_pay_upload: "Загрузите фото чека",
+      advertise_pay_change: "Выбрать другое фото",
+      advertise_pay_send: "Отправить чек",
+      advertise_pay_sent: "Чек отправлен! После подтверждения админом реклама появится в рейтинге.",
+      advertise_pay_unavailable: "Оплата пока не настроена. Попробуйте позже.",
+      advertise_pending_label: "На проверке",
+      advertise_pending_new: "новая реклама",
+      advertise_pending_raise: "повышение ставки",
       settings_title: "Общие настройки", language_label: "Язык", notifications_label: "Уведомления",
       add_to_home_title: "Открывайте Ehson в один клик",
       add_to_home_desc: "Чтобы открывать приложение мгновенно, добавьте Ehson на главный экран.",
@@ -954,7 +1038,7 @@
       advertise_url_placeholder: "Your brand's URL",
       advertise_url_hint: "Website, Telegram, Instagram, YouTube, App Store or Google Play URL",
       advertise_filter_all: "All", advertise_top_n_label: "TOP {n}", advertise_submit: "Break the rating",
-      advertise_empty: "No bids yet. Be the first!", advertise_you_badge: "Yours", advertise_clicks: "{count} clicks", advertise_take_rank: "Take #{n}", advertise_raise: "Raise bid", advertise_rank_prefix: "For #{n}", advertise_raise_confirm: "Raise «{brand}» bid to {amount}?",
+      advertise_empty: "No bids yet. Be the first!", advertise_you_badge: "Yours", advertise_clicks: "{count} clicks", advertise_take_rank: "Take #{n}", advertise_raise: "Raise bid", advertise_rank_prefix: "For #{n}",
       advertise_refresh: "Refresh", advertise_refreshed: "Rating updated",
       advertise_page_summary: "{from}–{to} of {total} projects", advertise_website_label: "Website",
       advertise_category_placeholder: "Choose a category",
@@ -963,7 +1047,24 @@
       advertise_cat_marketing: "Marketing & creative", advertise_cat_lifestyle: "Lifestyle & entertainment",
       advertise_cat_other: "Other",
       advertise_bid_too_low: "Bid is too low. Enter at least {amount}.",
-      advertise_success: "Your bid was accepted!",
+      advertise_pay_amount_label: "Amount to pay",
+      advertise_pay_new_subject: "Ad: {brand}",
+      advertise_pay_raise_subject: "Raise bid: {brand}",
+      advertise_pay_card_label: "Card number",
+      advertise_pay_holder_label: "Card holder",
+      advertise_pay_copy: "Copy",
+      advertise_copied: "Copied",
+      advertise_pay_step1: "Transfer the amount shown to this card.",
+      advertise_pay_step2: "Upload the payment receipt (screenshot).",
+      advertise_pay_step3: "Once an admin confirms it, your ad goes into the rating and the bot notifies you.",
+      advertise_pay_upload: "Upload receipt photo",
+      advertise_pay_change: "Choose another photo",
+      advertise_pay_send: "Send receipt",
+      advertise_pay_sent: "Receipt sent! Your ad will appear in the rating after admin confirmation.",
+      advertise_pay_unavailable: "Payment is not set up yet. Please try again later.",
+      advertise_pending_label: "Under review",
+      advertise_pending_new: "new ad",
+      advertise_pending_raise: "bid raise",
       settings_title: "General settings", language_label: "Language", notifications_label: "Notifications",
       add_to_home_title: "Open Ehson in one tap",
       add_to_home_desc: "Add Ehson to your home screen to open the app instantly.",
@@ -1025,7 +1126,7 @@
       advertise_url_placeholder: "Брендіңіздің URL мекенжайы",
       advertise_url_hint: "Веб-сайт, Telegram, Instagram, YouTube, App Store немесе Google Play сілтемесі",
       advertise_filter_all: "Барлығы", advertise_top_n_label: "ТОП {n}", advertise_submit: "Рейтинг үшін күресу",
-      advertise_empty: "Әзірге ұсыныстар жоқ. Бірінші болыңыз!", advertise_you_badge: "Сіздікі", advertise_clicks: "{count} басу", advertise_take_rank: "{n}-орынды алу", advertise_raise: "Ұсынысты көтеру", advertise_rank_prefix: "{n}-орын үшін", advertise_raise_confirm: "«{brand}» ұсынысын {amount} дейін көтересіз бе?",
+      advertise_empty: "Әзірге ұсыныстар жоқ. Бірінші болыңыз!", advertise_you_badge: "Сіздікі", advertise_clicks: "{count} басу", advertise_take_rank: "{n}-орынды алу", advertise_raise: "Ұсынысты көтеру", advertise_rank_prefix: "{n}-орын үшін",
       advertise_refresh: "Жаңарту", advertise_refreshed: "Рейтинг жаңартылды",
       advertise_page_summary: "{from}–{to}, барлығы {total} жоба", advertise_website_label: "Веб-сайт",
       advertise_category_placeholder: "Санатты таңдаңыз",
@@ -1034,7 +1135,24 @@
       advertise_cat_marketing: "Маркетинг және креатив", advertise_cat_lifestyle: "Лайфстайл және көңіл ашу",
       advertise_cat_other: "Басқалар",
       advertise_bid_too_low: "Ұсыныс тым төмен. Кемінде {amount} енгізіңіз.",
-      advertise_success: "Ұсынысыңыз қабылданды!",
+      advertise_pay_amount_label: "Төлем сомасы",
+      advertise_pay_new_subject: "Жарнама: {brand}",
+      advertise_pay_raise_subject: "Ұсынысты көтеру: {brand}",
+      advertise_pay_card_label: "Карта нөмірі",
+      advertise_pay_holder_label: "Карта иесі",
+      advertise_pay_copy: "Көшіру",
+      advertise_copied: "Көшірілді",
+      advertise_pay_step1: "Көрсетілген соманы осы картаға аударыңыз.",
+      advertise_pay_step2: "Төлем чегін (скриншот) жүктеңіз.",
+      advertise_pay_step3: "Әкімші растағаннан кейін жарнамаңыз рейтингке шығады, бот хабарлайды.",
+      advertise_pay_upload: "Чек суретін жүктеңіз",
+      advertise_pay_change: "Басқа сурет таңдау",
+      advertise_pay_send: "Чекті жіберу",
+      advertise_pay_sent: "Чек жіберілді! Әкімші растағаннан кейін жарнамаңыз рейтингке шығады.",
+      advertise_pay_unavailable: "Төлем әзірге бапталмаған. Кейінірек көріңіз.",
+      advertise_pending_label: "Тексерілуде",
+      advertise_pending_new: "жаңа жарнама",
+      advertise_pending_raise: "ұсынысты көтеру",
       settings_title: "Жалпы баптаулар", language_label: "Тіл", notifications_label: "Хабарландырулар",
       add_to_home_title: "Ehson-ды бір басуда ашыңыз",
       add_to_home_desc: "Қосымшаны лезде ашу үшін Ehson-ды басты экранға қосыңыз.",
@@ -1088,7 +1206,7 @@
       advertise_url_placeholder: "Суроғаи URL-и бренди шумо",
       advertise_url_hint: "Сомона, Telegram, Instagram, YouTube, App Store ё Google Play пайванд",
       advertise_filter_all: "Ҳама", advertise_top_n_label: "ТОП {n}", advertise_submit: "Барои рейтинг мубориза бурдан",
-      advertise_empty: "Ҳанӯз пешниҳод нест. Аввалин шавед!", advertise_you_badge: "Аз шумо", advertise_clicks: "{count} клик", advertise_take_rank: "Ҷои {n}-ро гирифтан", advertise_raise: "Баланд бардоштан", advertise_rank_prefix: "Барои ҷои {n}", advertise_raise_confirm: "Пешниҳоди «{brand}»-ро то {amount} баланд мебардоред?",
+      advertise_empty: "Ҳанӯз пешниҳод нест. Аввалин шавед!", advertise_you_badge: "Аз шумо", advertise_clicks: "{count} клик", advertise_take_rank: "Ҷои {n}-ро гирифтан", advertise_raise: "Баланд бардоштан", advertise_rank_prefix: "Барои ҷои {n}",
       advertise_refresh: "Навсозӣ", advertise_refreshed: "Рейтинг навсозӣ шуд",
       advertise_page_summary: "{from}–{to}, ҳамагӣ {total} лоиҳа", advertise_website_label: "Сомона",
       advertise_category_placeholder: "Категорияро интихоб кунед",
@@ -1097,7 +1215,24 @@
       advertise_cat_marketing: "Маркетинг ва креатив", advertise_cat_lifestyle: "Лайфстайл ва фароғат",
       advertise_cat_other: "Дигар",
       advertise_bid_too_low: "Пешниҳод хеле паст. Ҳадди ақал {amount} ворид кунед.",
-      advertise_success: "Пешниҳоди шумо қабул шуд!",
+      advertise_pay_amount_label: "Маблағи пардохт",
+      advertise_pay_new_subject: "Реклама: {brand}",
+      advertise_pay_raise_subject: "Баланд бардоштани пешниҳод: {brand}",
+      advertise_pay_card_label: "Рақами корт",
+      advertise_pay_holder_label: "Соҳиби корт",
+      advertise_pay_copy: "Нусха",
+      advertise_copied: "Нусха гирифта шуд",
+      advertise_pay_step1: "Маблағи нишондодашударо ба ин корт интиқол диҳед.",
+      advertise_pay_step2: "Чеки пардохтро (скриншот) бор кунед.",
+      advertise_pay_step3: "Пас аз тасдиқи админ рекламаи шумо ба рейтинг мебарояд ва бот хабар медиҳад.",
+      advertise_pay_upload: "Акси чекро бор кунед",
+      advertise_pay_change: "Акси дигар интихоб кунед",
+      advertise_pay_send: "Фиристодани чек",
+      advertise_pay_sent: "Чек фиристода шуд! Пас аз тасдиқи админ реклама ба рейтинг мебарояд.",
+      advertise_pay_unavailable: "Пардохт ҳоло танзим нашудааст. Баъдтар кӯшиш кунед.",
+      advertise_pending_label: "Дар санҷиш",
+      advertise_pending_new: "рекламаи нав",
+      advertise_pending_raise: "баланд бардоштани пешниҳод",
       settings_title: "Танзимоти умумӣ", language_label: "Забон", notifications_label: "Огоҳиномаҳо",
       add_to_home_title: "Ehson-ро бо як зарба кушоед",
       add_to_home_desc: "Барои дарҳол кушодани барнома, Ehson-ро ба экрани асосӣ илова кунед.",
@@ -1151,7 +1286,7 @@
       advertise_url_placeholder: "Брендиңиздин URL дареги",
       advertise_url_hint: "Веб-сайт, Telegram, Instagram, YouTube, App Store же Google Play шилтемеси",
       advertise_filter_all: "Баары", advertise_top_n_label: "ТОП {n}", advertise_submit: "Рейтинг үчүн күрөшүү",
-      advertise_empty: "Азырынча сунуштар жок. Биринчи болуңуз!", advertise_you_badge: "Сиздики", advertise_clicks: "{count} басуу", advertise_take_rank: "{n}-орунду алуу", advertise_raise: "Сунушту көтөрүү", advertise_rank_prefix: "{n}-орун үчүн", advertise_raise_confirm: "«{brand}» сунушун {amount} чейин көтөрөсүзбү?",
+      advertise_empty: "Азырынча сунуштар жок. Биринчи болуңуз!", advertise_you_badge: "Сиздики", advertise_clicks: "{count} басуу", advertise_take_rank: "{n}-орунду алуу", advertise_raise: "Сунушту көтөрүү", advertise_rank_prefix: "{n}-орун үчүн",
       advertise_refresh: "Жаңылоо", advertise_refreshed: "Рейтинг жаңыланды",
       advertise_page_summary: "{from}–{to}, бардыгы {total} долбоор", advertise_website_label: "Веб-сайт",
       advertise_category_placeholder: "Категорияны тандаңыз",
@@ -1160,7 +1295,24 @@
       advertise_cat_marketing: "Маркетинг жана креатив", advertise_cat_lifestyle: "Лайфстайл жана көңүл ачуу",
       advertise_cat_other: "Башкалар",
       advertise_bid_too_low: "Сунуш өтө төмөн. Кеминде {amount} киргизиңиз.",
-      advertise_success: "Сунушуңуз кабыл алынды!",
+      advertise_pay_amount_label: "Төлөм суммасы",
+      advertise_pay_new_subject: "Жарнама: {brand}",
+      advertise_pay_raise_subject: "Сунушту көтөрүү: {brand}",
+      advertise_pay_card_label: "Карта номери",
+      advertise_pay_holder_label: "Карта ээси",
+      advertise_pay_copy: "Көчүрүү",
+      advertise_copied: "Көчүрүлдү",
+      advertise_pay_step1: "Көрсөтүлгөн сумманы ушул картага которуңуз.",
+      advertise_pay_step2: "Төлөм чегин (скриншот) жүктөңүз.",
+      advertise_pay_step3: "Админ тастыктагандан кийин жарнамаңыз рейтингге чыгат, бот билдирет.",
+      advertise_pay_upload: "Чектин сүрөтүн жүктөңүз",
+      advertise_pay_change: "Башка сүрөт тандоо",
+      advertise_pay_send: "Чекти жөнөтүү",
+      advertise_pay_sent: "Чек жөнөтүлдү! Админ тастыктагандан кийин жарнамаңыз рейтингге чыгат.",
+      advertise_pay_unavailable: "Төлөм азырынча жөндөлгөн эмес. Кийинчерээк аракет кылыңыз.",
+      advertise_pending_label: "Текшерилүүдө",
+      advertise_pending_new: "жаңы жарнама",
+      advertise_pending_raise: "сунушту көтөрүү",
       settings_title: "Жалпы жөндөөлөр", language_label: "Тил", notifications_label: "Билдирүүлөр",
       add_to_home_title: "Ehson-ду бир басуу менен ачыңыз",
       add_to_home_desc: "Колдонмону дароо ачуу үчүн Ehson-ду башкы экранга кошуңуз.",
@@ -1214,7 +1366,7 @@
       advertise_url_placeholder: "Brendiňiziň URL salgysy",
       advertise_url_hint: "Websahypa, Telegram, Instagram, YouTube, App Store ýa-da Google Play salgysy",
       advertise_filter_all: "Ählisi", advertise_top_n_label: "TOP {n}", advertise_submit: "Reýting üçin göreşmek",
-      advertise_empty: "Heniz teklip ýok. Birinji boluň!", advertise_you_badge: "Siziňki", advertise_clicks: "{count} basyş", advertise_take_rank: "{n}-nji orny almak", advertise_raise: "Teklibi ýokarlandyrmak", advertise_rank_prefix: "{n}-nji orun üçin", advertise_raise_confirm: "«{brand}» teklibini {amount} çenli ýokarlandyrýarsyňyzmy?",
+      advertise_empty: "Heniz teklip ýok. Birinji boluň!", advertise_you_badge: "Siziňki", advertise_clicks: "{count} basyş", advertise_take_rank: "{n}-nji orny almak", advertise_raise: "Teklibi ýokarlandyrmak", advertise_rank_prefix: "{n}-nji orun üçin",
       advertise_refresh: "Täzele", advertise_refreshed: "Reýting täzelendi",
       advertise_page_summary: "{from}–{to}, jemi {total} taslama", advertise_website_label: "Websahypa",
       advertise_category_placeholder: "Kategoriýany saýlaň",
@@ -1223,7 +1375,24 @@
       advertise_cat_marketing: "Marketing we dörediji", advertise_cat_lifestyle: "Durmuş ýörelgesi we güýmenje",
       advertise_cat_other: "Beýlekiler",
       advertise_bid_too_low: "Teklip gaty pes. Iň az {amount} giriziň.",
-      advertise_success: "Teklibiňiz kabul edildi!",
+      advertise_pay_amount_label: "Töleg mukdary",
+      advertise_pay_new_subject: "Mahabat: {brand}",
+      advertise_pay_raise_subject: "Teklibi ýokarlandyrmak: {brand}",
+      advertise_pay_card_label: "Kart belgisi",
+      advertise_pay_holder_label: "Kartyň eýesi",
+      advertise_pay_copy: "Göçür",
+      advertise_copied: "Göçürildi",
+      advertise_pay_step1: "Görkezilen mukdary şu karta geçiriň.",
+      advertise_pay_step2: "Töleg çegini (skrinşot) ýükläň.",
+      advertise_pay_step3: "Admin tassyklandan soň mahabatyňyz reýtinge çykar we bot habar berer.",
+      advertise_pay_upload: "Çegiň suratyny ýükläň",
+      advertise_pay_change: "Başga surat saýlamak",
+      advertise_pay_send: "Çegi ibermek",
+      advertise_pay_sent: "Çek iberildi! Admin tassyklandan soň mahabatyňyz reýtinge çykar.",
+      advertise_pay_unavailable: "Töleg entek sazlanmady. Soňrak synanyşyň.",
+      advertise_pending_label: "Barlanýar",
+      advertise_pending_new: "täze mahabat",
+      advertise_pending_raise: "teklibi ýokarlandyrmak",
       settings_title: "Umumy sazlamalar", language_label: "Dil", notifications_label: "Bildirişler",
       add_to_home_title: "Ehson-y bir basyşda açyň",
       add_to_home_desc: "Programmany haýal etmän açmak üçin Ehson-y baş ekrana goşuň.",
@@ -2932,26 +3101,16 @@
         document.getElementById("advertise-top-amount-unit").textContent = parts.unit;
       }
 
-      function askConfirm(message, onYes) {
-        if (tg && typeof tg.showConfirm === "function") {
-          try {
-            tg.showConfirm(message, function (ok) { if (ok) onYes(); });
-            return;
-          } catch (e) {}
-        }
-        if (window.confirm(message)) onYes();
+      // To'lov sahifasiga o'tish: kartaga o'tkazma + chek, admin tasdiqlaydi.
+      function openAdPayment(params) {
+        if (!data.payment || !data.payment.enabled) { showError(tr("advertise_pay_unavailable")); return; }
+        params.card = data.payment.card;
+        params.holder = data.payment.holder;
+        goto("advertise_pay", params);
       }
 
       function confirmRaise(bid) {
-        var newAmount = bid.bid_amount + data.min_increment;
-        askConfirm(trf("advertise_raise_confirm", { brand: bid.brand_name, amount: formatSom(newAmount) }), function () {
-          api("POST", "/api/ads/" + bid.id + "/raise")
-            .then(function () {
-              if (tg && tg.HapticFeedback) tg.HapticFeedback.notificationOccurred("success");
-              renderAdvertise();
-            })
-            .catch(function () { showError(); });
-        });
+        openAdPayment({ kind: "raise", bidId: bid.id, amount: data.min_increment, brand: bid.brand_name });
       }
 
       var REFRESH_ICON = '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polyline points="23 4 23 10 17 10"></polyline><polyline points="1 20 1 14 7 14"></polyline><path d="M3.51 9a9 9 0 0 1 14.85-3.36L23 10M1 14l4.64 4.36A9 9 0 0 0 20.49 15"></path></svg>';
@@ -3138,6 +3297,14 @@
       }).join("");
 
       var topAmountParts = splitSomUnit(formatSom(data.next_top_bid));
+      // Cheki yuborilgan, admin hali tasdiqlamagan to'lovlar.
+      var pendingHtml = (data.my_pending || []).length
+        ? '<div class="advertise-pending">' + data.my_pending.map(function (p) {
+            return '<div class="advertise-pending-row">⏳ <b>' + escapeHtml(tr("advertise_pending_label")) + "</b> · " +
+              escapeHtml(p.brand_name) + " — " + escapeHtml(formatSom(p.amount)) + " (" +
+              escapeHtml(tr(p.kind === "raise" ? "advertise_pending_raise" : "advertise_pending_new")) + ")</div>";
+          }).join("") + "</div>"
+        : "";
 
       app.innerHTML =
         '<div class="advertise-page">' +
@@ -3164,6 +3331,7 @@
         "</div>" +
         '<div class="advertise-url-hint">' + escapeHtml(tr("advertise_url_hint")) + "</div>" +
         '<button class="card-btn" id="advertise-submit-btn">' + tr("advertise_submit") + "</button>" +
+        pendingHtml +
         "</div>" +
         '<div class="advertise-filter-tabs">' + filterTabsHtml + "</div>" +
         '<div id="advertise-list"></div>' +
@@ -3259,27 +3427,136 @@
         var brand = (hasFreshPreview && lastAdvertisePreview.title) ? lastAdvertisePreview.title : deriveBrandFromUrl(url);
         var photoUrl = hasFreshPreview ? lastAdvertisePreview.photo_url : null;
         var description = hasFreshPreview ? lastAdvertisePreview.description : null;
-        api("POST", "/api/ads/bid", { url: url, brand_name: brand, bid_amount: bidAmount, photo_url: photoUrl, category: selectedAdvertiseCategory, description: description })
-          .then(function () {
-            if (tg && tg.HapticFeedback) tg.HapticFeedback.notificationOccurred("success");
-            var successOverlay = showSuccess(tr("advertise_success"), "🚀", "pop");
-            setTimeout(function () {
-              if (successOverlay.parentNode) successOverlay.parentNode.removeChild(successOverlay);
-              renderAdvertise();
-            }, 2500);
-          })
-          .catch(function (err) {
-            if (err.status === 409 && err.body === "bid_too_low") {
-              showError(trf("advertise_bid_too_low", { amount: formatSom(bidAmount) }));
-            } else {
-              showError();
-            }
-          });
+        openAdPayment({
+          kind: "new", amount: bidAmount, url: url, brand: brand, photoUrl: photoUrl,
+          category: selectedAdvertiseCategory, description: description,
+        });
       });
 
       hideMainButton();
       setBackButton();
     }).catch(function () { showError(); });
+  }
+
+  function copyToClipboard(text) {
+    function fallback() {
+      var ta = document.createElement("textarea");
+      ta.value = text;
+      ta.setAttribute("readonly", "");
+      ta.style.position = "fixed";
+      ta.style.opacity = "0";
+      document.body.appendChild(ta);
+      ta.select();
+      try { document.execCommand("copy"); } catch (e) {}
+      document.body.removeChild(ta);
+      showSnackbar(tr("advertise_copied"));
+    }
+    if (navigator.clipboard && navigator.clipboard.writeText) {
+      navigator.clipboard.writeText(text).then(function () { showSnackbar(tr("advertise_copied")); }, fallback);
+    } else {
+      fallback();
+    }
+  }
+
+  var COPY_ICON = '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="9" y="9" width="13" height="13" rx="2"></rect><path d="M5 15H4a2 2 0 0 1-2-2V4a2 2 0 0 1 2-2h9a2 2 0 0 1 2 2v1"></path></svg>';
+  var RECEIPT_ICON = '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"></path><polyline points="17 8 12 3 7 8"></polyline><line x1="12" y1="3" x2="12" y2="15"></line></svg>';
+
+  // Reklama to'lovi: summani kartaga o'tkazib, chekni yuklash. Admin
+  // Telegram'da tasdiqlagach reklama reytingga chiqadi (yoki taklif oshadi).
+  function renderAdvertisePay() {
+    var p = state.params || {};
+    var cardFormatted = (p.card || "").replace(/(\d{4})(?=\d)/g, "$1 ");
+    app.innerHTML =
+      '<div class="advertise-page"><div class="adpay">' +
+      '<div class="adpay-amount-label">' + escapeHtml(tr("advertise_pay_amount_label")) + "</div>" +
+      '<div class="adpay-amount">' + escapeHtml(formatSom(p.amount)) + "</div>" +
+      '<div class="adpay-subject">' + escapeHtml(trf(p.kind === "raise" ? "advertise_pay_raise_subject" : "advertise_pay_new_subject", { brand: p.brand || "" })) + "</div>" +
+      '<div class="adpay-card">' +
+      '<div class="adpay-card-label">' + escapeHtml(tr("advertise_pay_card_label")) + "</div>" +
+      '<div class="adpay-card-row"><span class="adpay-card-number">' + escapeHtml(cardFormatted) + "</span>" +
+      '<button type="button" class="adpay-copy-btn" id="adpay-copy-card">' + COPY_ICON + escapeHtml(tr("advertise_pay_copy")) + "</button></div>" +
+      (p.holder
+        ? '<div class="adpay-card-divider"></div><div class="adpay-card-label">' + escapeHtml(tr("advertise_pay_holder_label")) + "</div>" +
+          '<div class="adpay-card-holder">' + escapeHtml(p.holder) + "</div>"
+        : "") +
+      "</div>" +
+      '<ol class="adpay-steps">' +
+      "<li>" + escapeHtml(tr("advertise_pay_step1")) + "</li>" +
+      "<li>" + escapeHtml(tr("advertise_pay_step2")) + "</li>" +
+      "<li>" + escapeHtml(tr("advertise_pay_step3")) + "</li>" +
+      "</ol>" +
+      '<input id="adpay-photo-input" type="file" accept="image/*" class="visually-hidden">' +
+      '<label for="adpay-photo-input" class="adpay-upload" id="adpay-upload"></label>' +
+      '<button class="card-btn" id="advertise-pay-btn" disabled>' + escapeHtml(tr("advertise_pay_send")) + "</button>" +
+      "</div></div>";
+
+    var receiptFile = null;
+    var uploadEl = document.getElementById("adpay-upload");
+    var sendBtn = document.getElementById("advertise-pay-btn");
+
+    function renderUpload() {
+      if (receiptFile) {
+        uploadEl.innerHTML = '<img alt="">' + '<span class="adpay-upload-change">' + escapeHtml(tr("advertise_pay_change")) + "</span>";
+        uploadEl.querySelector("img").src = URL.createObjectURL(receiptFile);
+      } else {
+        uploadEl.innerHTML = RECEIPT_ICON + "<span>" + escapeHtml(tr("advertise_pay_upload")) + "</span>";
+      }
+      sendBtn.disabled = !receiptFile;
+    }
+    renderUpload();
+
+    document.getElementById("adpay-copy-card").addEventListener("click", function () {
+      copyToClipboard(p.card || "");
+    });
+    document.getElementById("adpay-photo-input").addEventListener("change", function (e) {
+      var picked = (e.target.files || [])[0];
+      if (picked) receiptFile = picked;
+      e.target.value = "";
+      renderUpload();
+    });
+
+    sendBtn.addEventListener("click", function () {
+      if (!receiptFile) { showError(tr("photo_required")); return; }
+      sendBtn.disabled = true;
+      compressImage(receiptFile).then(function (compressed) {
+        var fd = new FormData();
+        fd.append("photo", compressed);
+        fd.append("kind", p.kind);
+        if (p.kind === "raise") {
+          fd.append("bid_id", String(p.bidId));
+        } else {
+          fd.append("bid_amount", String(p.amount));
+          fd.append("url", p.url || "");
+          fd.append("brand_name", p.brand || "");
+          if (p.photoUrl) fd.append("photo_url", p.photoUrl);
+          if (p.category) fd.append("category", p.category);
+          if (p.description) fd.append("description", p.description);
+        }
+        return api("POST", "/api/ads/payment", fd);
+      })
+        .then(function () {
+          if (tg && tg.HapticFeedback) tg.HapticFeedback.notificationOccurred("success");
+          var sentOverlay = showSuccess(tr("advertise_pay_sent"), "✅", "pop");
+          setTimeout(function () {
+            if (sentOverlay.parentNode) sentOverlay.parentNode.removeChild(sentOverlay);
+            navStack = [{ screen: "home", params: {} }];
+            goto("advertise", {}, false);
+          }, 3000);
+        })
+        .catch(function (err) {
+          sendBtn.disabled = false;
+          if (err && err.status === 409 && err.body === "bid_too_low") {
+            showError(trf("advertise_bid_too_low", { amount: formatSom(p.amount) }));
+          } else if (err && err.status === 503) {
+            showError(tr("advertise_pay_unavailable"));
+          } else {
+            showError();
+          }
+        });
+    });
+
+    hideMainButton();
+    setBackButton();
   }
 
   function renderProfile() {
@@ -3409,13 +3686,14 @@
     profile: renderProfile,
     profile_language: renderProfileLanguage,
     advertise: renderAdvertise,
+    advertise_pay: renderAdvertisePay,
   };
 
   function render() {
     if (adTimer) { clearInterval(adTimer); adTimer = null; }
     if (ad2Timer) { ad2Timer.stop(); ad2Timer = null; }
     var fn = screens[state.screen] || renderHome;
-    document.documentElement.classList.toggle("page-white", state.screen === "advertise");
+    document.documentElement.classList.toggle("page-white", state.screen === "advertise" || state.screen === "advertise_pay");
     fn();
     updateBottomNav();
   }
