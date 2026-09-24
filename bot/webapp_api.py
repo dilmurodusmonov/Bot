@@ -36,6 +36,8 @@ from bot.config import (
     WEBAPP_URL,
 )
 from bot.database import (
+    get_ad_logo_cache,
+    put_ad_logo_cache,
     cancel_reservation,
     count_pending_receive,
     count_pending_ship,
@@ -962,27 +964,52 @@ def _redirected_away(requested_url: str, final_url: str) -> bool:
     return bool(final) and requested != final and requested not in _SHORTENER_DOMAINS
 
 
-async def _fetch_best_html(url: str, platform: str) -> Optional[tuple[str, str]]:
+async def _fetch_best_html(
+    url: str, platform: str, on_blocked: Optional[Any] = None,
+) -> Optional[tuple[str, str]]:
     """Avval oddiy brauzer sifatida; sahifa bloklangan ko'rinsa (captcha,
-    og: yo'q, boshqa saytga yo'naltirilgan) — havola-preview botlari sifatida
-    qayta so'raladi. Yaroqli sahifa bo'lmasa None."""
+    og: yo'q, boshqa saytga yo'naltirilgan) — havola-preview botlari sifatida.
+    Tezlik uchun: brauzer 1.2 soniyada javob bermasa yoki bloklansa, botlar
+    bilan so'rovlar parallel yuboriladi (ketma-ket 4×6 soniya emas).
+    on_blocked() — sayt bizni to'sganini birinchi sezganda (Microlink'ni
+    oldindan boshlash uchun). Yaroqli sahifa bo'lmasa None."""
     def genuine(result: Optional[tuple[str, str]]) -> bool:
         return bool(result) and not _is_challenge(result[0]) and not _redirected_away(url, result[1])
 
+    def good(result: Optional[tuple[str, str]]) -> bool:
+        return genuine(result) and _has_rich_meta(result[0])
+
+    browser = asyncio.create_task(_fetch_site_html(url, platform))
+    done, _ = await asyncio.wait({browser}, timeout=1.2)
+    if done and good(browser.result()):
+        return browser.result()
+    if done and not genuine(browser.result()) and on_blocked:
+        on_blocked()
+    agents = [
+        asyncio.create_task(_fetch_site_html(url, platform, user_agent=agent))
+        for agent in _PREVIEW_BOT_AGENTS
+    ]
+    pending = set(agents) | ({browser} if not done else set())
     # og: tag'lari bo'lmagan oddiy sahifa (Google, Mail.ru bosh sahifasi)
-    # ham yaroqli — <title> va description ishlatiladi; faqat to'liqroq
-    # ma'lumot uchun preview botlari bilan qayta urinib ko'riladi.
-    first = await _fetch_site_html(url, platform)
-    if genuine(first) and _has_rich_meta(first[0]):
-        return first
-    fallback = first if genuine(first) else None
-    for agent in _PREVIEW_BOT_AGENTS:
-        retry = await _fetch_site_html(url, platform, user_agent=agent)
-        if genuine(retry):
-            if _has_rich_meta(retry[0]):
-                return retry
-            fallback = fallback or retry
-    return fallback
+    # ham yaroqli — <title> va description ishlatiladi.
+    fallback = browser.result() if done and genuine(browser.result()) else None
+    try:
+        # Qaysi so'rov birinchi to'liq sahifa bersa — shu (sekin brauzer
+        # so'rovini kutib o'tirmasdan).
+        while pending:
+            finished, pending = await asyncio.wait(pending, return_when=asyncio.FIRST_COMPLETED)
+            for task in finished:
+                result = task.result()
+                if good(result):
+                    return result
+                if genuine(result):
+                    fallback = fallback or result
+                elif task is browser and on_blocked:
+                    on_blocked()
+        return fallback
+    finally:
+        for task in pending:
+            task.cancel()
 
 
 # --- Uzum Market: tovar ma'lumoti saytning o'z API'sidan -----------------------
@@ -1227,10 +1254,15 @@ async def _resolve_brand_logo(host: str, trace: Optional[list] = None) -> Option
                     ordered.insert(len(touch_icons), microlink["logo"])
                 else:
                     ordered.append(microlink["logo"])
+    # Qolgan nomzodlar parallel yuklanadi (ketma-ket 5 soniyadan kutilmaydi),
+    # tartib bo'yicha birinchi ishlagani olinadi.
+    missing = [u for u in dict.fromkeys(ordered) if u not in fetched]
+    for u, r in zip(missing, await asyncio.gather(*(_fetch_image(u) for u in missing))):
+        fetched[u] = r
     logo: Optional[tuple[bytes, str]] = None
     tried: list[str] = []
     for url in ordered:
-        result = fetched[url] if url in fetched else await _fetch_image(url)
+        result = fetched[url]
         tried.append(f"{url[:80]} = {'ok' if result else _IMAGE_ERRORS.get(url, 'no')}")
         if result:
             logo = result
@@ -1299,6 +1331,36 @@ async def _resolve_logo_for_url(url: str, trace: Optional[list] = None) -> Optio
     return logo
 
 
+async def _db_cached_logo(key: str) -> Optional[tuple[bytes, str]]:
+    """Xotirada yo'q bo'lsa — bazadagi logotip (server qayta ishga tushgandan
+    keyin ham saytlarni qayta qidirmasdan darhol)."""
+    hit, logo = _logo_cache_get(key)
+    if hit:
+        return logo
+    try:
+        logo = await get_ad_logo_cache(key)
+    except Exception:
+        logging.exception("ad_logo_cache o'qilmadi")
+        return None
+    if logo:
+        _logo_cache_put(key, logo)
+    return logo
+
+
+async def _save_logo_db(key: str, logo: tuple[bytes, str]) -> None:
+    try:
+        await put_ad_logo_cache(key, logo[0], logo[1])
+    except Exception:
+        logging.exception("ad_logo_cache yozilmadi")
+
+
+def _spawn(coro) -> asyncio.Task:
+    task = asyncio.create_task(coro)
+    _background_tasks.add(task)
+    task.add_done_callback(_background_tasks.discard)
+    return task
+
+
 async def api_ads_logo(request: web.Request) -> web.Response:
     """<img src="/api/ads/logo?url=..."> (yoki ?host=...) — logotip rasmining
     o'zi (server orqali), topilmasa 404 (sahifa emoji ko'rsatadi). Img so'rovi
@@ -1311,12 +1373,19 @@ async def api_ads_logo(request: web.Request) -> web.Response:
             raw_url = "https://" + raw_url
         if len(raw_url) > 2000 or not _valid_host((urlparse(raw_url).hostname or "").lower()):
             raise web.HTTPBadRequest(text="invalid url")
-        logo = await _resolve_logo_for_url(raw_url, trace)
+        key = "url:" + raw_url
+        resolve = lambda: _resolve_logo_for_url(raw_url, trace)  # noqa: E731
     else:
         host = (request.query.get("host") or "").strip().lower().removeprefix("www.")
         if not _valid_host(host):
             raise web.HTTPBadRequest(text="invalid host")
-        logo = await _resolve_brand_logo(host, trace)
+        key = "host:" + host
+        resolve = lambda: _resolve_brand_logo(host, trace)  # noqa: E731
+    logo = await _db_cached_logo(key) if trace is None else None
+    if logo is None:
+        logo = await resolve()
+        if logo and trace is None:
+            _spawn(_save_logo_db(key, logo))
     if trace is not None:
         return web.json_response({
             "found": bool(logo), "bytes": len(logo[0]) if logo else 0,
@@ -1396,12 +1465,41 @@ def _brand_named_img(imgs: Any, page_url: str) -> Optional[str]:
     return None
 
 
+_MICROLINK_INFLIGHT: dict[str, "asyncio.Future[Optional[dict]]"] = {}
+
+
+def _microlink_key(url: str) -> str:
+    """https://Islom.uz, https://islom.uz/ — bitta kalit (bitta so'rov, bitta kesh)."""
+    parsed = urlparse(url)
+    path = parsed.path if parsed.path not in ("", "/") else ""
+    return f"https://{(parsed.hostname or '').lower()}{path}" + (f"?{parsed.query}" if parsed.query else "")
+
+
 async def _fetch_microlink(url: str) -> Optional[dict]:
-    now = time.monotonic()
+    url = _microlink_key(url)
     cached = _MICROLINK_CACHE.get(url)
-    if cached and now < cached[1]:
+    if cached and time.monotonic() < cached[1]:
         _microlink_trace(cached[0], cached=True)
         return cached[0]
+    # Preview va logotip bir vaqtda so'rasa — bitta Microlink so'rovi.
+    inflight = _MICROLINK_INFLIGHT.get(url)
+    if inflight:
+        result = await asyncio.shield(inflight)
+        _microlink_trace(result, cached=True)
+        return result
+    task = asyncio.ensure_future(_fetch_microlink_uncached(url))
+    _MICROLINK_INFLIGHT[url] = task
+    try:
+        return await asyncio.shield(task)
+    finally:
+        if task.done():
+            _MICROLINK_INFLIGHT.pop(url, None)
+        else:
+            task.add_done_callback(lambda _t: _MICROLINK_INFLIGHT.pop(url, None))
+
+
+async def _fetch_microlink_uncached(url: str) -> Optional[dict]:
+    now = time.monotonic()
     # Microlink sahifani haqiqiy brauzerda ochadi — 5–10 soniya ketishi mumkin.
     # Qo'shimcha qoida: sayt sarlavhasidagi logotip rasmi (<img ...logo...>) —
     # favicon standart/kichik, og:image esa keng banner bo'lgan saytlar uchun.
@@ -1497,7 +1595,34 @@ class _AdPreviewError(Exception):
         self.reason = reason
 
 
+_PREVIEW_CACHE: dict[str, tuple[dict, float]] = {}
+_PREVIEW_INFLIGHT: dict[str, "asyncio.Future[dict]"] = {}
+
+
 async def _fetch_ad_preview(bot: Bot, url: str) -> dict:
+    """Keshlangan preview: bir havola qayta yozilsa/ochilsa darhol javob;
+    bir vaqtdagi bir xil so'rovlar birlashtiriladi. /preview (tashxis) keshsiz."""
+    if _FETCH_TRACE.get() is not None:
+        return await _fetch_ad_preview_uncached(bot, url)
+    key = url.strip().rstrip("/").lower()
+    key = key if re.match(r"^https?://", key) else "https://" + key
+    cached = _PREVIEW_CACHE.get(key)
+    if cached and time.monotonic() < cached[1]:
+        return dict(cached[0])
+    inflight = _PREVIEW_INFLIGHT.get(key)
+    if inflight:
+        return dict(await asyncio.shield(inflight))
+    task = asyncio.ensure_future(_fetch_ad_preview_uncached(bot, url))
+    _PREVIEW_INFLIGHT[key] = task
+    task.add_done_callback(lambda _t: _PREVIEW_INFLIGHT.pop(key, None))
+    preview = await asyncio.shield(task)
+    if len(_PREVIEW_CACHE) > 500:
+        _PREVIEW_CACHE.clear()
+    _PREVIEW_CACHE[key] = (preview, time.monotonic() + (3600 if preview.get("title") else 300))
+    return dict(preview)
+
+
+async def _fetch_ad_preview_uncached(bot: Bot, url: str) -> dict:
     """URL bo'yicha brend nomi/tavsifi/rasmini aniqlaydi (sindr.uz'dagi kabi).
     Telegram havolalari uchun bot.get_chat() orqali, boshqa saytlar uchun
     Open Graph meta teglarini o'qib."""
@@ -1552,12 +1677,25 @@ async def _fetch_ad_preview(bot: Bot, url: str) -> dict:
         if uzum:
             return uzum
 
-    fetched = await _fetch_best_html(url, platform)
+    # Sayt bizni to'sgani sezilishi bilan Microlink parallel boshlanadi
+    # (botlar bilan qayta urinishlarni kutmasdan).
+    microlink_task: Optional[asyncio.Task] = None
+
+    def start_microlink() -> None:
+        nonlocal microlink_task
+        if platform == "website" and microlink_task is None:
+            microlink_task = _spawn(_fetch_microlink(url))
+
+    async def get_microlink() -> Optional[dict]:
+        start_microlink()
+        return await microlink_task if microlink_task else None
+
+    fetched = await _fetch_best_html(url, platform, start_microlink)
     if not fetched:
         # Sayt serverimizni to'sdi (captcha, "Верификация", Vercel himoyasi...):
         # Microlink orqali urinib ko'riladi. Bo'lmasa bo'sh — sahifa domen
         # nomini, logotipni esa /api/ads/logo'dan ko'rsatadi.
-        microlink = await _fetch_microlink(url) if platform == "website" else None
+        microlink = await get_microlink()
         if microlink and microlink["title"]:
             return {
                 "platform": platform,
@@ -1593,7 +1731,7 @@ async def _fetch_ad_preview(bot: Bot, url: str) -> dict:
 
     # Tavsif yo'q (ko'pincha JS bilan yig'iladigan saytlar) — Microlink'dan.
     if platform == "website" and not description:
-        microlink = await _fetch_microlink(url)
+        microlink = await get_microlink()
         if microlink:
             description = microlink["description"]
             title = title or microlink["title"]

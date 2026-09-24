@@ -696,6 +696,14 @@
     font-size: 12.5px; color: var(--hint); line-height: 1.3; margin-top: 2px;
     display: -webkit-box; -webkit-line-clamp: 2; -webkit-box-orient: vertical; overflow: hidden;
   }
+  /* Preview kelguncha: domen nomi + logotip darhol, tavsif o'rnida skelet. */
+  .advertise-preview-skeleton {
+    height: 10px; border-radius: 5px; margin-top: 6px; width: 90%;
+    background: linear-gradient(90deg, rgba(0,0,0,0.06) 25%, rgba(0,0,0,0.12) 50%, rgba(0,0,0,0.06) 75%);
+    background-size: 200% 100%; animation: advertise-skeleton 1.1s linear infinite;
+  }
+  .advertise-preview-skeleton + .advertise-preview-skeleton { width: 60%; }
+  @keyframes advertise-skeleton { from { background-position: 200% 0; } to { background-position: -200% 0; } }
   .cat-list { display: flex; flex-direction: column; }
   .cat-row {
     display: flex; align-items: center; gap: 12px; width: 100%; text-align: left;
@@ -3548,8 +3556,22 @@
           '<div class="advertise-preview-platform">' + escapeHtml(emoji + " " + label) + "</div>" +
           (preview.title ? '<div class="advertise-preview-title">' + escapeHtml(preview.title) + "</div>" : "") +
           (preview.description ? '<div class="advertise-preview-desc">' + escapeHtml(preview.description) + "</div>" : "") +
+          (preview.loading ? '<div class="advertise-preview-skeleton"></div><div class="advertise-preview-skeleton"></div>' : "") +
           "</div></div>";
       }
+
+      function guessAdvertisePlatform(u) {
+        var h = deriveBrandFromUrl(u).toLowerCase();
+        if (/(^|\.)(t\.me|telegram\.me)$/.test(h)) return "telegram";
+        if (/(^|\.)instagram\.com$/.test(h)) return "instagram";
+        if (/(^|\.)(youtube\.com|youtu\.be)$/.test(h)) return "youtube";
+        if (h === "apps.apple.com") return "appstore";
+        if (h === "play.google.com") return "googleplay";
+        return "website";
+      }
+
+      // Bir marta olingan preview qayta yozilganda/qaytilganda darhol chiqadi.
+      var advertisePreviewCache = {};
 
       var advertisePreviewTimer = null;
       document.getElementById("advertise-url-input").addEventListener("input", function () {
@@ -3559,16 +3581,28 @@
         lastAdvertisePreview = null;
         lastAdvertisePreviewUrl = "";
         if (!value) { renderAdvertisePreview(null); return; }
+        var cachedPreview = advertisePreviewCache[value.toLowerCase()];
+        if (cachedPreview) {
+          renderAdvertisePreview(cachedPreview, value);
+          lastAdvertisePreview = cachedPreview;
+          lastAdvertisePreviewUrl = value;
+          return;
+        }
         advertisePreviewTimer = setTimeout(function () {
+          // Domen nomi va logotip darhol (logotip preview bilan parallel yuklanadi).
+          if (/^[^\s]+\.[a-z\u0400-\u04ff]{2,}([\/?#].*)?$/i.test(value.replace(/^https?:\/\//i, ""))) {
+            renderAdvertisePreview({ platform: guessAdvertisePlatform(value), title: deriveBrandFromUrl(value), description: "", photo_url: null, loading: true }, value);
+          }
           api("GET", "/api/ads/preview?url=" + encodeURIComponent(value))
             .then(function (preview) {
+              advertisePreviewCache[value.toLowerCase()] = preview;
               if (urlInput.value.trim() !== value) return;
               renderAdvertisePreview(preview, value);
               lastAdvertisePreview = preview;
               lastAdvertisePreviewUrl = value;
             })
-            .catch(function () { renderAdvertisePreview(null); });
-        }, 600);
+            .catch(function () { if (urlInput.value.trim() === value) renderAdvertisePreview(null); });
+        }, 350);
       });
 
       document.getElementById("advertise-submit-btn").addEventListener("click", function () {

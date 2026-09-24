@@ -102,6 +102,7 @@ async def init_db() -> None:
         await _migrate_ad_bids_description(conn)
         await _migrate_ad_bids_clicks(conn)
         await _migrate_ad_payments(conn)
+        await _migrate_ad_logo_cache(conn)
 
 
 async def _migrate_ad_stats(conn: asyncpg.Connection) -> None:
@@ -241,6 +242,19 @@ async def _migrate_ad_payments(conn: asyncpg.Connection) -> None:
     await conn.execute("ALTER TABLE ad_payments ADD COLUMN IF NOT EXISTS reject_reason TEXT")
     await conn.execute(
         "ALTER TABLE ad_payments ADD COLUMN IF NOT EXISTS rejection_seen BOOLEAN NOT NULL DEFAULT FALSE"
+    )
+
+
+async def _migrate_ad_logo_cache(conn: asyncpg.Connection) -> None:
+    """Topilgan brend logotiplari — server qayta ishga tushganda ham darhol
+    beriladi (har safar saytlardan qayta qidirilmaydi)."""
+    await conn.execute(
+        """CREATE TABLE IF NOT EXISTS ad_logo_cache (
+               key TEXT PRIMARY KEY,
+               body BYTEA NOT NULL,
+               content_type TEXT NOT NULL,
+               updated_at TIMESTAMPTZ NOT NULL DEFAULT now()
+           )"""
     )
 
 
@@ -617,6 +631,24 @@ async def get_ad_bids_ranked() -> list[dict[str, Any]]:
         "SELECT * FROM ad_bids WHERE status = 'approved' ORDER BY bid_amount DESC, created_at ASC"
     )
     return [dict(row) for row in rows]
+
+
+async def get_ad_logo_cache(key: str, max_age_days: int = 7) -> Optional[tuple[bytes, str]]:
+    row = await _get_pool().fetchrow(
+        """SELECT body, content_type FROM ad_logo_cache
+           WHERE key = $1 AND updated_at > now() - make_interval(days => $2)""",
+        key, max_age_days,
+    )
+    return (bytes(row["body"]), row["content_type"]) if row else None
+
+
+async def put_ad_logo_cache(key: str, body: bytes, content_type: str) -> None:
+    await _get_pool().execute(
+        """INSERT INTO ad_logo_cache (key, body, content_type) VALUES ($1, $2, $3)
+           ON CONFLICT (key) DO UPDATE
+           SET body = EXCLUDED.body, content_type = EXCLUDED.content_type, updated_at = now()""",
+        key, body, content_type,
+    )
 
 
 async def get_ad_bid(bid_id: int) -> Optional[dict[str, Any]]:
