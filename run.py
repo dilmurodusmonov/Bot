@@ -21,8 +21,10 @@ async def main() -> None:
     bot = Bot(token=BOT_TOKEN, default=DefaultBotProperties(parse_mode=ParseMode.HTML))
     dp = Dispatcher(storage=MemoryStorage())
 
-    dp.include_router(start.router)
+    # ads birinchi: start.router'dagi umumiy matn javobi (fallback) /logo kabi
+    # admin buyruqlarini tutib qolmasin.
     dp.include_router(ads.router)
+    dp.include_router(start.router)
 
     await start_webserver(bot)
 

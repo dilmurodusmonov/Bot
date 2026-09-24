@@ -74,12 +74,11 @@ async def on_ad_payment_decision(callback: CallbackQuery) -> None:
         logging.warning("Reklama to'lovi haqida foydalanuvchiga xabar yuborilmadi: %s", payment["telegram_id"])
 
 
-@router.message(Command("logo"))
+@router.message(Command("logo"), F.from_user.id.in_(AD_ADMIN_IDS))
 async def on_logo_debug(message: Message, command: CommandObject) -> None:
     """Admin uchun tashxis: /logo click.uz — logotip qidiruvining har bir
-    manbasi natijasi va topilgan rasm."""
-    if not message.from_user or message.from_user.id not in AD_ADMIN_IDS:
-        return
+    manbasi natijasi va topilgan rasm. Admin bo'lmaganlarga filtr mos
+    kelmaydi va odatiy javob beriladi."""
     from bot.webapp_api import _resolve_logo_for_url  # aylanma importdan qochish
 
     raw = (command.args or "").strip()
