@@ -696,6 +696,15 @@ def _absolute_image_url(base_url: str, src: str) -> Optional[str]:
     return full if full.startswith("https://") else None
 
 
+# Next.js loyihasi yaratilganda keladigan standart favicon (Vercel uchburchagi) —
+# sayt egasi almashtirmagan bo'lsa bu brend logotipi emas.
+_DEFAULT_FAVICON_RE = re.compile(r"favicon\.0b3bf435\.ico|/_next/static/media/favicon\.[0-9a-f]+\.ico", re.I)
+
+
+def _is_default_favicon(url: Optional[str]) -> bool:
+    return bool(url and _DEFAULT_FAVICON_RE.search(url))
+
+
 def _site_icon_candidates(html_text: str, base_url: str) -> list[tuple[int, str]]:
     """Sahifadagi barcha <link rel=...icon...> ikonkalar, eng yaxshisi birinchi:
     apple-touch-icon > SVG > o'lchami bo'yicha. (ball, to'liq_url) ro'yxati."""
@@ -717,6 +726,8 @@ def _site_icon_candidates(html_text: str, base_url: str) -> list[tuple[int, str]
         else:
             score = size
         href = unescape(href_m.group(1)).strip()
+        if _is_default_favicon(href):
+            continue
         # Ba'zi saytlar ikonkani sahifaning o'ziga (data:image/...) joylaydi.
         full = href if href.startswith("data:image/") else _absolute_image_url(base_url, href)
         if full:
@@ -1337,16 +1348,23 @@ async def _fetch_microlink(url: str) -> Optional[dict]:
         if not _CHALLENGE_TITLE_RE.search(title):
             logo = data.get("logo") if isinstance(data.get("logo"), dict) else {}
             image = data.get("image") if isinstance(data.get("image"), dict) else {}
-            # Logotip kichik favicon bo'lsa (masalan 32px .ico), sahifaning
-            # kvadratga yaqin asosiy rasmi (odatda katta logotip) afzal.
-            logo_small = (logo.get("width") or 0) < 96
-            iw, ih = image.get("width") or 0, image.get("height") or 0
-            image_squareish = bool(iw and ih and 0.75 <= iw / ih <= 1.33)
-            best_logo = image.get("url") if logo_small and image_squareish else (logo.get("url") or None)
+            # Logotip kichik/.ico favicon yoki Next.js standart ikonkasi bo'lsa —
+            # sahifaning asosiy rasmi (odatda katta logotip) afzal; rasm
+            # kartada "contain" bilan ko'rsatilgani uchun kesilmaydi.
+            logo_url = logo.get("url") or None
+            weak_logo = (
+                not logo_url
+                or _is_default_favicon(logo_url)
+                or (logo.get("width") or 0) < 96
+                or urlparse(logo_url).path.lower().endswith(".ico")
+            )
+            if _is_default_favicon(logo_url):
+                logo_url = None
+            best_logo = (image.get("url") or logo_url) if weak_logo else logo_url
             result = {
                 "title": title,
                 "description": str(data.get("description") or "").strip(),
-                "logo": best_logo or logo.get("url") or None,
+                "logo": best_logo or logo_url,
                 "image": image.get("url") or None,
             }
     if len(_MICROLINK_CACHE) > 500:
