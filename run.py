@@ -9,7 +9,7 @@ from aiogram.types import MenuButtonWebApp, WebAppInfo
 
 from bot.config import BOT_TOKEN, WEBAPP_URL
 from bot.database import init_db
-from bot.handlers import start
+from bot.handlers import ads, start
 from bot.keepalive import start_webserver
 from bot.reminders import run_reminder_loop
 
@@ -22,6 +22,7 @@ async def main() -> None:
     dp = Dispatcher(storage=MemoryStorage())
 
     dp.include_router(start.router)
+    dp.include_router(ads.router)
 
     await start_webserver(bot)
 

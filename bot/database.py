@@ -72,6 +72,7 @@ CREATE TABLE IF NOT EXISTS ad_bids (
     description TEXT,
     description_checked BOOLEAN NOT NULL DEFAULT FALSE,
     clicks INTEGER NOT NULL DEFAULT 0,
+    status TEXT NOT NULL DEFAULT 'approved',
     created_at TIMESTAMPTZ NOT NULL DEFAULT now()
 );
 """
@@ -100,6 +101,7 @@ async def init_db() -> None:
         await _migrate_ad_bids_category(conn)
         await _migrate_ad_bids_description(conn)
         await _migrate_ad_bids_clicks(conn)
+        await _migrate_ad_payments(conn)
 
 
 async def _migrate_ad_stats(conn: asyncpg.Connection) -> None:
@@ -215,6 +217,27 @@ async def _migrate_ad_bids_description(conn: asyncpg.Connection) -> None:
     """Reyting ro'yxatida brend nomi ostida qisqa tavsif chiqishi uchun —
     URL preview'dan olingan tavsif shu ustunda saqlanadi."""
     await conn.execute("ALTER TABLE ad_bids ADD COLUMN IF NOT EXISTS description TEXT")
+
+
+async def _migrate_ad_payments(conn: asyncpg.Connection) -> None:
+    """Reklama to'lovi kartaga o'tkazma + chek orqali: taklif admin chekni
+    tasdiqlaguncha 'pending' holatda turadi va reytingda ko'rinmaydi.
+    Avvaldan mavjud takliflar 'approved' bo'lib qoladi."""
+    await conn.execute("ALTER TABLE ad_bids ADD COLUMN IF NOT EXISTS status TEXT NOT NULL DEFAULT 'approved'")
+    await conn.execute(
+        """CREATE TABLE IF NOT EXISTS ad_payments (
+               id SERIAL PRIMARY KEY,
+               bid_id INTEGER NOT NULL REFERENCES ad_bids(id) ON DELETE CASCADE,
+               telegram_id BIGINT NOT NULL,
+               kind TEXT NOT NULL,
+               amount BIGINT NOT NULL,
+               receipt_file_id TEXT,
+               status TEXT NOT NULL DEFAULT 'pending',
+               decided_by BIGINT,
+               decided_at TIMESTAMPTZ,
+               created_at TIMESTAMPTZ NOT NULL DEFAULT now()
+           )"""
+    )
 
 
 async def _migrate_ad_bids_clicks(conn: asyncpg.Connection) -> None:
@@ -585,38 +608,106 @@ async def count_new_donations_last_24h() -> int:
 # --- "Reklama berish" reyting/taklif tizimi ----------------------------------
 
 async def get_ad_bids_ranked() -> list[dict[str, Any]]:
+    """Faqat to'lovi tasdiqlangan takliflar reytingda ko'rinadi."""
     rows = await _get_pool().fetch(
-        "SELECT * FROM ad_bids ORDER BY bid_amount DESC, created_at ASC"
+        "SELECT * FROM ad_bids WHERE status = 'approved' ORDER BY bid_amount DESC, created_at ASC"
     )
     return [dict(row) for row in rows]
 
 
-async def insert_ad_bid(
+async def get_ad_bid(bid_id: int) -> Optional[dict[str, Any]]:
+    row = await _get_pool().fetchrow("SELECT * FROM ad_bids WHERE id = $1", bid_id)
+    return dict(row) if row else None
+
+
+async def create_ad_payment_new(
     telegram_id: int, brand_name: str, url: str, bid_amount: int,
-    platform: Optional[str] = None, photo_url: Optional[str] = None,
-    category: Optional[str] = None, description: Optional[str] = None,
-) -> None:
-    """Har bir taklif alohida qator sifatida qo'shiladi — bitta foydalanuvchi
-    bir nechta mustaqil brend/taklif joylashtirishi mumkin."""
-    await _get_pool().execute(
-        """INSERT INTO ad_bids (telegram_id, brand_name, url, bid_amount, platform, photo_url, category, description)
-           VALUES ($1, $2, $3, $4, $5, $6, $7, $8)""",
-        telegram_id, brand_name, url, bid_amount, platform, photo_url, category, description,
-    )
+    platform: Optional[str], photo_url: Optional[str],
+    category: Optional[str], description: Optional[str],
+) -> tuple[int, int]:
+    """Yangi reklama: taklif 'pending' holatda yaratiladi va unga to'lov
+    yozuvi bog'lanadi. (bid_id, payment_id) qaytaradi."""
+    async with _get_pool().acquire() as conn:
+        async with conn.transaction():
+            bid_id = await conn.fetchval(
+                """INSERT INTO ad_bids (telegram_id, brand_name, url, bid_amount, platform,
+                                        photo_url, category, description, status)
+                   VALUES ($1, $2, $3, $4, $5, $6, $7, $8, 'pending') RETURNING id""",
+                telegram_id, brand_name, url, bid_amount, platform, photo_url, category, description,
+            )
+            payment_id = await conn.fetchval(
+                """INSERT INTO ad_payments (bid_id, telegram_id, kind, amount)
+                   VALUES ($1, $2, 'new', $3) RETURNING id""",
+                bid_id, telegram_id, bid_amount,
+            )
+    return bid_id, payment_id
 
 
-async def get_ad_bid_owner(bid_id: int) -> Optional[int]:
-    return await _get_pool().fetchval("SELECT telegram_id FROM ad_bids WHERE id = $1", bid_id)
-
-
-async def raise_ad_bid(bid_id: int, telegram_id: int, increment: int) -> Optional[int]:
-    """Taklifni atomik ravishda oshiradi va yangi summani qaytaradi. Faqat
-    taklif egasi oshira oladi — boshqa foydalanuvchi uchun None qaytadi."""
+async def create_ad_payment_raise(bid_id: int, telegram_id: int, amount: int) -> int:
+    """"Taklifni oshirish": summa admin tasdiqlagandan keyingina qo'shiladi."""
     return await _get_pool().fetchval(
-        """UPDATE ad_bids SET bid_amount = bid_amount + $3
-           WHERE id = $1 AND telegram_id = $2 RETURNING bid_amount""",
-        bid_id, telegram_id, increment,
+        """INSERT INTO ad_payments (bid_id, telegram_id, kind, amount)
+           VALUES ($1, $2, 'raise', $3) RETURNING id""",
+        bid_id, telegram_id, amount,
     )
+
+
+async def set_ad_payment_receipt(payment_id: int, receipt_file_id: str) -> None:
+    await _get_pool().execute(
+        "UPDATE ad_payments SET receipt_file_id = $2 WHERE id = $1", payment_id, receipt_file_id
+    )
+
+
+async def delete_ad_payment(payment_id: int) -> None:
+    """Chek adminga yetib bormasa — yarim qolgan to'lov (va yangi reklama
+    bo'lsa, uning 'pending' taklifi) o'chiriladi."""
+    async with _get_pool().acquire() as conn:
+        async with conn.transaction():
+            row = await conn.fetchrow(
+                "DELETE FROM ad_payments WHERE id = $1 RETURNING bid_id, kind", payment_id
+            )
+            if row and row["kind"] == "new":
+                await conn.execute(
+                    "DELETE FROM ad_bids WHERE id = $1 AND status = 'pending'", row["bid_id"]
+                )
+
+
+async def decide_ad_payment(payment_id: int, approve: bool, admin_id: int) -> Optional[dict[str, Any]]:
+    """Admin qarori — atomik: faqat 'pending' to'lov bir marta hal qilinadi.
+    Tasdiqlansa yangi reklama reytingga chiqadi yoki taklif summasi oshadi.
+    Allaqachon hal qilingan bo'lsa None qaytadi."""
+    async with _get_pool().acquire() as conn:
+        async with conn.transaction():
+            payment = await conn.fetchrow(
+                """UPDATE ad_payments SET status = $2, decided_by = $3, decided_at = now()
+                   WHERE id = $1 AND status = 'pending' RETURNING *""",
+                payment_id, "approved" if approve else "rejected", admin_id,
+            )
+            if not payment:
+                return None
+            if payment["kind"] == "new":
+                await conn.execute(
+                    "UPDATE ad_bids SET status = $2, created_at = now() WHERE id = $1",
+                    payment["bid_id"], "approved" if approve else "rejected",
+                )
+            elif approve:
+                await conn.execute(
+                    "UPDATE ad_bids SET bid_amount = bid_amount + $2 WHERE id = $1",
+                    payment["bid_id"], payment["amount"],
+                )
+            bid = await conn.fetchrow("SELECT * FROM ad_bids WHERE id = $1", payment["bid_id"])
+    return {"payment": dict(payment), "bid": dict(bid) if bid else None}
+
+
+async def get_pending_ad_payments(telegram_id: int) -> list[dict[str, Any]]:
+    rows = await _get_pool().fetch(
+        """SELECT p.id, p.kind, p.amount, b.brand_name
+           FROM ad_payments p JOIN ad_bids b ON b.id = p.bid_id
+           WHERE p.telegram_id = $1 AND p.status = 'pending' AND p.receipt_file_id IS NOT NULL
+           ORDER BY p.created_at DESC""",
+        telegram_id,
+    )
+    return [dict(row) for row in rows]
 
 
 async def increment_ad_bid_clicks(bid_id: int) -> Optional[int]:
