@@ -3354,6 +3354,13 @@
           document.querySelectorAll(".advertise-filter-tab").forEach(function (t) {
             t.classList.toggle("active", t === tab);
           });
+          // Tanlangan kategoriya gorizontal qatorning o'rtasiga suriladi
+          // (sahifa vertikal siljimaydi).
+          var row = tab.parentNode;
+          var tabRect = tab.getBoundingClientRect();
+          var rowRect = row.getBoundingClientRect();
+          var delta = tabRect.left + tabRect.width / 2 - (rowRect.left + rowRect.width / 2);
+          if (row.scrollBy) row.scrollBy({ left: delta, behavior: "smooth" }); else row.scrollLeft += delta;
           renderList();
         });
       });
