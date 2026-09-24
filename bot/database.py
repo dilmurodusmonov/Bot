@@ -706,7 +706,7 @@ async def get_ad_payment(payment_id: int) -> Optional[dict[str, Any]]:
 
 async def get_pending_ad_payments(telegram_id: int) -> list[dict[str, Any]]:
     rows = await _get_pool().fetch(
-        """SELECT p.id, p.kind, p.amount, b.brand_name
+        """SELECT p.id, p.kind, p.amount, p.bid_id, b.brand_name, b.bid_amount
            FROM ad_payments p JOIN ad_bids b ON b.id = p.bid_id
            WHERE p.telegram_id = $1 AND p.status = 'pending' AND p.receipt_file_id IS NOT NULL
            ORDER BY p.created_at DESC""",
