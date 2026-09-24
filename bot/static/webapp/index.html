@@ -578,14 +578,33 @@
   @media (prefers-reduced-motion: reduce) {
     .advertise-pending { animation: none; border-color: #E5484D; }
     .advertise-pending-icon { animation: none; }
+    .advertise-rejected { animation: none; border-color: #E5484D; }
+    .advertise-rejected-icon { animation: none; }
   }
   .advertise-pending-row + .advertise-pending-row { margin-top: 4px; }
   /* Rad etilgan to'lov: sabab bilan, × bilan yopiladi. */
   .advertise-rejected {
     position: relative; margin: 12px 6px 0; padding: 10px 34px 10px 12px; border-radius: 12px;
     background: #FFF1F0; border: 1.5px solid #F3B7B4; color: #3A3A3C; font-size: 12.5px; line-height: 1.4;
+    animation: advertise-rejected-glow 1.6s ease-in-out infinite;
   }
   .advertise-rejected b { color: #D2453F; }
+  @keyframes advertise-rejected-glow {
+    0%, 100% { border-color: #F3B7B4; box-shadow: 0 0 0 0 rgba(229, 72, 77, 0); }
+    50% { border-color: #E5484D; box-shadow: 0 0 0 3px rgba(229, 72, 77, 0.2); }
+  }
+  /* ❌ vaqti-vaqti bilan kattalashib, chayqaladi. */
+  .advertise-rejected-icon {
+    display: inline-block; transform-origin: 50% 50%;
+    animation: advertise-rejected-shake 1.6s ease-in-out infinite;
+  }
+  @keyframes advertise-rejected-shake {
+    0%, 55%, 100% { transform: scale(1) rotate(0deg); }
+    62% { transform: scale(1.25) rotate(-12deg); }
+    70% { transform: scale(1.25) rotate(12deg); }
+    78% { transform: scale(1.2) rotate(-8deg); }
+    86% { transform: scale(1.1) rotate(4deg); }
+  }
   .advertise-rejected-reason { margin-top: 3px; color: #1C1C1E; font-weight: 500; }
   .advertise-rejected-close {
     position: absolute; top: 6px; right: 6px; width: 24px; height: 24px; border-radius: 50%;
@@ -3170,7 +3189,7 @@
           return '<div class="advertise-rejected">' +
             '<button type="button" class="advertise-rejected-close" data-dismiss-rejected="' + r.id + '" aria-label="' +
             escapeHtml(tr("advertise_rejected_close")) + '">×</button>' +
-            "<div>❌ <b>" + escapeHtml(tr("advertise_rejected_label")) + "</b> · " +
+            '<div><span class="advertise-rejected-icon">❌</span> <b>' + escapeHtml(tr("advertise_rejected_label")) + "</b> · " +
             escapeHtml(r.brand_name) + " — " + escapeHtml(formatSom(r.amount)) + "</div>" +
             (r.reason ? '<div class="advertise-rejected-reason">' + escapeHtml(trf("advertise_rejected_reason", { reason: r.reason })) + "</div>" : "") +
             "</div>";
