@@ -1,4 +1,6 @@
 import asyncio
+import base64
+import binascii
 import ipaddress
 import json
 import logging
@@ -703,7 +705,9 @@ def _site_icon_candidates(html_text: str, base_url: str) -> list[tuple[int, str]
             score = 500
         else:
             score = size
-        full = _absolute_image_url(base_url, unescape(href_m.group(1)))
+        href = unescape(href_m.group(1)).strip()
+        # Ba'zi saytlar ikonkani sahifaning o'ziga (data:image/...) joylaydi.
+        full = href if href.startswith("data:image/") else _absolute_image_url(base_url, href)
         if full:
             found.append((score, full))
     found.sort(key=lambda item: -item[0])
@@ -750,83 +754,155 @@ async def _fetch_site_html(url: str, platform: str = "website") -> Optional[tupl
         return None
 
 
-async def _probe_image(url: str) -> bool:
-    """URL haqiqatan ishlaydigan rasm qaytaradimi: 200 status, rasm turi
-    (yoki .ico imzosi) va bo'sh emas."""
+_LOGO_MAX_BYTES = 512 * 1024
+
+
+async def _fetch_image(url: str) -> Optional[tuple[bytes, str]]:
+    """Rasmni yuklab oladi va haqiqiy rasm ekanini tekshiradi: 200 status,
+    rasm turi (yoki .ico/PNG/JPEG/SVG imzosi), bo'sh emas. data: URI ham.
+    (bayt, content_type) yoki None."""
+    if url.startswith("data:image/"):
+        m = re.match(r"data:(image/[\w.+-]+);base64,(.+)$", url, re.S)
+        if not m:
+            return None
+        try:
+            body = base64.b64decode(m.group(2), validate=False)
+        except (ValueError, binascii.Error):
+            return None
+        return (body, m.group(1)) if len(body) >= 100 else None
     try:
         async with aiohttp.ClientSession() as session:
             async with session.get(
                 url, timeout=aiohttp.ClientTimeout(total=5), max_redirects=3,
-                headers={**_BROWSER_HEADERS, "Accept": "image/*"},
+                headers={**_BROWSER_HEADERS, "Accept": "image/avif,image/webp,image/png,image/svg+xml,image/*,*/*;q=0.8"},
             ) as resp:
                 if resp.status != 200:
-                    return False
-                body = await resp.content.read(512 * 1024)
-                ctype = resp.headers.get("Content-Type", "").lower()
+                    return None
+                body = await resp.content.read(_LOGO_MAX_BYTES)
+                ctype = resp.headers.get("Content-Type", "").split(";")[0].strip().lower()
     except Exception:
-        return False
+        return None
     if len(body) < 100:
-        return False
-    return ctype.startswith("image/") or body[:4] == b"\x00\x00\x01\x00"
+        return None
+    if ctype.startswith("image/"):
+        return body, ctype
+    head = body[:256].lstrip().lower()
+    if body[:4] == b"\x00\x00\x01\x00":
+        return body, "image/x-icon"
+    if body[:8] == b"\x89PNG\r\n\x1a\n":
+        return body, "image/png"
+    if body[:3] == b"\xff\xd8\xff":
+        return body, "image/jpeg"
+    if head.startswith(b"<svg") or (head.startswith(b"<?xml") and b"<svg" in body[:1024].lower()):
+        return body, "image/svg+xml"
+    return None
 
 
-_LOGO_CACHE: dict[str, tuple[Optional[str], float]] = {}
-_LOGO_CACHE_MAX = 2000
+# Topilgan logotipning o'zi (baytlari) keshlanadi va sahifaga serverdan
+# beriladi — telefon boshqa saytga umuman murojaat qilmaydi (hotlink
+# himoyasi, geo-bloklash, Telegram brauzerini to'sish muammo bo'lmaydi).
+_LOGO_CACHE: dict[str, tuple[Optional[tuple[bytes, str]], float]] = {}
+_LOGO_CACHE_MAX = 400
+
+
+def _logo_cache_get(key: str):
+    cached = _LOGO_CACHE.get(key)
+    if cached and time.monotonic() < cached[1]:
+        return True, cached[0]
+    return False, None
+
+
+def _logo_cache_put(key: str, logo: Optional[tuple[bytes, str]]) -> None:
+    if len(_LOGO_CACHE) >= _LOGO_CACHE_MAX:
+        _LOGO_CACHE.clear()
+    _LOGO_CACHE[key] = (logo, time.monotonic() + (86400 if logo else 1800))
 
 
 def _logo_fallback_urls(host: str) -> list[str]:
-    """Saytning o'zidan topilmasa — ommaviy ikonka xizmatlari."""
+    """Saytning o'zidan topilmasa — ommaviy ikonka xizmatlari (topilmasa
+    404 qaytaradi, shuning uchun tekshirib bo'ladi)."""
     return [
         "https://t1.gstatic.com/faviconV2?client=SOCIAL&type=FAVICON"
         f"&fallback_opts=TYPE,SIZE,URL&url=https://{host}&size=128",
+        f"https://www.google.com/s2/favicons?domain={host}&sz=128",
         f"https://icons.duckduckgo.com/ip3/{host}.ico",
     ]
 
 
-async def _resolve_brand_logo(host: str) -> Optional[str]:
-    """Brend logotipini universal qidiradi va birinchi ishlaydiganini qaytaradi:
-    1) sahifadagi apple-touch-icon / katta icon / SVG, 2) /apple-touch-icon.png,
-    3) Google (gstatic) favicon, 4) DuckDuckGo, 5) kichik favicon.
+async def _manifest_icons(html_text: str, base_url: str) -> list[str]:
+    """<link rel="manifest"> (manifest.json) dagi ikonkalar, kattasi birinchi."""
+    m = re.search(r"<link\b[^>]*rel=[\"']manifest[\"'][^>]*>", html_text, re.I)
+    href = re.search(r'href=[\"\']([^\"\']+)[\"\']', m.group(0), re.I) if m else None
+    if not href:
+        return []
+    manifest_url = urljoin(base_url, unescape(href.group(1)))
+    try:
+        async with aiohttp.ClientSession() as session:
+            async with session.get(
+                manifest_url, timeout=aiohttp.ClientTimeout(total=5), headers=_BROWSER_HEADERS,
+            ) as resp:
+                data = json.loads(await resp.text(errors="ignore"))
+    except Exception:
+        return []
+    icons = []
+    for icon in data.get("icons") or []:
+        if not isinstance(icon, dict) or not icon.get("src"):
+            continue
+        sizes = [int(n) for n in re.findall(r"(\d+)x\d+", str(icon.get("sizes", "")))]
+        full = _absolute_image_url(manifest_url, icon["src"])
+        if full:
+            icons.append((max(sizes) if sizes else 0, full))
+    icons.sort(key=lambda item: -item[0])
+    return [url for _, url in icons[:3]]
+
+
+async def _resolve_brand_logo(host: str) -> Optional[tuple[bytes, str]]:
+    """Brend logotipini universal qidiradi, birinchi ishlaydiganini qaytaradi:
+    1) sahifadagi apple-touch-icon / katta icon / SVG (data: ham),
+    2) manifest.json ikonkalari, 3) /apple-touch-icon.png,
+    4) Google (gstatic, s2), DuckDuckGo, 5) kichik favicon.
     Natija xost bo'yicha keshlanadi."""
-    now = time.monotonic()
-    cached = _LOGO_CACHE.get(host)
-    if cached and now < cached[1]:
-        return cached[0]
+    hit, cached = _logo_cache_get("host:" + host)
+    if hit:
+        return cached
 
     origin = f"https://{host}"
     site_allowed = await _resolve_is_public_host(host)
     touch_icons = [f"{origin}/apple-touch-icon.png", f"{origin}/apple-touch-icon-precomposed.png"]
     fallbacks = _logo_fallback_urls(host)
-
-    html_task = _fetch_site_html(origin + "/") if site_allowed else asyncio.sleep(0, None)
     probe_urls = (touch_icons if site_allowed else []) + fallbacks
+
+    async def no_html():
+        return None
+
     html_result, *probe_results = await asyncio.gather(
-        html_task, *(_probe_image(u) for u in probe_urls)
+        _fetch_site_html(origin + "/") if site_allowed else no_html(),
+        *(_fetch_image(u) for u in probe_urls),
     )
-    probed = dict(zip(probe_urls, probe_results))
+    fetched = dict(zip(probe_urls, probe_results))
 
     big_icons: list[str] = []
     small_icons: list[str] = []
+    manifest: list[str] = []
     if html_result:
         for score, url in _site_icon_candidates(*html_result):
             (big_icons if score >= 96 else small_icons).append(url)
-    small_icons.append(f"{origin}/favicon.ico")
+        manifest = await _manifest_icons(*html_result)
+    if site_allowed:
+        small_icons.append(f"{origin}/favicon.ico")
 
-    ordered: list[str] = []
-    ordered += big_icons[:3]
-    ordered += [u for u in touch_icons if probed.get(u)]
-    ordered += [u for u in fallbacks if probed.get(u)]
-    ordered += small_icons[:3] if site_allowed else []
-
-    logo: Optional[str] = None
+    ordered = big_icons[:3] + manifest + (touch_icons if site_allowed else []) + fallbacks + small_icons[:3]
+    logo: Optional[tuple[bytes, str]] = None
+    tried: list[str] = []
     for url in ordered:
-        if probed.get(url) or await _probe_image(url):
-            logo = url
+        result = fetched[url] if url in fetched else await _fetch_image(url)
+        tried.append(f"{url[:80]}={'ok' if result else 'no'}")
+        if result:
+            logo = result
             break
-
-    if len(_LOGO_CACHE) >= _LOGO_CACHE_MAX:
-        _LOGO_CACHE.clear()
-    _LOGO_CACHE[host] = (logo, now + (86400 if logo else 3600))
+    if not logo:
+        logging.info("Logotip topilmadi: %s (html=%s) %s", host, bool(html_result), "; ".join(tried))
+    _logo_cache_put("host:" + host, logo)
     return logo
 
 
@@ -834,7 +910,7 @@ def _valid_host(host: str) -> bool:
     return bool(re.fullmatch(r"[a-z0-9-]+(\.[a-z0-9-]+)+", host)) and len(host) <= 253
 
 
-async def _resolve_logo_for_url(url: str) -> Optional[str]:
+async def _resolve_logo_for_url(url: str) -> Optional[tuple[bytes, str]]:
     """Istalgan havola uchun logotip:
     - Telegram/Instagram/YouTube/App Store/Google Play — sahifaning og:image'i
       (profil/kanal/ilova rasmi), bo'lmasa platformaning o'z logotipi;
@@ -846,33 +922,30 @@ async def _resolve_logo_for_url(url: str) -> Optional[str]:
         return None
     platform = _derive_ad_platform(url)
     key = "url:" + url
-    now = time.monotonic()
-    cached = _LOGO_CACHE.get(key)
-    if cached and now < cached[1]:
-        return cached[0]
+    hit, cached = _logo_cache_get(key)
+    if hit:
+        return cached
 
-    logo: Optional[str] = None
+    logo: Optional[tuple[bytes, str]] = None
     fetched = await _fetch_site_html(url, platform) if await _resolve_is_public_host(host) else None
     if platform != "website":
         if fetched:
             og_image = _absolute_image_url(fetched[1], _extract_meta(fetched[0], "og:image", "twitter:image"))
-            if og_image and await _probe_image(og_image):
-                logo = og_image
+            if og_image:
+                logo = await _fetch_image(og_image)
         if not logo:
             logo = await _resolve_brand_logo(host.removeprefix("www.").removeprefix("m."))
     else:
         final_host = (urlparse(fetched[1]).hostname or host).lower() if fetched else host
         logo = await _resolve_brand_logo(final_host.removeprefix("www."))
 
-    if len(_LOGO_CACHE) >= _LOGO_CACHE_MAX:
-        _LOGO_CACHE.clear()
-    _LOGO_CACHE[key] = (logo, now + (86400 if logo else 3600))
+    _logo_cache_put(key, logo)
     return logo
 
 
 async def api_ads_logo(request: web.Request) -> web.Response:
-    """<img src="/api/ads/logo?url=..."> (yoki ?host=...) — topilgan
-    logotipga redirect, topilmasa 404 (sahifa emoji ko'rsatadi). Img so'rovi
+    """<img src="/api/ads/logo?url=..."> (yoki ?host=...) — logotip rasmining
+    o'zi (server orqali), topilmasa 404 (sahifa emoji ko'rsatadi). Img so'rovi
     sarlavha yubora olmagani uchun autentifikatsiyasiz."""
     raw_url = (request.query.get("url") or "").strip()
     if raw_url:
@@ -887,8 +960,17 @@ async def api_ads_logo(request: web.Request) -> web.Response:
             raise web.HTTPBadRequest(text="invalid host")
         logo = await _resolve_brand_logo(host)
     if not logo:
-        raise web.HTTPNotFound(headers={"Cache-Control": "public, max-age=3600"})
-    raise web.HTTPFound(logo, headers={"Cache-Control": "public, max-age=86400"})
+        raise web.HTTPNotFound(headers={"Cache-Control": "public, max-age=1800"})
+    body, ctype = logo
+    return web.Response(
+        body=body, content_type=ctype,
+        # SVG bizning domenda skript ishga tushira olmasin.
+        headers={
+            "Cache-Control": "public, max-age=86400",
+            "X-Content-Type-Options": "nosniff",
+            "Content-Security-Policy": "default-src 'none'; style-src 'unsafe-inline'; sandbox",
+        },
+    )
 
 
 class _AdPreviewError(Exception):
