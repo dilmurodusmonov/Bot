@@ -4,7 +4,8 @@ from html import escape
 
 from aiogram import F, Router
 from aiogram.exceptions import TelegramAPIError
-from aiogram.types import CallbackQuery
+from aiogram.filters import Command, CommandObject
+from aiogram.types import BufferedInputFile, CallbackQuery, Message
 
 from bot.ad_payments import CALLBACK_PREFIX, decided_keyboard, format_som
 from bot.config import AD_ADMIN_IDS
@@ -71,3 +72,42 @@ async def on_ad_payment_decision(callback: CallbackQuery) -> None:
         )
     except TelegramAPIError:
         logging.warning("Reklama to'lovi haqida foydalanuvchiga xabar yuborilmadi: %s", payment["telegram_id"])
+
+
+@router.message(Command("logo"))
+async def on_logo_debug(message: Message, command: CommandObject) -> None:
+    """Admin uchun tashxis: /logo click.uz — logotip qidiruvining har bir
+    manbasi natijasi va topilgan rasm."""
+    if not message.from_user or message.from_user.id not in AD_ADMIN_IDS:
+        return
+    from bot.webapp_api import _resolve_logo_for_url  # aylanma importdan qochish
+
+    raw = (command.args or "").strip()
+    if not raw:
+        await message.answer("Foydalanish: /logo click.uz")
+        return
+    url = raw if raw.lower().startswith(("http://", "https://")) else "https://" + raw
+    await message.answer("🔎 Qidirilmoqda...")
+    trace: list = []
+    try:
+        logo = await _resolve_logo_for_url(url, trace)
+    except Exception as e:  # tashxis — xatoni ham ko'rsatamiz
+        await message.answer(f"Xato: {escape(repr(e))[:3500]}")
+        return
+
+    lines = [f"<b>{escape(url)}</b>", "Topildi ✅" if logo else "Topilmadi ❌"]
+    for step in trace:
+        if "tried" in step:
+            lines.append(f"\nXost: {escape(step['host'])} · sayt ochiq: {step['site_allowed']} · HTML: {step['html']}")
+            lines.extend("• " + escape(t) for t in step["tried"])
+        else:
+            lines.append(f"Yakuniy manzil: {escape(str(step.get('final_url')))}")
+    text = "\n".join(lines)
+    await message.answer(text[:4000], disable_web_page_preview=True)
+    if logo:
+        body, ctype = logo
+        ext = "png" if "png" in ctype else "jpg" if "jpeg" in ctype else "img"
+        try:
+            await message.answer_document(BufferedInputFile(body, filename=f"logo.{ext}"), caption=ctype)
+        except TelegramAPIError:
+            pass
