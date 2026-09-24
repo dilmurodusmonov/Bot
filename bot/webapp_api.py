@@ -890,11 +890,11 @@ def _wb_base_url(basket: int, nm_id: int) -> str:
     return f"https://basket-{basket:02d}.wbbasket.ru/vol{nm_id // 100000}/part{nm_id // 1000}/{nm_id}"
 
 
-async def _fetch_json(url: str, headers: Optional[dict] = None) -> Optional[Any]:
+async def _fetch_json(url: str, headers: Optional[dict] = None, timeout: float = 5) -> Optional[Any]:
     try:
         async with aiohttp.ClientSession() as session:
             async with session.get(
-                url, timeout=aiohttp.ClientTimeout(total=5), headers={**_BROWSER_HEADERS, **(headers or {})},
+                url, timeout=aiohttp.ClientTimeout(total=timeout), headers={**_BROWSER_HEADERS, **(headers or {})},
             ) as resp:
                 if resp.status != 200:
                     return None
@@ -1328,21 +1328,31 @@ async def _fetch_microlink(url: str) -> Optional[dict]:
     cached = _MICROLINK_CACHE.get(url)
     if cached and now < cached[1]:
         return cached[0]
-    payload = await _fetch_json("https://api.microlink.io/?url=" + quote(url, safe=""))
+    # Microlink sahifani haqiqiy brauzerda ochadi — 5–10 soniya ketishi mumkin.
+    payload = await _fetch_json("https://api.microlink.io/?url=" + quote(url, safe=""), timeout=20)
     result: Optional[dict] = None
     if isinstance(payload, dict) and payload.get("status") == "success" and isinstance(payload.get("data"), dict):
         data = payload["data"]
         title = str(data.get("title") or "").strip()
         if not _CHALLENGE_TITLE_RE.search(title):
+            logo = data.get("logo") if isinstance(data.get("logo"), dict) else {}
+            image = data.get("image") if isinstance(data.get("image"), dict) else {}
+            # Logotip kichik favicon bo'lsa (masalan 32px .ico), sahifaning
+            # kvadratga yaqin asosiy rasmi (odatda katta logotip) afzal.
+            logo_small = (logo.get("width") or 0) < 96
+            iw, ih = image.get("width") or 0, image.get("height") or 0
+            image_squareish = bool(iw and ih and 0.75 <= iw / ih <= 1.33)
+            best_logo = image.get("url") if logo_small and image_squareish else (logo.get("url") or None)
             result = {
                 "title": title,
                 "description": str(data.get("description") or "").strip(),
-                "logo": ((data.get("logo") or {}).get("url") if isinstance(data.get("logo"), dict) else None),
-                "image": ((data.get("image") or {}).get("url") if isinstance(data.get("image"), dict) else None),
+                "logo": best_logo or logo.get("url") or None,
+                "image": image.get("url") or None,
             }
     if len(_MICROLINK_CACHE) > 500:
         _MICROLINK_CACHE.clear()
-    _MICROLINK_CACHE[url] = (result, now + (86400 if result else 3600))
+    # Muvaffaqiyatsiz natija qisqa keshlanadi (vaqtinchalik xato bo'lishi mumkin).
+    _MICROLINK_CACHE[url] = (result, now + (86400 if result else 600))
     return result
 
 
