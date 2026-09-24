@@ -3,6 +3,7 @@ import ipaddress
 import json
 import logging
 import re
+import time
 from html import escape, unescape
 from typing import Any, Optional
 from urllib.parse import urljoin, urlparse
@@ -681,10 +682,10 @@ def _absolute_image_url(base_url: str, src: str) -> Optional[str]:
     return full if full.startswith("https://") else None
 
 
-def _extract_site_icon(html_text: str, base_url: str) -> Optional[str]:
-    """Saytning logotip ikonkasini topadi: apple-touch-icon yoki kattaligi
-    kamida 96px bo'lgan (yoki SVG) icon. Kichik favicon'lar olinmaydi."""
-    best, best_score = None, 0
+def _site_icon_candidates(html_text: str, base_url: str) -> list[tuple[int, str]]:
+    """Sahifadagi barcha <link rel=...icon...> ikonkalar, eng yaxshisi birinchi:
+    apple-touch-icon > SVG > o'lchami bo'yicha. (ball, to'liq_url) ro'yxati."""
+    found: list[tuple[int, str]] = []
     for tag in re.findall(r"<link\b[^>]*>", html_text, re.I):
         rel_m = re.search(r'rel=["\']([^"\']*)["\']', tag, re.I)
         href_m = re.search(r'href=["\']([^"\']*)["\']', tag, re.I)
@@ -701,11 +702,136 @@ def _extract_site_icon(html_text: str, base_url: str) -> Optional[str]:
             score = 500
         else:
             score = size
-        if score > best_score:
-            best, best_score = href_m.group(1), score
-    if best is None or best_score < 96:
+        full = _absolute_image_url(base_url, unescape(href_m.group(1)))
+        if full:
+            found.append((score, full))
+    found.sort(key=lambda item: -item[0])
+    return found
+
+
+def _extract_site_icon(html_text: str, base_url: str) -> Optional[str]:
+    """Saytning logotip ikonkasi: apple-touch-icon yoki kamida 96px (yoki
+    SVG) icon. Kichik favicon'lar olinmaydi."""
+    for score, url in _site_icon_candidates(html_text, base_url):
+        if score >= 96:
+            return url
+    return None
+
+
+_BROWSER_HEADERS = {
+    # Oddiy brauzer kabi — ko'p saytlar bot User-Agent'ini to'sadi.
+    "User-Agent": "Mozilla/5.0 (Linux; Android 13) AppleWebKit/537.36 "
+                  "(KHTML, like Gecko) Chrome/124.0 Mobile Safari/537.36",
+    "Accept-Language": "uz,ru;q=0.9,en;q=0.8",
+}
+
+
+async def _fetch_site_html(url: str) -> Optional[tuple[str, str]]:
+    """Sahifa HTML'i va yakuniy (redirectdan keyingi) manzili."""
+    try:
+        async with aiohttp.ClientSession() as session:
+            async with session.get(
+                url, timeout=aiohttp.ClientTimeout(total=6), max_redirects=5,
+                headers={**_BROWSER_HEADERS, "Accept": "text/html,application/xhtml+xml"},
+            ) as resp:
+                return await resp.text(errors="ignore"), str(resp.url)
+    except Exception:
         return None
-    return _absolute_image_url(base_url, unescape(best))
+
+
+async def _probe_image(url: str) -> bool:
+    """URL haqiqatan ishlaydigan rasm qaytaradimi: 200 status, rasm turi
+    (yoki .ico imzosi) va bo'sh emas."""
+    try:
+        async with aiohttp.ClientSession() as session:
+            async with session.get(
+                url, timeout=aiohttp.ClientTimeout(total=5), max_redirects=3,
+                headers={**_BROWSER_HEADERS, "Accept": "image/*"},
+            ) as resp:
+                if resp.status != 200:
+                    return False
+                body = await resp.content.read(512 * 1024)
+                ctype = resp.headers.get("Content-Type", "").lower()
+    except Exception:
+        return False
+    if len(body) < 100:
+        return False
+    return ctype.startswith("image/") or body[:4] == b"\x00\x00\x01\x00"
+
+
+_LOGO_CACHE: dict[str, tuple[Optional[str], float]] = {}
+_LOGO_CACHE_MAX = 2000
+
+
+def _logo_fallback_urls(host: str) -> list[str]:
+    """Saytning o'zidan topilmasa — ommaviy ikonka xizmatlari."""
+    return [
+        "https://t1.gstatic.com/faviconV2?client=SOCIAL&type=FAVICON"
+        f"&fallback_opts=TYPE,SIZE,URL&url=https://{host}&size=128",
+        f"https://icons.duckduckgo.com/ip3/{host}.ico",
+    ]
+
+
+async def _resolve_brand_logo(host: str) -> Optional[str]:
+    """Brend logotipini universal qidiradi va birinchi ishlaydiganini qaytaradi:
+    1) sahifadagi apple-touch-icon / katta icon / SVG, 2) /apple-touch-icon.png,
+    3) Google (gstatic) favicon, 4) DuckDuckGo, 5) kichik favicon.
+    Natija xost bo'yicha keshlanadi."""
+    now = time.monotonic()
+    cached = _LOGO_CACHE.get(host)
+    if cached and now < cached[1]:
+        return cached[0]
+
+    origin = f"https://{host}"
+    site_allowed = await _resolve_is_public_host(host)
+    touch_icons = [f"{origin}/apple-touch-icon.png", f"{origin}/apple-touch-icon-precomposed.png"]
+    fallbacks = _logo_fallback_urls(host)
+
+    html_task = _fetch_site_html(origin + "/") if site_allowed else asyncio.sleep(0, None)
+    probe_urls = (touch_icons if site_allowed else []) + fallbacks
+    html_result, *probe_results = await asyncio.gather(
+        html_task, *(_probe_image(u) for u in probe_urls)
+    )
+    probed = dict(zip(probe_urls, probe_results))
+
+    big_icons: list[str] = []
+    small_icons: list[str] = []
+    if html_result:
+        for score, url in _site_icon_candidates(*html_result):
+            (big_icons if score >= 96 else small_icons).append(url)
+    small_icons.append(f"{origin}/favicon.ico")
+
+    ordered: list[str] = []
+    ordered += big_icons[:3]
+    ordered += [u for u in touch_icons if probed.get(u)]
+    ordered += [u for u in fallbacks if probed.get(u)]
+    ordered += small_icons[:3] if site_allowed else []
+
+    logo: Optional[str] = None
+    for url in ordered:
+        if probed.get(url) or await _probe_image(url):
+            logo = url
+            break
+
+    if len(_LOGO_CACHE) >= _LOGO_CACHE_MAX:
+        _LOGO_CACHE.clear()
+    _LOGO_CACHE[host] = (logo, now + (86400 if logo else 3600))
+    return logo
+
+
+async def api_ads_logo(request: web.Request) -> web.Response:
+    """<img src="/api/ads/logo?host=click.uz"> — topilgan logotipga redirect,
+    topilmasa 404 (sahifa emoji ko'rsatadi). Img so'rovi sarlavha yubora
+    olmagani uchun autentifikatsiyasiz."""
+    host = (request.query.get("host") or "").strip().lower()
+    if host.startswith("www."):
+        host = host[4:]
+    if not re.fullmatch(r"[a-z0-9-]+(\.[a-z0-9-]+)+", host) or len(host) > 253:
+        raise web.HTTPBadRequest(text="invalid host")
+    logo = await _resolve_brand_logo(host)
+    if not logo:
+        raise web.HTTPNotFound(headers={"Cache-Control": "public, max-age=3600"})
+    raise web.HTTPFound(logo, headers={"Cache-Control": "public, max-age=86400"})
 
 
 class _AdPreviewError(Exception):
@@ -745,22 +871,10 @@ async def _fetch_ad_preview(bot: Bot, url: str) -> dict:
     if not await _resolve_is_public_host(host):
         raise _AdPreviewError(400, "host_not_allowed")
 
-    try:
-        async with aiohttp.ClientSession() as session:
-            async with session.get(
-                url, timeout=aiohttp.ClientTimeout(total=6),
-                # Oddiy brauzer kabi — ko'p saytlar bot User-Agent'ini to'sadi.
-                headers={
-                    "User-Agent": "Mozilla/5.0 (Linux; Android 13) AppleWebKit/537.36 "
-                                  "(KHTML, like Gecko) Chrome/124.0 Mobile Safari/537.36",
-                    "Accept": "text/html,application/xhtml+xml",
-                    "Accept-Language": "uz,ru;q=0.9,en;q=0.8",
-                },
-            ) as resp:
-                html_text = await resp.text(errors="ignore")
-                base_url = str(resp.url)
-    except Exception:
+    fetched = await _fetch_site_html(url)
+    if not fetched:
         return {"platform": platform, "title": "", "description": "", "photo_url": None}
+    html_text, base_url = fetched
 
     title = _extract_meta(html_text, "og:title", "twitter:title")
     if not title:
@@ -1364,6 +1478,7 @@ def setup_api_routes(app: web.Application) -> None:
     app.router.add_get("/api/badges", api_badges)
     app.router.add_post("/api/ad-view", api_ad_view)
     app.router.add_get("/api/ads/preview", api_ads_preview)
+    app.router.add_get("/api/ads/logo", api_ads_logo)
     app.router.add_get("/api/ads/leaderboard", api_ads_leaderboard)
     app.router.add_post("/api/ads/payment", api_ads_payment)
     app.router.add_post("/api/ads/{id:\\d+}/click", api_ads_click)

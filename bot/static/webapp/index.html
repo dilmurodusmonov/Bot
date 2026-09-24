@@ -1418,12 +1418,13 @@
   var AD_INTERVAL_MS = 7000;
 
   function tr(key) { return (UI[state.lang] && UI[state.lang][key]) || UI.uz[key] || key; }
-  // Brend logotipi: saqlangan rasm, bo'lmasa (yoki yuklanmasa) sayt domeni
-  // bo'yicha Google favicon xizmati, u ham bo'lmasa — platforma emojisi.
+  // Brend logotipi: saqlangan rasm, bo'lmasa (yoki yuklanmasa) serverdagi
+  // universal qidiruv (/api/ads/logo — sayt ikonkalari, Google, DuckDuckGo),
+  // u ham topmasa — platforma emojisi.
   function brandFaviconUrl(siteUrl) {
     try {
-      var host = new URL(/^https?:\/\//i.test(siteUrl) ? siteUrl : "https://" + siteUrl).hostname;
-      return host ? "https://www.google.com/s2/favicons?sz=128&domain=" + encodeURIComponent(host) : null;
+      var host = new URL(/^https?:\/\//i.test(siteUrl) ? siteUrl : "https://" + siteUrl).hostname.replace(/^www\./, "");
+      return host ? "/api/ads/logo?host=" + encodeURIComponent(host) : null;
     } catch (e) {
       return null;
     }
