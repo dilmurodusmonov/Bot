@@ -418,7 +418,7 @@
     position: relative; top: -2px;
   }
   .advertise-top-plus:active { transform: translateY(3px); box-shadow: 0 0 0 #A92F34; }
-  /* To'ldirilmagan maydon: qizg'ish rangda yonib-o'chadi, to'ldirilguncha qizil chegara. */
+  /* To'ldirilmagan maydon: maydonga bosilguncha qizg'ish rangda yonib-o'chib turadi. */
   @keyframes advertise-field-warn {
     0%, 100% { border-color: #E5484D; box-shadow: 0 0 0 0 rgba(229, 72, 77, 0); }
     50% { border-color: #E5484D; box-shadow: 0 0 0 4px rgba(229, 72, 77, 0.22); background-color: #FFF1F1; }
@@ -432,7 +432,7 @@
   .advertise-form-error div + div { margin-top: 4px; }
   @keyframes advertise-form-error-in { from { opacity: 0; transform: translateY(-4px); } to { opacity: 1; transform: none; } }
   .advertise-field-warn {
-    border-color: #E5484D !important; animation: advertise-field-warn 0.6s ease-in-out 4;
+    border-color: #E5484D !important; animation: advertise-field-warn 0.9s ease-in-out infinite;
   }
   .advertise-top-plus svg { width: 12px; height: 12px; stroke-width: 3; }
   .advertise-rules-hint { color: var(--hint); font-size: 10.5px; margin: 0 6px 14px; line-height: 1.4; text-align: center; }
@@ -969,8 +969,8 @@
       advertise_url_hint: "Veb-sayt, Telegram, Instagram, YouTube, App Store yoki Google Play URL",
       advertise_preview_new_brand: "Yangi brend",
       advertise_preview_checkout: "To'lov summasi",
-      advertise_err_url: "Veb-sayt, Telegram, Instagram, YouTube kanali yoki App Store/Google Play ilovasi URL manzilini kiriting.",
-      advertise_err_category: "Yangi brend uchun kategoriya tanlang.",
+      advertise_err_url: "Veb-sayt, Telegram, Instagram, YouTube kanali yoki App Store/Google Play ilovasi URL manzilini kiriting!",
+      advertise_err_category: "Yangi brend uchun kategoriya tanlang!",
       advertise_filter_all: "Barchasi", advertise_top_n_label: "TOP {n}", advertise_submit: "Reytingni sindirish",
       advertise_empty: "Hozircha takliflar yo'q. Birinchi bo'ling!", advertise_you_badge: "Sizniki", advertise_clicks: "{count} klik", advertise_take_rank: "{n}-o'rinni olish", advertise_raise: "Taklifni oshirish", advertise_rank_prefix: "{n}-o'rin uchun",
       advertise_refresh: "Yangilash", advertise_refreshed: "Reyting yangilandi",
@@ -1061,8 +1061,8 @@
       advertise_url_hint: "Сайт, Telegram, Instagram, YouTube, App Store или Google Play ссылка",
       advertise_preview_new_brand: "Новый бренд",
       advertise_preview_checkout: "Сумма к оплате",
-      advertise_err_url: "Введите ссылку на сайт, Telegram, Instagram, YouTube-канал или приложение в App Store/Google Play.",
-      advertise_err_category: "Выберите категорию для нового бренда.",
+      advertise_err_url: "Введите ссылку на сайт, Telegram, Instagram, YouTube-канал или приложение в App Store/Google Play!",
+      advertise_err_category: "Выберите категорию для нового бренда!",
       advertise_filter_all: "Все", advertise_top_n_label: "ТОП {n}", advertise_submit: "Побороться за рейтинг",
       advertise_empty: "Пока нет ставок. Будьте первым!", advertise_you_badge: "Ваша", advertise_clicks: "{count} кликов", advertise_take_rank: "Занять {n}-е место", advertise_raise: "Повысить ставку", advertise_rank_prefix: "За {n}-е место",
       advertise_refresh: "Обновить", advertise_refreshed: "Рейтинг обновлён",
@@ -1153,8 +1153,8 @@
       advertise_url_hint: "Website, Telegram, Instagram, YouTube, App Store or Google Play URL",
       advertise_preview_new_brand: "New brand",
       advertise_preview_checkout: "Checkout amount",
-      advertise_err_url: "Enter the URL of a website, Telegram, Instagram, YouTube channel or App Store/Google Play app.",
-      advertise_err_category: "Choose a category for the new brand.",
+      advertise_err_url: "Enter the URL of a website, Telegram, Instagram, YouTube channel or App Store/Google Play app!",
+      advertise_err_category: "Choose a category for the new brand!",
       advertise_filter_all: "All", advertise_top_n_label: "TOP {n}", advertise_submit: "Break the rating",
       advertise_empty: "No bids yet. Be the first!", advertise_you_badge: "Yours", advertise_clicks: "{count} clicks", advertise_take_rank: "Take #{n}", advertise_raise: "Raise bid", advertise_rank_prefix: "For #{n}",
       advertise_refresh: "Refresh", advertise_refreshed: "Rating updated",
@@ -1245,8 +1245,8 @@
       advertise_url_hint: "Веб-сайт, Telegram, Instagram, YouTube, App Store немесе Google Play сілтемесі",
       advertise_preview_new_brand: "Жаңа бренд",
       advertise_preview_checkout: "Төлем сомасы",
-      advertise_err_url: "Веб-сайт, Telegram, Instagram, YouTube арнасы немесе App Store/Google Play қосымшасының сілтемесін енгізіңіз.",
-      advertise_err_category: "Жаңа бренд үшін санатты таңдаңыз.",
+      advertise_err_url: "Веб-сайт, Telegram, Instagram, YouTube арнасы немесе App Store/Google Play қосымшасының сілтемесін енгізіңіз!",
+      advertise_err_category: "Жаңа бренд үшін санатты таңдаңыз!",
       advertise_filter_all: "Барлығы", advertise_top_n_label: "ТОП {n}", advertise_submit: "Рейтинг үшін күресу",
       advertise_empty: "Әзірге ұсыныстар жоқ. Бірінші болыңыз!", advertise_you_badge: "Сіздікі", advertise_clicks: "{count} басу", advertise_take_rank: "{n}-орынды алу", advertise_raise: "Ұсынысты көтеру", advertise_rank_prefix: "{n}-орын үшін",
       advertise_refresh: "Жаңарту", advertise_refreshed: "Рейтинг жаңартылды",
@@ -1329,8 +1329,8 @@
       advertise_url_hint: "Сомона, Telegram, Instagram, YouTube, App Store ё Google Play пайванд",
       advertise_preview_new_brand: "Бренди нав",
       advertise_preview_checkout: "Маблағи пардохт",
-      advertise_err_url: "Пайванди сомона, Telegram, Instagram, канали YouTube ё барномаи App Store/Google Play-ро ворид кунед.",
-      advertise_err_category: "Барои бренди нав категорияро интихоб кунед.",
+      advertise_err_url: "Пайванди сомона, Telegram, Instagram, канали YouTube ё барномаи App Store/Google Play-ро ворид кунед!",
+      advertise_err_category: "Барои бренди нав категорияро интихоб кунед!",
       advertise_filter_all: "Ҳама", advertise_top_n_label: "ТОП {n}", advertise_submit: "Барои рейтинг мубориза бурдан",
       advertise_empty: "Ҳанӯз пешниҳод нест. Аввалин шавед!", advertise_you_badge: "Аз шумо", advertise_clicks: "{count} клик", advertise_take_rank: "Ҷои {n}-ро гирифтан", advertise_raise: "Баланд бардоштан", advertise_rank_prefix: "Барои ҷои {n}",
       advertise_refresh: "Навсозӣ", advertise_refreshed: "Рейтинг навсозӣ шуд",
@@ -1413,8 +1413,8 @@
       advertise_url_hint: "Веб-сайт, Telegram, Instagram, YouTube, App Store же Google Play шилтемеси",
       advertise_preview_new_brand: "Жаңы бренд",
       advertise_preview_checkout: "Төлөм суммасы",
-      advertise_err_url: "Веб-сайттын, Telegram, Instagram, YouTube каналынын же App Store/Google Play тиркемесинин шилтемесин киргизиңиз.",
-      advertise_err_category: "Жаңы бренд үчүн категорияны тандаңыз.",
+      advertise_err_url: "Веб-сайттын, Telegram, Instagram, YouTube каналынын же App Store/Google Play тиркемесинин шилтемесин киргизиңиз!",
+      advertise_err_category: "Жаңы бренд үчүн категорияны тандаңыз!",
       advertise_filter_all: "Баары", advertise_top_n_label: "ТОП {n}", advertise_submit: "Рейтинг үчүн күрөшүү",
       advertise_empty: "Азырынча сунуштар жок. Биринчи болуңуз!", advertise_you_badge: "Сиздики", advertise_clicks: "{count} басуу", advertise_take_rank: "{n}-орунду алуу", advertise_raise: "Сунушту көтөрүү", advertise_rank_prefix: "{n}-орун үчүн",
       advertise_refresh: "Жаңылоо", advertise_refreshed: "Рейтинг жаңыланды",
@@ -1497,8 +1497,8 @@
       advertise_url_hint: "Websahypa, Telegram, Instagram, YouTube, App Store ýa-da Google Play salgysy",
       advertise_preview_new_brand: "Täze brend",
       advertise_preview_checkout: "Töleg möçberi",
-      advertise_err_url: "Websahypanyň, Telegram, Instagram, YouTube kanalynyň ýa-da App Store/Google Play programmasynyň salgysyny giriziň.",
-      advertise_err_category: "Täze brend üçin kategoriýa saýlaň.",
+      advertise_err_url: "Websahypanyň, Telegram, Instagram, YouTube kanalynyň ýa-da App Store/Google Play programmasynyň salgysyny giriziň!",
+      advertise_err_category: "Täze brend üçin kategoriýa saýlaň!",
       advertise_filter_all: "Ählisi", advertise_top_n_label: "TOP {n}", advertise_submit: "Reýting üçin göreşmek",
       advertise_empty: "Heniz teklip ýok. Birinji boluň!", advertise_you_badge: "Siziňki", advertise_clicks: "{count} basyş", advertise_take_rank: "{n}-nji orny almak", advertise_raise: "Teklibi ýokarlandyrmak", advertise_rank_prefix: "{n}-nji orun üçin",
       advertise_refresh: "Täzele", advertise_refreshed: "Reýting täzelendi",
@@ -3592,7 +3592,10 @@
       var advertiseCatTrigger = document.getElementById("advertise-cat-trigger");
       var advertiseCatTriggerLabel = document.getElementById("advertise-cat-trigger-label");
       var advertiseCatOverlay = document.getElementById("advertise-cat-overlay");
-      advertiseCatTrigger.addEventListener("click", function () { advertiseCatOverlay.hidden = false; });
+      advertiseCatTrigger.addEventListener("click", function () {
+        advertiseCatTrigger.classList.remove("advertise-field-warn");
+        advertiseCatOverlay.hidden = false;
+      });
       advertiseCatOverlay.addEventListener("click", function (e) {
         if (e.target === advertiseCatOverlay) advertiseCatOverlay.hidden = true;
       });
@@ -3745,6 +3748,10 @@
       var advertisePreviewCache = {};
 
       var advertisePreviewTimer = null;
+      // Maydonga bosilganda yonib-o'chish to'xtaydi.
+      document.getElementById("advertise-url-input").addEventListener("focus", function () {
+        this.classList.remove("advertise-field-warn");
+      });
       document.getElementById("advertise-url-input").addEventListener("input", function () {
         if (advertisePreviewTimer) clearTimeout(advertisePreviewTimer);
         var urlInput = document.getElementById("advertise-url-input");
