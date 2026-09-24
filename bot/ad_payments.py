@@ -37,6 +37,26 @@ def admin_keyboard(payment_id: int, receipt_file_id: Optional[str]) -> InlineKey
     ])
 
 
+# Rad etish sabablari: callback kodi -> (admin tugmasi, foydalanuvchi matni kaliti).
+REJECT_REASONS = {
+    "nr": ("💸 Summa kartaga kelib tushmadi", "ad_reject_not_received"),
+    "wa": ("⚠️ Noto'g'ri summa to'langan", "ad_reject_wrong_amount"),
+    "br": ("🧾 Chek noto'g'ri yoki o'qib bo'lmaydi", "ad_reject_bad_receipt"),
+}
+
+
+def reject_reasons_keyboard(payment_id: int, receipt_file_id: Optional[str]) -> InlineKeyboardMarkup:
+    """"Rad etish" bosilganda: avval sabab tanlanadi."""
+    rows = [[receipt_button(payment_id, receipt_file_id)]]
+    rows += [
+        [InlineKeyboardButton(text=label, callback_data=f"{CALLBACK_PREFIX}:rj:{payment_id}:{code}")]
+        for code, (label, _) in REJECT_REASONS.items()
+    ]
+    rows.append([InlineKeyboardButton(text="✍️ Boshqa sabab (yozish)", callback_data=f"{CALLBACK_PREFIX}:rc:{payment_id}")])
+    rows.append([InlineKeyboardButton(text="↩️ Orqaga", callback_data=f"{CALLBACK_PREFIX}:back:{payment_id}")])
+    return InlineKeyboardMarkup(inline_keyboard=rows)
+
+
 def decided_keyboard(payment_id: int, receipt_file_id: Optional[str]) -> InlineKeyboardMarkup:
     """Qaror qabul qilingach tasdiqlash tugmalari olinadi, chek qoladi."""
     return InlineKeyboardMarkup(inline_keyboard=[[receipt_button(payment_id, receipt_file_id)]])
