@@ -103,6 +103,12 @@ async def init_db() -> None:
         await _migrate_ad_bids_clicks(conn)
         await _migrate_ad_payments(conn)
         await _migrate_ad_logo_cache(conn)
+        # Instagram vaqtincha bloklagan paytda joylangan (tavsifsiz) takliflar
+        # har ishga tushishda qayta tekshiriladi.
+        await conn.execute(
+            """UPDATE ad_bids SET description_checked = FALSE
+               WHERE platform = 'instagram' AND description IS NULL AND description_checked"""
+        )
 
 
 async def _migrate_ad_stats(conn: asyncpg.Connection) -> None:
@@ -797,12 +803,16 @@ async def claim_ad_bids_for_description(bid_ids: list[int]) -> list[dict[str, An
     return [dict(row) for row in rows]
 
 
-async def fill_ad_bid_preview(bid_id: int, description: Optional[str], photo_url: Optional[str]) -> None:
+async def fill_ad_bid_preview(
+    bid_id: int, description: Optional[str], photo_url: Optional[str], brand_name: Optional[str] = None,
+) -> None:
+    """Bo'sh maydonlar to'ldiriladi; nom faqat vaqtinchalik "@username" bo'lsa almashadi."""
     await _get_pool().execute(
         """UPDATE ad_bids
-           SET description = COALESCE(description, $2), photo_url = COALESCE(photo_url, $3)
+           SET description = COALESCE(description, $2), photo_url = COALESCE(photo_url, $3),
+               brand_name = CASE WHEN $4::text IS NOT NULL AND brand_name LIKE '@%' THEN $4 ELSE brand_name END
            WHERE id = $1""",
-        bid_id, description, photo_url,
+        bid_id, description, photo_url, brand_name,
     )
 
 

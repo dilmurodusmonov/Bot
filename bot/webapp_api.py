@@ -981,6 +981,19 @@ async def _fetch_best_html(
     def good(result: Optional[tuple[str, str]]) -> bool:
         return genuine(result) and _has_rich_meta(result[0])
 
+    if platform != "website":
+        # Instagram/YouTube kabi platformalar bir vaqtdagi bir nechta so'rovni
+        # bloklaydi (kirish sahifasini beradi) — avvalgidek ketma-ket, birinchi
+        # platformaga mos (facebookexternalhit) so'rov bilan.
+        fallback = None
+        for agent in (None, *_PREVIEW_BOT_AGENTS):
+            result = await _fetch_site_html(url, platform, user_agent=agent)
+            if good(result):
+                return result
+            if genuine(result):
+                fallback = fallback or result
+        return fallback
+
     browser = asyncio.create_task(_fetch_site_html(url, platform))
     done, _ = await asyncio.wait({browser}, timeout=1.2)
     if done and good(browser.result()):
@@ -1083,6 +1096,14 @@ async def _fetch_instagram_profile(username: str) -> Optional[dict]:
         return cached[0]
     trace = _FETCH_TRACE.get()
     result: Optional[dict] = None
+    # 1) Avval ishlab kelgan yo'l: profil sahifasining o'zi, bitta so'rov,
+    # facebookexternalhit sifatida (Instagram unga og: teglarini beradi).
+    fetched = await _fetch_site_html(f"https://www.instagram.com/{username}/", "instagram")
+    if fetched:
+        result = _instagram_from_html(fetched[0], username)
+        if result:
+            _INSTAGRAM_CACHE[key] = (result, time.monotonic() + 21600)
+            return result
     api_headers = {
         "x-ig-app-id": _INSTAGRAM_APP_ID,
         "Accept": "application/json",
@@ -1136,7 +1157,7 @@ async def _fetch_instagram_profile(username: str) -> Optional[dict]:
             }
     if len(_INSTAGRAM_CACHE) > 300:
         _INSTAGRAM_CACHE.clear()
-    _INSTAGRAM_CACHE[key] = (result, time.monotonic() + (21600 if result else 900))
+    _INSTAGRAM_CACHE[key] = (result, time.monotonic() + (21600 if result else 300))
     return result
 
 
@@ -1450,7 +1471,7 @@ async def _resolve_logo_for_url(url: str, trace: Optional[list] = None) -> Optio
             return logo
     fetched = await _fetch_site_html(url, platform) if await _resolve_is_public_host(host) else None
     if platform != "website":
-        if fetched:
+        if fetched and not _is_challenge(fetched[0]):
             og_image = _absolute_image_url(fetched[1], _extract_meta(fetched[0], "og:image", "twitter:image"))
             if og_image:
                 logo = await _fetch_image(og_image)
@@ -1471,7 +1492,7 @@ async def _resolve_logo_for_url(url: str, trace: Optional[list] = None) -> Optio
     return logo
 
 
-_LOGO_DB_VERSION = "v2:"
+_LOGO_DB_VERSION = "v3:"
 
 
 async def _db_cached_logo(key: str) -> Optional[tuple[bytes, str]]:
@@ -1764,7 +1785,9 @@ async def _fetch_ad_preview(bot: Bot, url: str) -> dict:
     preview = await asyncio.shield(task)
     if len(_PREVIEW_CACHE) > 500:
         _PREVIEW_CACHE.clear()
-    _PREVIEW_CACHE[key] = (preview, time.monotonic() + (3600 if preview.get("title") else 300))
+    # To'liq bo'lmagan natija (masalan faqat "@username") qisqa keshlanadi.
+    complete = preview.get("title") and (preview.get("description") or preview.get("photo_url"))
+    _PREVIEW_CACHE[key] = (preview, time.monotonic() + (3600 if complete else 120))
     return dict(preview)
 
 
@@ -1928,8 +1951,10 @@ async def _backfill_ad_descriptions(bot: Bot, bid_ids: list[int]) -> None:
             continue
         description = _sanitize_ad_description(preview.get("description"))
         photo_url = None if bid["photo_url"] else _sanitize_ad_photo_url(preview.get("photo_url"))
-        if description or photo_url:
-            await fill_ad_bid_preview(bid["id"], description, photo_url)
+        title = str(preview.get("title") or "").strip()
+        brand_name = title[:80] if title and not title.startswith("@") else None
+        if description or photo_url or brand_name:
+            await fill_ad_bid_preview(bid["id"], description, photo_url, brand_name)
 
 
 async def api_ads_leaderboard(request: web.Request) -> web.Response:
