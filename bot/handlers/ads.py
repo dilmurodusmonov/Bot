@@ -20,7 +20,7 @@ from bot.ad_payments import (
     reject_reasons_keyboard,
 )
 from bot.config import AD_ADMIN_IDS
-from bot.database import decide_ad_payment, get_ad_payment, get_user
+from bot.database import decide_ad_payment, get_ad_payment, get_bot_stats, get_user
 from bot.texts import t
 
 router = Router()
@@ -169,6 +169,25 @@ async def on_custom_reject_reason(message: Message, state: FSMContext) -> None:
     except TelegramAPIError:
         pass
     await message.answer(f"❌ #{payment_id} rad etildi. Sabab foydalanuvchiga yuborildi.")
+
+
+@router.message(Command("stats"), F.from_user.id.in_(AD_ADMIN_IDS))
+async def on_stats(message: Message) -> None:
+    """Admin uchun: foydalanuvchilar va tashrif buyuruvchilar soni (reklama
+    sahifasidagi "N onlayn · M tashrif buyuruvchi" shu yerdan)."""
+    st = await get_bot_stats()
+    num = lambda n: f"{n:,}".replace(",", " ")  # noqa: E731
+    await message.answer(
+        "📊 <b>Statistika</b>\n\n"
+        f"👥 Bot foydalanuvchilari (/start): <b>{num(st['users'])}</b> (bugun +{num(st['users_new_day'])})\n"
+        f"🚶 Tashrif buyuruvchilar: <b>{num(st['visitors'])}</b>\n"
+        f"🟢 Hozir onlayn (2 daqiqa): <b>{num(st['online'])}</b>\n"
+        f"📅 Oxirgi 24 soatda faol: <b>{num(st['active_day'])}</b>\n"
+        f"🗓 Oxirgi 7 kunda faol: <b>{num(st['active_week'])}</b>\n"
+        f"👁 Reklama banneri ko'rishlari: <b>{num(st['banner_views'])}</b>\n"
+        f"📢 Reytingdagi reklamalar: <b>{num(st['ads'])}</b>",
+        parse_mode="HTML",
+    )
 
 
 @router.message(Command("logo"), F.from_user.id.in_(AD_ADMIN_IDS))

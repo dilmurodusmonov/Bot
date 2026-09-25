@@ -254,9 +254,8 @@ async def _migrate_ad_payments(conn: asyncpg.Connection) -> None:
 
 async def _migrate_app_presence(conn: asyncpg.Connection) -> None:
     """Mini App'dagi onlayn foydalanuvchilar va tashrif buyuruvchilar soni.
-    Birinchi marta yaratilganda botdan foydalangan barcha foydalanuvchilar
-    tashrif buyuruvchi sifatida qo'shiladi (onlayn emas)."""
-    created = not await conn.fetchval("SELECT to_regclass('app_presence') IS NOT NULL")
+    Botdan foydalangan (/start bosgan) barcha foydalanuvchilar har ishga
+    tushishda tashrif buyuruvchi sifatida qo'shib boriladi (onlayn emas)."""
     await conn.execute(
         """CREATE TABLE IF NOT EXISTS app_presence (
                telegram_id BIGINT PRIMARY KEY,
@@ -265,12 +264,11 @@ async def _migrate_app_presence(conn: asyncpg.Connection) -> None:
            )"""
     )
     await conn.execute("CREATE INDEX IF NOT EXISTS app_presence_last_seen ON app_presence (last_seen)")
-    if created:
-        await conn.execute(
-            """INSERT INTO app_presence (telegram_id, first_seen, last_seen)
-               SELECT telegram_id, created_at, created_at FROM users
-               ON CONFLICT (telegram_id) DO NOTHING"""
-        )
+    await conn.execute(
+        """INSERT INTO app_presence (telegram_id, first_seen, last_seen)
+           SELECT telegram_id, created_at, created_at - interval '5 minutes' FROM users
+           ON CONFLICT (telegram_id) DO NOTHING"""
+    )
 
 
 async def touch_app_presence(telegram_id: int) -> None:
@@ -279,6 +277,22 @@ async def touch_app_presence(telegram_id: int) -> None:
            ON CONFLICT (telegram_id) DO UPDATE SET last_seen = now()""",
         telegram_id,
     )
+
+
+async def get_bot_stats() -> dict[str, int]:
+    """/stats (admin) uchun: foydalanuvchilar, tashrif buyuruvchilar, faollik."""
+    row = await _get_pool().fetchrow(
+        """SELECT
+             (SELECT count(*) FROM users) AS users,
+             (SELECT count(*) FROM users WHERE created_at > now() - interval '1 day') AS users_new_day,
+             (SELECT count(*) FROM app_presence) AS visitors,
+             (SELECT count(*) FROM app_presence WHERE last_seen > now() - interval '2 minutes') AS online,
+             (SELECT count(*) FROM app_presence WHERE last_seen > now() - interval '1 day') AS active_day,
+             (SELECT count(*) FROM app_presence WHERE last_seen > now() - interval '7 days') AS active_week,
+             (SELECT coalesce(sum(views), 0) FROM ad_stats) AS banner_views,
+             (SELECT count(*) FROM ad_bids WHERE status = 'approved') AS ads"""
+    )
+    return {k: int(v) for k, v in dict(row).items()}
 
 
 async def get_app_presence_counts(online_seconds: int = 120) -> tuple[int, int]:
