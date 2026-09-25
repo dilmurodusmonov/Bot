@@ -1,11 +1,13 @@
 import base64
 import hmac
 from datetime import datetime, timezone
+from html import escape
+from typing import Optional
 
 from aiohttp import web
 
 from bot.config import ADMIN_PASSWORD, ADMIN_USERNAME
-from bot.database import get_recent_donations, get_reminder_stats, get_stats
+from bot.database import get_ad_panel_stats, get_recent_donations, get_reminder_stats, get_stats
 from bot.texts import CATEGORIES, category_name, status_label
 
 STATUS_ORDER = ("available", "reserved", "shipped", "received")
@@ -45,7 +47,8 @@ async def dashboard_handler(request: web.Request) -> web.Response:
     stats = await get_stats()
     reminder_stats = await get_reminder_stats()
     recent = await get_recent_donations(10)
-    html = _render_dashboard(stats, reminder_stats, recent)
+    ad_stats = await get_ad_panel_stats()
+    html = _render_dashboard(stats, reminder_stats, recent, ad_stats)
     return web.Response(text=html, content_type="text/html")
 
 
@@ -76,7 +79,84 @@ def _recent_row(donation: dict) -> str:
     """
 
 
-def _render_dashboard(stats: dict, reminder_stats: dict, recent: list) -> str:
+def _num(n: int) -> str:
+    return f"{n:,}".replace(",", " ")
+
+
+def _som(n: int) -> str:
+    if n >= 1_000_000:
+        return f"{n / 1_000_000:.2f}".rstrip("0").rstrip(".").replace(".", ",") + " mln so'm"
+    if n >= 1_000:
+        return f"{n / 1_000:.1f}".rstrip("0").rstrip(".").replace(".", ",") + " ming so'm"
+    return f"{n} so'm"
+
+
+def _ad_row(bid: dict, max_clicks: int) -> str:
+    width = round(bid["clicks"] / max_clicks * 100) if max_clicks else 0
+    url = bid["url"] if bid["url"].startswith(("http://", "https://")) else "https://" + bid["url"]
+    return f"""
+    <tr>
+      <td>#{bid['rank']}</td>
+      <td><a href="{escape(url, quote=True)}" target="_blank" rel="noopener noreferrer">{escape(bid['brand_name'])}</a>
+        <div class="muted small">{escape(bid['platform'] or 'website')}</div></td>
+      <td class="nowrap">{_som(bid['bid_amount'])}</td>
+      <td><div class="clicks-cell">
+        <div class="bar-track"><div class="bar-fill" style="width:{width}%"></div></div>
+        <span>{_num(bid['clicks'])}</span>
+      </div></td>
+    </tr>
+    """
+
+
+def _render_ad_section(ad: dict) -> str:
+    bids = ad.get("bids", [])
+    max_clicks = max((b["clicks"] for b in bids), default=0)
+    rows = "".join(_ad_row(b, max_clicks) for b in bids) or (
+        '<tr><td colspan="4" class="muted empty">Reytingda hozircha reklama yo\'q.</td></tr>'
+    )
+    return f"""
+  <section>
+    <h2>Reklama</h2>
+    <div class="cards cards-sub">
+      <div class="card">
+        <div class="value">{_num(ad['visitors'])}</div>
+        <div class="label">Tashrif buyuruvchilar</div>
+        <div class="sub">bugun yangi: +{_num(ad['visitors_new_day'])}</div>
+      </div>
+      <div class="card">
+        <div class="value"><span class="dot"></span>{_num(ad['online'])}</div>
+        <div class="label">Hozir onlayn</div>
+        <div class="sub">24 soatda: {_num(ad['active_day'])} · 7 kunda: {_num(ad['active_week'])}</div>
+      </div>
+      <div class="card">
+        <div class="value">{_num(ad['clicks'])}</div>
+        <div class="label">Reytingdagi brendlarga kliklar</div>
+        <div class="sub">{_num(ad['ads'])} ta reklama reytingda</div>
+      </div>
+      <div class="card">
+        <div class="value">{_num(ad['banner_views'])}</div>
+        <div class="label">Reklama banneri ko'rishlari</div>
+      </div>
+      <div class="card">
+        <div class="value">{_som(ad['paid_sum'])}</div>
+        <div class="label">Tasdiqlangan to'lovlar</div>
+        <div class="sub">{_num(ad['paid_count'])} ta · kutilmoqda: {_num(ad['pending_count'])} · rad: {_num(ad['rejected_count'])}</div>
+      </div>
+    </div>
+    <h3>Reyting va kliklar</h3>
+    <div class="table-wrap"><table>
+      <thead>
+        <tr><th>O'rin</th><th>Brend</th><th>Taklif</th><th>Kliklar</th></tr>
+      </thead>
+      <tbody>
+        {rows}
+      </tbody>
+    </table></div>
+  </section>
+"""
+
+
+def _render_dashboard(stats: dict, reminder_stats: dict, recent: list, ad_stats: Optional[dict] = None) -> str:
     by_status = stats.get("donations_by_status", {})
     by_category = stats.get("donations_by_category", {})
 
@@ -147,6 +227,17 @@ def _render_dashboard(stats: dict, reminder_stats: dict, recent: list) -> str:
   .pill-shipped {{ color: #4EA4F5; }}
   .pill-received {{ color: #3FCF7F; }}
   footer {{ text-align: center; color: #5B6670; font-size: 12px; margin-top: 30px; }}
+  section h3 {{ font-size: 13.5px; margin: 22px 0 12px; color: #C7D0D9; }}
+  .small {{ font-size: 12px; margin-top: 2px; }}
+  .muted {{ color: #7C8A99; }}
+  td a {{ color: #E8EDF2; text-decoration: none; }}
+  td a:hover {{ text-decoration: underline; }}
+  .clicks-cell {{ display: flex; align-items: center; gap: 10px; min-width: 110px; }}
+  .nowrap {{ white-space: nowrap; }}
+  .table-wrap {{ overflow-x: auto; }}
+  .clicks-cell .bar-track {{ height: 8px; }}
+  .dot {{ display: inline-block; width: 10px; height: 10px; border-radius: 50%; background: #3FCF7F;
+          margin-right: 8px; vertical-align: middle; box-shadow: 0 0 0 4px rgba(63,207,127,0.18); }}
 </style>
 </head>
 <body>
@@ -175,6 +266,8 @@ def _render_dashboard(stats: dict, reminder_stats: dict, recent: list) -> str:
       <div class="label">Muvaffaqiyatli yetib borgan</div>
     </div>
   </div>
+
+  {_render_ad_section(ad_stats) if ad_stats else ""}
 
   <section>
     <h2>Eslatmalar (javob berilmagan tranzaksion xabarlar)</h2>
