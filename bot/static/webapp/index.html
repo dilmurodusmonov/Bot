@@ -719,7 +719,25 @@
     background: #FFFFFF; border: 1px solid var(--border); border-radius: 18px;
     padding: 14px 14px 12px; margin-top: 16px;
   }
-  .advertise-preview-main { display: flex; align-items: flex-start; gap: 12px; }
+  .advertise-preview-main { display: flex; align-items: flex-start; gap: 12px; position: relative; }
+  /* Qo'lda kiritish: avtomatik topilmasa brend nomi, tavsif, logotip. */
+  .advertise-preview-edit-btn {
+    position: absolute; top: -4px; right: -4px; border: none; background: none; padding: 4px 6px;
+    color: #D2551F; font-size: 12px; font-weight: 600; cursor: pointer;
+  }
+  .advertise-preview-info { padding-right: 18px; }
+  .advertise-edit { margin-top: 12px; display: flex; flex-direction: column; gap: 8px; }
+  .advertise-edit-hint { font-size: 12px; color: #C62828; font-weight: 600; line-height: 1.35; }
+  .advertise-edit input, .advertise-edit textarea { border-radius: 12px; padding: 10px 12px; font-size: 14px; }
+  .advertise-edit textarea { min-height: 64px; }
+  .advertise-edit-row { display: flex; gap: 8px; }
+  .advertise-edit-logo, .advertise-edit-save {
+    flex: 1 1 0; border-radius: 12px; padding: 0 10px; font-size: 13.5px; font-weight: 600; cursor: pointer;
+    display: flex; align-items: center; justify-content: center; gap: 4px; min-height: 42px; box-sizing: border-box;
+    margin: 0; font-family: inherit;
+  }
+  .advertise-edit-logo { background: #FFFFFF; color: #D2551F; border: 1px solid #F3B9A0; }
+  .advertise-edit-save { background: linear-gradient(135deg, var(--accent1), var(--accent2)); color: #fff; border: none; }
   .advertise-preview-foot {
     display: flex; align-items: center; justify-content: space-between; gap: 10px;
     border-top: 1px solid var(--border); margin-top: 12px; padding-top: 10px;
@@ -977,6 +995,13 @@
       advertise_url_hint: "Veb-sayt, Telegram, Instagram, YouTube, App Store yoki Google Play URL",
       advertise_preview_new_brand: "Yangi brend",
       advertise_preview_checkout: "To'lov summasi",
+      advertise_edit_name: "Brend nomi",
+      advertise_edit_desc: "Tavsif",
+      advertise_edit_logo: "Logotip yuklash",
+      advertise_edit_uploading: "Yuklanmoqda…",
+      advertise_edit_save: "Saqlash",
+      advertise_edit_hint: "Ma'lumot to'liq topilmadi — brend nomi, tavsif va logotipni o'zingiz kiriting.",
+      advertise_edit_btn: "O'zgartirish",
       advertise_err_url: "Veb-sayt, Telegram, Instagram, YouTube kanali yoki App Store/Google Play ilovasi URL manzilini kiriting!",
       advertise_err_category: "Yangi brend uchun kategoriya tanlang!",
       advertise_filter_all: "Barchasi", advertise_top_n_label: "TOP {n}", advertise_submit: "Reytingni sindirish",
@@ -1071,6 +1096,13 @@
       advertise_url_hint: "Сайт, Telegram, Instagram, YouTube, App Store или Google Play ссылка",
       advertise_preview_new_brand: "Новый бренд",
       advertise_preview_checkout: "Сумма к оплате",
+      advertise_edit_name: "Название бренда",
+      advertise_edit_desc: "Описание",
+      advertise_edit_logo: "Загрузить логотип",
+      advertise_edit_uploading: "Загрузка…",
+      advertise_edit_save: "Сохранить",
+      advertise_edit_hint: "Данные не найдены полностью — укажите название, описание и логотип сами.",
+      advertise_edit_btn: "Изменить",
       advertise_err_url: "Введите ссылку на сайт, Telegram, Instagram, YouTube-канал или приложение в App Store/Google Play!",
       advertise_err_category: "Выберите категорию для нового бренда!",
       advertise_filter_all: "Все", advertise_top_n_label: "ТОП {n}", advertise_submit: "Побороться за рейтинг",
@@ -1165,6 +1197,13 @@
       advertise_url_hint: "Website, Telegram, Instagram, YouTube, App Store or Google Play URL",
       advertise_preview_new_brand: "New brand",
       advertise_preview_checkout: "Checkout amount",
+      advertise_edit_name: "Brand name",
+      advertise_edit_desc: "Description",
+      advertise_edit_logo: "Upload logo",
+      advertise_edit_uploading: "Uploading…",
+      advertise_edit_save: "Save",
+      advertise_edit_hint: "Couldn't find full details — enter the brand name, description and logo yourself.",
+      advertise_edit_btn: "Edit",
       advertise_err_url: "Enter the URL of a website, Telegram, Instagram, YouTube channel or App Store/Google Play app!",
       advertise_err_category: "Choose a category for the new brand!",
       advertise_filter_all: "All", advertise_top_n_label: "TOP {n}", advertise_submit: "Break the rating",
@@ -1259,6 +1298,13 @@
       advertise_url_hint: "Веб-сайт, Telegram, Instagram, YouTube, App Store немесе Google Play сілтемесі",
       advertise_preview_new_brand: "Жаңа бренд",
       advertise_preview_checkout: "Төлем сомасы",
+      advertise_edit_name: "Бренд атауы",
+      advertise_edit_desc: "Сипаттама",
+      advertise_edit_logo: "Логотип жүктеу",
+      advertise_edit_uploading: "Жүктелуде…",
+      advertise_edit_save: "Сақтау",
+      advertise_edit_hint: "Деректер толық табылмады — бренд атауын, сипаттамасын және логотипін өзіңіз енгізіңіз.",
+      advertise_edit_btn: "Өзгерту",
       advertise_err_url: "Веб-сайт, Telegram, Instagram, YouTube арнасы немесе App Store/Google Play қосымшасының сілтемесін енгізіңіз!",
       advertise_err_category: "Жаңа бренд үшін санатты таңдаңыз!",
       advertise_filter_all: "Барлығы", advertise_top_n_label: "ТОП {n}", advertise_submit: "Рейтинг үшін күресу",
@@ -1345,6 +1391,13 @@
       advertise_url_hint: "Сомона, Telegram, Instagram, YouTube, App Store ё Google Play пайванд",
       advertise_preview_new_brand: "Бренди нав",
       advertise_preview_checkout: "Маблағи пардохт",
+      advertise_edit_name: "Номи бренд",
+      advertise_edit_desc: "Тавсиф",
+      advertise_edit_logo: "Боргузории логотип",
+      advertise_edit_uploading: "Боргузорӣ…",
+      advertise_edit_save: "Нигоҳ доштан",
+      advertise_edit_hint: "Маълумот пурра ёфт нашуд — номи бренд, тавсиф ва логотипро худатон ворид кунед.",
+      advertise_edit_btn: "Тағйир додан",
       advertise_err_url: "Пайванди сомона, Telegram, Instagram, канали YouTube ё барномаи App Store/Google Play-ро ворид кунед!",
       advertise_err_category: "Барои бренди нав категорияро интихоб кунед!",
       advertise_filter_all: "Ҳама", advertise_top_n_label: "ТОП {n}", advertise_submit: "Барои рейтинг мубориза бурдан",
@@ -1431,6 +1484,13 @@
       advertise_url_hint: "Веб-сайт, Telegram, Instagram, YouTube, App Store же Google Play шилтемеси",
       advertise_preview_new_brand: "Жаңы бренд",
       advertise_preview_checkout: "Төлөм суммасы",
+      advertise_edit_name: "Бренддин аталышы",
+      advertise_edit_desc: "Сүрөттөмө",
+      advertise_edit_logo: "Логотип жүктөө",
+      advertise_edit_uploading: "Жүктөлүүдө…",
+      advertise_edit_save: "Сактоо",
+      advertise_edit_hint: "Маалымат толук табылган жок — бренддин аталышын, сүрөттөмөсүн жана логотибин өзүңүз киргизиңиз.",
+      advertise_edit_btn: "Өзгөртүү",
       advertise_err_url: "Веб-сайттын, Telegram, Instagram, YouTube каналынын же App Store/Google Play тиркемесинин шилтемесин киргизиңиз!",
       advertise_err_category: "Жаңы бренд үчүн категорияны тандаңыз!",
       advertise_filter_all: "Баары", advertise_top_n_label: "ТОП {n}", advertise_submit: "Рейтинг үчүн күрөшүү",
@@ -1517,6 +1577,13 @@
       advertise_url_hint: "Websahypa, Telegram, Instagram, YouTube, App Store ýa-da Google Play salgysy",
       advertise_preview_new_brand: "Täze brend",
       advertise_preview_checkout: "Töleg möçberi",
+      advertise_edit_name: "Brendiň ady",
+      advertise_edit_desc: "Beýany",
+      advertise_edit_logo: "Logotip ýükle",
+      advertise_edit_uploading: "Ýüklenýär…",
+      advertise_edit_save: "Ýatda sakla",
+      advertise_edit_hint: "Maglumat doly tapylmady — brendiň adyny, beýanyny we logotipini özüňiz giriziň.",
+      advertise_edit_btn: "Üýtget",
       advertise_err_url: "Websahypanyň, Telegram, Instagram, YouTube kanalynyň ýa-da App Store/Google Play programmasynyň salgysyny giriziň!",
       advertise_err_category: "Täze brend üçin kategoriýa saýlaň!",
       advertise_filter_all: "Ählisi", advertise_top_n_label: "TOP {n}", advertise_submit: "Reýting üçin göreşmek",
@@ -3742,6 +3809,26 @@
         }
       }
 
+      // Qo'lda tahrirlash formasi (avtomatik topilmasa o'zi ochiladi).
+      var advertiseEditOpen = false;
+      var advertiseEditIncomplete = false;
+      function advertiseEditFormHtml(preview) {
+        return '<div class="advertise-edit">' +
+          (advertiseEditIncomplete ? '<div class="advertise-edit-hint">' + escapeHtml(tr("advertise_edit_hint")) + "</div>" : "") +
+          '<input type="text" id="advertise-edit-name" maxlength="80" placeholder="' + escapeHtml(tr("advertise_edit_name")) + '" value="' +
+          escapeHtml(/^@/.test(preview.title || "") ? "" : (preview.title || "")) + '">' +
+          '<textarea id="advertise-edit-desc" maxlength="200" placeholder="' + escapeHtml(tr("advertise_edit_desc")) + '">' +
+          escapeHtml(preview.description || "") + "</textarea>" +
+          '<input type="file" id="advertise-edit-file" accept="image/*" class="visually-hidden">' +
+          '<div class="advertise-edit-row">' +
+          '<label for="advertise-edit-file" class="advertise-edit-logo" id="advertise-edit-logo-btn">📷 ' + escapeHtml(tr("advertise_edit_logo")) + "</label>" +
+          '<button type="button" class="advertise-edit-save" data-adv-edit-save>' + escapeHtml(tr("advertise_edit_save")) + "</button>" +
+          "</div></div>";
+      }
+      function isPreviewIncomplete(p) {
+        return !p || !p.title || (/^@/.test(p.title) && !p.description);
+      }
+
       function renderAdvertisePreview(preview, siteUrl) {
         var previewEl = document.getElementById("advertise-preview");
         if (!previewEl) return;
@@ -3757,6 +3844,7 @@
         var thumbHtml = brandThumbHtml(preview.photo_url, siteUrl, emoji);
         previewEl.innerHTML =
           '<div class="advertise-preview-card"><div class="advertise-preview-main">' +
+          (preview.loading ? "" : '<button type="button" class="advertise-preview-edit-btn" data-adv-edit>✏️ ' + escapeHtml(tr("advertise_edit_btn")) + "</button>") +
           thumbHtml +
           '<div class="advertise-preview-info">' +
           '<div class="advertise-preview-platform">' + escapeHtml(emoji + " " + label) + "</div>" +
@@ -3764,6 +3852,7 @@
           (preview.description ? '<div class="advertise-preview-desc">' + escapeHtml(preview.description) + "</div>" : "") +
           (preview.loading ? '<div class="advertise-preview-skeleton"></div><div class="advertise-preview-skeleton"></div>' : "") +
           "</div></div>" +
+          (advertiseEditOpen && !preview.loading ? advertiseEditFormHtml(preview) : "") +
           '<div class="advertise-preview-foot">' +
           '<div class="advertise-preview-foot-label"><div>' + escapeHtml(tr("advertise_preview_new_brand")) + "</div><div>" +
           escapeHtml(tr("advertise_preview_checkout")) + "</div></div>" +
@@ -3798,6 +3887,7 @@
         lastAdvertisePreview = null;
         lastAdvertisePreviewUrl = "";
         if (!value) { renderAdvertisePreview(null); return; }
+        advertiseEditOpen = false;
         var cachedPreview = advertisePreviewCache[value.toLowerCase()];
         if (cachedPreview) {
           renderAdvertisePreview(cachedPreview, value);
@@ -3814,12 +3904,67 @@
             .then(function (preview) {
               advertisePreviewCache[value.toLowerCase()] = preview;
               if (urlInput.value.trim() !== value) return;
+              advertiseEditIncomplete = isPreviewIncomplete(preview);
+              advertiseEditOpen = advertiseEditIncomplete;
               renderAdvertisePreview(preview, value);
               lastAdvertisePreview = preview;
               lastAdvertisePreviewUrl = value;
             })
             .catch(function () { if (urlInput.value.trim() === value) renderAdvertisePreview(null); });
         }, 350);
+      });
+
+      // Tahrirlash: ✏️ tugmasi, "Saqlash", logotip yuklash.
+      var advertisePreviewEl = document.getElementById("advertise-preview");
+      function currentPreviewForEdit() {
+        var url = document.getElementById("advertise-url-input").value.trim();
+        if (!lastAdvertisePreview || lastAdvertisePreviewUrl !== url) return null;
+        return lastAdvertisePreview;
+      }
+      advertisePreviewEl.addEventListener("click", function (e) {
+        var pv = currentPreviewForEdit();
+        if (!pv) return;
+        var url = lastAdvertisePreviewUrl;
+        if (e.target.closest("[data-adv-edit]")) {
+          advertiseEditOpen = !advertiseEditOpen;
+          renderAdvertisePreview(pv, url);
+          var nameEl = document.getElementById("advertise-edit-name");
+          if (nameEl && !nameEl.value) nameEl.focus();
+        } else if (e.target.closest("[data-adv-edit-save]")) {
+          var name = document.getElementById("advertise-edit-name").value.trim();
+          var desc = document.getElementById("advertise-edit-desc").value.trim();
+          if (name) pv.title = name;
+          pv.description = desc;
+          advertiseEditOpen = false;
+          advertiseEditIncomplete = false;
+          renderAdvertisePreview(pv, url);
+        }
+      });
+      advertisePreviewEl.addEventListener("change", function (e) {
+        if (e.target.id !== "advertise-edit-file") return;
+        var file = (e.target.files || [])[0];
+        var pv = currentPreviewForEdit();
+        if (!file || !pv) return;
+        var url = lastAdvertisePreviewUrl;
+        var btn = document.getElementById("advertise-edit-logo-btn");
+        if (btn) btn.textContent = tr("advertise_edit_uploading");
+        // Yozilgan nom/tavsif qayta chizishda yo'qolmasin.
+        var nameNow = document.getElementById("advertise-edit-name").value.trim();
+        var descNow = document.getElementById("advertise-edit-desc").value.trim();
+        compressImage(file).then(function (compressed) {
+          var fd = new FormData();
+          fd.append("photo", compressed);
+          return api("POST", "/api/ads/brand-logo", fd);
+        }).then(function (res) {
+          if (currentPreviewForEdit() !== pv) return;
+          pv.photo_url = res.photo_url;
+          if (nameNow) pv.title = nameNow;
+          pv.description = descNow;
+          renderAdvertisePreview(pv, url);
+        }).catch(function () {
+          showError();
+          if (btn) btn.textContent = "📷 " + tr("advertise_edit_logo");
+        });
       });
 
       document.getElementById("advertise-submit-btn").addEventListener("click", function () {
