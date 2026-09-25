@@ -39,6 +39,8 @@ from bot.config import (
     WEBAPP_URL,
 )
 from bot.database import (
+    get_app_presence_counts,
+    touch_app_presence,
     get_ad_logo_cache,
     put_ad_logo_cache,
     cancel_reservation,
@@ -2284,6 +2286,23 @@ async def api_ads_brand_logo_upload(request: web.Request) -> web.Response:
     raise web.HTTPBadGateway(text="upload_failed")
 
 
+_PRESENCE_COUNTS: dict[str, Any] = {"value": None, "at": 0.0}
+
+
+async def api_presence(request: web.Request) -> web.Response:
+    """Mini App ochiq turganda har ~45 soniyada: foydalanuvchi "onlayn" deb
+    belgilanadi va onlayn / jami tashrif buyuruvchilar soni qaytariladi
+    (sonlar 10 soniya keshlanadi)."""
+    telegram_id = await _require_user_id(request)
+    await touch_app_presence(telegram_id)
+    now = time.monotonic()
+    if _PRESENCE_COUNTS["value"] is None or now - _PRESENCE_COUNTS["at"] > 10:
+        _PRESENCE_COUNTS["value"] = await get_app_presence_counts()
+        _PRESENCE_COUNTS["at"] = now
+    online, visitors = _PRESENCE_COUNTS["value"]
+    return web.json_response({"online": max(online, 1), "visitors": max(visitors, 1)})
+
+
 async def api_ads_click(request: web.Request) -> web.Response:
     await _require_user_id(request)
     clicks = await increment_ad_bid_clicks(int(request.match_info["id"]))
@@ -2733,6 +2752,7 @@ def setup_api_routes(app: web.Application) -> None:
     app.router.add_get("/api/ads/preview", api_ads_preview)
     app.router.add_get("/api/ads/logo", api_ads_logo)
     app.router.add_get("/api/ads/leaderboard", api_ads_leaderboard)
+    app.router.add_post("/api/presence", api_presence)
     app.router.add_post("/api/ads/payment", api_ads_payment)
     app.router.add_post("/api/ads/brand-logo", api_ads_brand_logo_upload)
     app.router.add_post("/api/ads/payments/{id:\\d+}/dismiss", api_ads_dismiss_rejection)
