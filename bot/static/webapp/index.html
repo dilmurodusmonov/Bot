@@ -687,6 +687,8 @@
   .adpay-amount { text-align: center; font-size: 30px; font-weight: 700; color: #E5484D; margin-top: 2px; white-space: nowrap; }
   /* "Taklifni oshirish": uziq chiziqli summaga bosib N,N (mln) kiritiladi. */
   .adpay-amount-editable { border-bottom: 2px dashed #E5484D; padding-bottom: 2px; cursor: pointer; }
+  /* Uziq chiziq ostidagi "Taklifni oshirish: …" matni bilan orasi ochiqroq. */
+  .adpay-amount-raise { margin-bottom: 10px; }
   .adpay-amount-input {
     width: 3ch; min-width: 2ch; padding: 0 0 2px; border: none; border-radius: 0; border-bottom: 2px dashed #E5484D;
     background: transparent; color: #E5484D; font: inherit; font-size: 30px; font-weight: 700;
@@ -4307,7 +4309,7 @@
     app.innerHTML =
       '<div class="advertise-page"><div class="adpay">' +
       '<div class="adpay-amount-label">' + escapeHtml(tr("advertise_pay_amount_label")) + "</div>" +
-      '<div class="adpay-amount" id="adpay-amount">' + adpayAmountHtml() + "</div>" +
+      '<div class="adpay-amount' + (isRaise ? " adpay-amount-raise" : "") + '" id="adpay-amount">' + adpayAmountHtml() + "</div>" +
       '<div class="adpay-subject">' + escapeHtml(trf(p.kind === "raise" ? "advertise_pay_raise_subject" : "advertise_pay_new_subject", { brand: p.brand || "" })) + "</div>" +
       (isRaise && p.currentAmount ? '<div class="adpay-raise-result" id="adpay-raise-result"></div>' : "") +
       '<div class="adpay-card">' +
