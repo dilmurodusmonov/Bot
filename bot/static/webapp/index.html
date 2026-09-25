@@ -677,6 +677,7 @@
     86% { transform: scale(1.1) rotate(4deg); }
   }
   .advertise-rejected-reason { margin-top: 3px; color: #1C1C1E; font-weight: 500; }
+  .advertise-rejected-retry { margin-top: 6px; color: #8E8E93; font-size: 10.5px; line-height: 1.3; }
   .advertise-rejected-close {
     position: absolute; top: 6px; right: 6px; width: 24px; height: 24px; border-radius: 50%;
     border: none; background: none; color: #8E8E93; font-size: 18px; line-height: 24px; padding: 0; cursor: pointer;
@@ -1082,6 +1083,7 @@
       advertise_pending_label: "Tekshirilmoqda",
       advertise_pending_rank: "#{n} reyting uchun",
       advertise_rejected_label: "Rad etildi", advertise_rejected_reason: "Sabab: {reason}", advertise_rejected_close: "Yopish",
+      advertise_rejected_retry: "Kamchiliklar bartaraf etilgandan so'ng qayta yuboring!",
       settings_title: "Umumiy sozlamalar", language_label: "Til", notifications_label: "Bildirishnomalar",
       add_to_home_title: "Ehsonni bir urinishda oching",
       add_to_home_desc: "Ilovani bir zumda ochish uchun Ehsonni bosh ekranga qo'shing.",
@@ -1187,6 +1189,7 @@
       advertise_pending_label: "На проверке",
       advertise_pending_rank: "за #{n} место в рейтинге",
       advertise_rejected_label: "Отклонено", advertise_rejected_reason: "Причина: {reason}", advertise_rejected_close: "Закрыть",
+      advertise_rejected_retry: "Устраните недочёты и отправьте снова!",
       settings_title: "Общие настройки", language_label: "Язык", notifications_label: "Уведомления",
       add_to_home_title: "Открывайте Ehson в один клик",
       add_to_home_desc: "Чтобы открывать приложение мгновенно, добавьте Ehson на главный экран.",
@@ -1292,6 +1295,7 @@
       advertise_pending_label: "Under review",
       advertise_pending_rank: "for rank #{n}",
       advertise_rejected_label: "Rejected", advertise_rejected_reason: "Reason: {reason}", advertise_rejected_close: "Close",
+      advertise_rejected_retry: "Fix the issues and submit again!",
       settings_title: "General settings", language_label: "Language", notifications_label: "Notifications",
       add_to_home_title: "Open Ehson in one tap",
       add_to_home_desc: "Add Ehson to your home screen to open the app instantly.",
@@ -1397,6 +1401,7 @@
       advertise_pending_label: "Тексерілуде",
       advertise_pending_rank: "рейтингтегі #{n} орын үшін",
       advertise_rejected_label: "Қабылданбады", advertise_rejected_reason: "Себебі: {reason}", advertise_rejected_close: "Жабу",
+      advertise_rejected_retry: "Кемшіліктерді түзеткеннен кейін қайта жіберіңіз!",
       settings_title: "Жалпы баптаулар", language_label: "Тіл", notifications_label: "Хабарландырулар",
       add_to_home_title: "Ehson-ды бір басуда ашыңыз",
       add_to_home_desc: "Қосымшаны лезде ашу үшін Ehson-ды басты экранға қосыңыз.",
@@ -1494,6 +1499,7 @@
       advertise_pending_label: "Дар санҷиш",
       advertise_pending_rank: "барои ҷои #{n} дар рейтинг",
       advertise_rejected_label: "Рад шуд", advertise_rejected_reason: "Сабаб: {reason}", advertise_rejected_close: "Пӯшидан",
+      advertise_rejected_retry: "Пас аз бартараф кардани камбудиҳо дубора фиристед!",
       settings_title: "Танзимоти умумӣ", language_label: "Забон", notifications_label: "Огоҳиномаҳо",
       add_to_home_title: "Ehson-ро бо як зарба кушоед",
       add_to_home_desc: "Барои дарҳол кушодани барнома, Ehson-ро ба экрани асосӣ илова кунед.",
@@ -1591,6 +1597,7 @@
       advertise_pending_label: "Текшерилүүдө",
       advertise_pending_rank: "рейтингдеги #{n} орун үчүн",
       advertise_rejected_label: "Четке кагылды", advertise_rejected_reason: "Себеби: {reason}", advertise_rejected_close: "Жабуу",
+      advertise_rejected_retry: "Кемчиликтерди оңдогондон кийин кайра жөнөтүңүз!",
       settings_title: "Жалпы жөндөөлөр", language_label: "Тил", notifications_label: "Билдирүүлөр",
       add_to_home_title: "Ehson-ду бир басуу менен ачыңыз",
       add_to_home_desc: "Колдонмону дароо ачуу үчүн Ehson-ду башкы экранга кошуңуз.",
@@ -1688,6 +1695,7 @@
       advertise_pending_label: "Barlanýar",
       advertise_pending_rank: "reýtingde #{n} orun üçin",
       advertise_rejected_label: "Ret edildi", advertise_rejected_reason: "Sebäbi: {reason}", advertise_rejected_close: "Ýapmak",
+      advertise_rejected_retry: "Kemçilikleri düzedeniňizden soň täzeden iberiň!",
       settings_title: "Umumy sazlamalar", language_label: "Dil", notifications_label: "Bildirişler",
       add_to_home_title: "Ehson-y bir basyşda açyň",
       add_to_home_desc: "Programmany haýal etmän açmak üçin Ehson-y baş ekrana goşuň.",
@@ -3653,6 +3661,7 @@
             '<div><span class="advertise-rejected-icon">❌</span> <b>' + escapeHtml(tr("advertise_rejected_label")) + "</b> · " +
             escapeHtml(r.brand_name) + " — " + escapeHtml(formatSom(r.amount)) + "</div>" +
             (r.reason ? '<div class="advertise-rejected-reason">' + escapeHtml(trf("advertise_rejected_reason", { reason: r.reason })) + "</div>" : "") +
+            '<div class="advertise-rejected-retry">' + escapeHtml(tr("advertise_rejected_retry")) + "</div>" +
             "</div>";
         }).join("");
       }
