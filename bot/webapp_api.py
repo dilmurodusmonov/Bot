@@ -34,6 +34,7 @@ from bot.config import (
     CHANNEL_ID,
     IG_BUSINESS_ID,
     IG_GRAPH_TOKEN,
+    INSTAGRAM_PROXIES,
     MINI_APP_SHORT_NAME,
     WEBAPP_URL,
 )
@@ -781,13 +782,24 @@ async def _fetch_site_html(
         headers["User-Agent"] = user_agent
     trace = _FETCH_TRACE.get()
     agent = (user_agent or "brauzer").split(" ")[0].split("/")[0]
+    route, proxy = "direct", None
+    if (urlparse(url).hostname or "").lower().endswith("instagram.com"):
+        route = _pick_instagram_route()
+        if route is None:
+            if trace is not None:
+                trace.append(f"{agent}: instagram — barcha yo'llar cheklangan (~{_instagram_minutes_left()} daqiqa)")
+            return None
+        proxy = None if route == "direct" else route
+        if INSTAGRAM_PROXIES:
+            agent += f" via {_mask_proxy(route)}"
     try:
         async with aiohttp.ClientSession() as session:
             async with session.get(
-                url, timeout=aiohttp.ClientTimeout(total=6), max_redirects=5, headers=headers,
+                url, timeout=aiohttp.ClientTimeout(total=8 if proxy else 6), max_redirects=5, headers=headers,
+                proxy=proxy,
             ) as resp:
                 html_text, final_url = await resp.text(errors="ignore"), str(resp.url)
-                _note_instagram_block(url, resp.status, final_url)
+                _note_instagram_block(url, resp.status, final_url, route)
                 if trace is not None:
                     trace.append(
                         f"{agent}: HTTP {resp.status} → {final_url[:60]} · "
@@ -797,9 +809,18 @@ async def _fetch_site_html(
                     return None
                 return html_text, final_url
     except Exception as e:
+        _note_proxy_failure(route, e)
         if trace is not None:
             trace.append(f"{agent}: {type(e).__name__}")
         return None
+
+
+def _note_proxy_failure(route: str, error: Exception) -> None:
+    """Proksining o'zi ishlamasa (ulanib bo'lmadi) — 5 daqiqa chetga, keyingisi sinaladi."""
+    global _ig_block_events
+    if route != "direct" and isinstance(error, (aiohttp.ClientProxyConnectionError, aiohttp.ClientHttpProxyError)):
+        _ig_route_blocked[route] = time.monotonic() + 300
+        _ig_block_events += 1
 
 
 # Marketplace'lar (Uzum, Wildberries, Ozon...) datacenter so'rovlariga
@@ -1036,20 +1057,52 @@ async def _fetch_best_html(
 # har bir yangi so'rov cheklovni uzaytiradi — shuning uchun 30 daqiqa
 # instagram.com'ga umuman murojaat qilinmaydi (faqat tashqi xizmatlar).
 _INSTAGRAM_BLOCK_SECONDS = 1800
-_instagram_blocked_until = 0.0
+# Yo'llar: INSTAGRAM_PROXY'dagi proksilar (navbat bilan) va "direct" (serverning
+# o'zi — faqat barcha proksilar cheklanganda). Har biri alohida cheklanadi.
+_ig_route_blocked: dict[str, float] = {}
+_ig_route_cursor = 0
+_ig_block_events = 0
 
 
-def _note_instagram_block(url: str, status: Any, final_url: str = "") -> None:
-    global _instagram_blocked_until
+def _mask_proxy(route: str) -> str:
+    """Proksi login/parolini ko'rsatmaslik uchun faqat host:port."""
+    if route == "direct":
+        return "server"
+    parsed = urlparse(route)
+    return f"{parsed.hostname}:{parsed.port}" if parsed.port else str(parsed.hostname)
+
+
+def _pick_instagram_route(advance: bool = True) -> Optional[str]:
+    global _ig_route_cursor
+    now = time.monotonic()
+    proxies = list(INSTAGRAM_PROXIES)
+    for i in range(len(proxies)):
+        route = proxies[(_ig_route_cursor + i) % len(proxies)]
+        if now >= _ig_route_blocked.get(route, 0):
+            if advance:
+                _ig_route_cursor = (_ig_route_cursor + i + 1) % len(proxies)
+            return route
+    return "direct" if now >= _ig_route_blocked.get("direct", 0) else None
+
+
+def _note_instagram_block(url: str, status: Any, final_url: str = "", route: str = "direct") -> None:
+    global _ig_block_events
     host = (urlparse(url).hostname or "").lower()
     if not host.endswith("instagram.com"):
         return
     if status == 429 or "/accounts/login" in final_url:
-        _instagram_blocked_until = time.monotonic() + _INSTAGRAM_BLOCK_SECONDS
+        _ig_route_blocked[route] = time.monotonic() + _INSTAGRAM_BLOCK_SECONDS
+        _ig_block_events += 1
 
 
 def _instagram_blocked() -> bool:
-    return time.monotonic() < _instagram_blocked_until
+    """Barcha yo'llar (proksilar va server) cheklangan."""
+    return _pick_instagram_route(advance=False) is None
+
+
+def _instagram_minutes_left() -> int:
+    until = min(_ig_route_blocked.values(), default=time.monotonic())
+    return max(1, int((until - time.monotonic()) / 60) + 1)
 
 
 # --- Instagram: profil sahifasi serverlarga "Login • Instagram" beradi, shuning
@@ -1177,19 +1230,23 @@ async def _fetch_instagram_profile(username: str) -> Optional[dict]:
     if _instagram_blocked():
         # instagram.com'ga so'rov yo'q — faqat Microlink (o'z serverlaridan).
         if trace is not None:
-            left = int((_instagram_blocked_until - time.monotonic()) / 60) + 1
-            trace.append(f"instagram: serverimiz vaqtincha cheklangan (429), ~{left} daqiqa so'rov yuborilmaydi")
+            trace.append(f"instagram: barcha yo'llar vaqtincha cheklangan (429), ~{_instagram_minutes_left()} daqiqa so'rov yuborilmaydi")
         result = await _instagram_via_microlink(username)
         _INSTAGRAM_CACHE[key] = (result, time.monotonic() + (21600 if result else 300))
         return result
     # 1) Avval ishlab kelgan yo'l: profil sahifasining o'zi, bitta so'rov,
     # facebookexternalhit sifatida (Instagram unga og: teglarini beradi).
-    fetched = await _fetch_site_html(f"https://www.instagram.com/{username}/", "instagram")
-    if fetched:
-        result = _instagram_from_html(fetched[0], username)
-        if result:
-            _INSTAGRAM_CACHE[key] = (result, time.monotonic() + 21600)
-            return result
+    # Proksi cheklangan bo'lsa — keyingi proksi bilan qayta (boshqa xatolarda emas).
+    for _attempt in range(len(INSTAGRAM_PROXIES) + 1):
+        blocks_before = _ig_block_events
+        fetched = await _fetch_site_html(f"https://www.instagram.com/{username}/", "instagram")
+        if fetched:
+            result = _instagram_from_html(fetched[0], username)
+            if result:
+                _INSTAGRAM_CACHE[key] = (result, time.monotonic() + 21600)
+                return result
+        if _ig_block_events == blocks_before or _instagram_blocked():
+            break
     if _instagram_blocked():   # birinchi so'rovning o'zi 429 oldi — boshqa urinish yo'q
         result = await _instagram_via_microlink(username)
         _INSTAGRAM_CACHE[key] = (result, time.monotonic() + (21600 if result else 300))
@@ -1206,18 +1263,23 @@ async def _fetch_instagram_profile(username: str) -> Optional[dict]:
     ):
         headers = dict(api_headers, **({"User-Agent": ua} if ua else {}))
         status, payload = None, None
+        route = _pick_instagram_route()
+        if route is None:
+            break
         try:
             async with aiohttp.ClientSession() as session:
                 async with session.get(
                     f"{base}/api/v1/users/web_profile_info/?username={quote(username)}",
-                    timeout=aiohttp.ClientTimeout(total=6), headers={**_BROWSER_HEADERS, **headers},
+                    timeout=aiohttp.ClientTimeout(total=8), headers={**_BROWSER_HEADERS, **headers},
+                    proxy=None if route == "direct" else route,
                 ) as resp:
                     status = resp.status
                     if resp.status == 200:
                         payload = json.loads(await resp.text(errors="ignore"))
         except Exception as e:
             status = type(e).__name__
-        _note_instagram_block(base, status)
+            _note_proxy_failure(route, e)
+        _note_instagram_block(base, status, route=route)
         user = ((payload or {}).get("data") or {}).get("user") if isinstance(payload, dict) else None
         if trace is not None:
             trace.append(f"instagram API ({base.split('//')[1]}): {status}" + (" ✓" if user else ""))
