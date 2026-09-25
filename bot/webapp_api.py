@@ -32,6 +32,8 @@ from bot.config import (
     AD_CARD_NUMBER,
     BASE_URL,
     CHANNEL_ID,
+    IG_BUSINESS_ID,
+    IG_GRAPH_TOKEN,
     MINI_APP_SHORT_NAME,
     WEBAPP_URL,
 )
@@ -1109,6 +1111,42 @@ def _instagram_from_html(html_text: str, username: str) -> Optional[dict]:
     }
 
 
+_IG_GRAPH_VERSION = "v21.0"
+
+
+async def _instagram_via_graph(username: str) -> Optional[dict]:
+    """Instagram rasmiy API — Business Discovery: Business/Creator akkauntlar
+    uchun ism, bio va rasm. instagram.com'ga murojaat qilmaydi (bloklanmaydi).
+    IG_GRAPH_TOKEN/IG_BUSINESS_ID sozlanmagan bo'lsa yoki akkaunt shaxsiy
+    bo'lsa None."""
+    if not (IG_GRAPH_TOKEN and IG_BUSINESS_ID):
+        return None
+    fields = f"business_discovery.username({username}){{name,username,biography,profile_picture_url,website}}"
+    url = (f"https://graph.facebook.com/{_IG_GRAPH_VERSION}/{quote(IG_BUSINESS_ID)}"
+           f"?fields={quote(fields, safe='(){{}},._')}&access_token={quote(IG_GRAPH_TOKEN)}")
+    trace = _FETCH_TRACE.get()
+    status: Any = None
+    payload: Any = None
+    try:
+        async with aiohttp.ClientSession() as session:
+            async with session.get(url, timeout=aiohttp.ClientTimeout(total=6)) as resp:
+                status = resp.status
+                payload = json.loads(await resp.text(errors="ignore"))
+    except Exception as e:
+        status = type(e).__name__
+    bd = payload.get("business_discovery") if isinstance(payload, dict) else None
+    if trace is not None:
+        err = (payload or {}).get("error", {}).get("message", "") if isinstance(payload, dict) else ""
+        trace.append(f"instagram rasmiy API: {status}" + (" ✓" if bd else f" {err[:60]}"))
+    if not isinstance(bd, dict):
+        return None
+    return {
+        "title": str(bd.get("name") or "").strip() or "@" + username,
+        "description": str(bd.get("biography") or "").strip(),
+        "pic": bd.get("profile_picture_url"),
+    }
+
+
 async def _instagram_via_microlink(username: str) -> Optional[dict]:
     microlink = await _fetch_microlink(f"https://www.instagram.com/{username}/")
     if microlink and microlink["title"] and microlink["title"].strip().lower() != "instagram":
@@ -1132,7 +1170,10 @@ async def _fetch_instagram_profile(username: str) -> Optional[dict]:
         if trace is not None:
             trace.append("instagram profil: kesh" + (" ✓" if cached[0] else " (topilmagan)"))
         return cached[0]
-    result: Optional[dict] = None
+    result: Optional[dict] = await _instagram_via_graph(username)
+    if result:
+        _INSTAGRAM_CACHE[key] = (result, time.monotonic() + 21600)
+        return result
     if _instagram_blocked():
         # instagram.com'ga so'rov yo'q — faqat Microlink (o'z serverlaridan).
         if trace is not None:
@@ -2156,6 +2197,31 @@ async def api_ads_payment(request: web.Request) -> web.Response:
     return web.json_response({"ok": True, "payment_id": payment_id})
 
 
+async def api_ads_brand_logo_upload(request: web.Request) -> web.Response:
+    """Avtomatik topilmaganda reklama beruvchi logotipni o'zi yuklaydi. Rasm
+    Telegram'ga (foydalanuvchining o'z bot chatiga, ovozsiz) yuborilib darhol
+    o'chiriladi — file_id qoladi va /api/photo/<file_id> orqali ko'rsatiladi."""
+    telegram_id = await _require_user_id(request)
+    _fields, photo_bytes, filename = await _read_multipart_photo(request)
+    if len(photo_bytes) > 5 * 1024 * 1024:
+        raise web.HTTPRequestEntityTooLarge(max_size=5 * 1024 * 1024, actual_size=len(photo_bytes))
+    bot: Bot = request.app["bot"]
+    for chat_id in [telegram_id, *AD_ADMIN_IDS]:
+        try:
+            sent = await bot.send_photo(
+                chat_id=chat_id, photo=BufferedInputFile(photo_bytes, filename=filename),
+                disable_notification=True,
+            )
+        except TelegramAPIError:
+            continue
+        try:
+            await bot.delete_message(chat_id=chat_id, message_id=sent.message_id)
+        except TelegramAPIError:
+            pass
+        return web.json_response({"photo_url": f"/api/photo/{sent.photo[-1].file_id}"})
+    raise web.HTTPBadGateway(text="upload_failed")
+
+
 async def api_ads_click(request: web.Request) -> web.Response:
     await _require_user_id(request)
     clicks = await increment_ad_bid_clicks(int(request.match_info["id"]))
@@ -2606,6 +2672,7 @@ def setup_api_routes(app: web.Application) -> None:
     app.router.add_get("/api/ads/logo", api_ads_logo)
     app.router.add_get("/api/ads/leaderboard", api_ads_leaderboard)
     app.router.add_post("/api/ads/payment", api_ads_payment)
+    app.router.add_post("/api/ads/brand-logo", api_ads_brand_logo_upload)
     app.router.add_post("/api/ads/payments/{id:\\d+}/dismiss", api_ads_dismiss_rejection)
     app.router.add_post("/api/ads/{id:\\d+}/click", api_ads_click)
     app.router.add_get("/api/categories", api_categories)

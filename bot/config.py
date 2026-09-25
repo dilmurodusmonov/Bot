@@ -37,6 +37,14 @@ AD_ADMIN_IDS = [
     if part.lstrip("-").isdigit()
 ]
 
+# Instagram rasmiy API (Business Discovery): reklama beruvchining Instagram
+# Business/Creator profili (ism, bio, rasm) instagram.com'ni bloklamasdan
+# olinadi. Ikkalasi ham bo'lmasa — o'chiq.
+#   IG_GRAPH_TOKEN=uzoq muddatli Facebook user/page access token
+#   IG_BUSINESS_ID=sizning Instagram Business akkauntingiz ID'si (1784...)
+IG_GRAPH_TOKEN = os.getenv("IG_GRAPH_TOKEN", "").strip()
+IG_BUSINESS_ID = os.getenv("IG_BUSINESS_ID", "").strip()
+
 if not BOT_TOKEN:
     raise RuntimeError(
         "BOT_TOKEN topilmadi. .env faylini yarating (.env.example asosida) "
