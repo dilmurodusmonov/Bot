@@ -2191,6 +2191,84 @@
     });
   }
 
+  // Brend logotipi: rasm atrofidagi bo'sh joy (skrinshot foni, oq hoshiya,
+  // shaffof qism) avtomatik kesiladi va kvadratga keltiriladi — kartadagi
+  // kichik joyda logotip to'liq ko'rinadi.
+  function prepareLogoImage(file, size) {
+    size = size || 512;
+    return new Promise(function (resolve) {
+      if (!file.type || file.type.indexOf("image/") !== 0) { resolve(file); return; }
+      var img = new Image();
+      var url = URL.createObjectURL(file);
+      img.onload = function () {
+        URL.revokeObjectURL(url);
+        var scale = Math.min(1, 1024 / Math.max(img.width, img.height));
+        var w = Math.max(1, Math.round(img.width * scale)), h = Math.max(1, Math.round(img.height * scale));
+        var canvas = document.createElement("canvas");
+        canvas.width = w; canvas.height = h;
+        var ctx = canvas.getContext("2d");
+        ctx.drawImage(img, 0, 0, w, h);
+        var data;
+        try { data = ctx.getImageData(0, 0, w, h).data; } catch (e) { compressImage(file, size).then(resolve); return; }
+        function px(x, y) { var i = (y * w + x) * 4; return [data[i], data[i + 1], data[i + 2], data[i + 3]]; }
+        function key(c) { return c[3] < 20 ? "t" : [c[0] >> 4, c[1] >> 4, c[2] >> 4].join(","); }
+        function differs(c, bg) {
+          if (bg[3] < 20) return c[3] >= 20;
+          if (c[3] < 20) return false;
+          return Math.abs(c[0] - bg[0]) + Math.abs(c[1] - bg[1]) + Math.abs(c[2] - bg[2]) > 48;
+        }
+        // Chetdagi eng ko'p uchragan rang — fon (kamida 55% bo'lsa).
+        function borderBg(box) {
+          var counts = {}, samples = {}, total = 0;
+          var step = Math.max(1, Math.round(Math.max(box.w, box.h) / 150));
+          function add(x, y) {
+            var c = px(x, y), k = key(c);
+            counts[k] = (counts[k] || 0) + 1; samples[k] = samples[k] || c; total++;
+          }
+          for (var x = box.x; x < box.x + box.w; x += step) { add(x, box.y); add(x, box.y + box.h - 1); }
+          for (var y = box.y; y < box.y + box.h; y += step) { add(box.x, y); add(box.x + box.w - 1, y); }
+          var best = null;
+          for (var k in counts) if (!best || counts[k] > counts[best]) best = k;
+          return best && counts[best] / total >= 0.55 ? samples[best] : null;
+        }
+        var box = { x: 0, y: 0, w: w, h: h }, fill = [255, 255, 255, 255];
+        for (var pass = 0; pass < 3; pass++) {
+          var bg = borderBg(box);
+          if (!bg) break;
+          var minX = box.x + box.w, minY = box.y + box.h, maxX = -1, maxY = -1;
+          for (var yy = box.y; yy < box.y + box.h; yy++) {
+            for (var xx = box.x; xx < box.x + box.w; xx++) {
+              if (differs(px(xx, yy), bg)) {
+                if (xx < minX) minX = xx; if (xx > maxX) maxX = xx;
+                if (yy < minY) minY = yy; if (yy > maxY) maxY = yy;
+              }
+            }
+          }
+          if (maxX < 0) break;
+          var nb = { x: minX, y: minY, w: maxX - minX + 1, h: maxY - minY + 1 };
+          // Juda kichik (shovqin) yoki deyarli o'zgarmagan — to'xtaymiz.
+          if (nb.w * nb.h < w * h * 0.01 || (nb.w >= box.w - 2 && nb.h >= box.h - 2)) break;
+          box = nb;
+          if (bg[3] >= 20) fill = bg;
+        }
+        var side = Math.round(Math.max(box.w, box.h) * 1.12);
+        var out = document.createElement("canvas");
+        out.width = out.height = size;
+        var octx = out.getContext("2d");
+        octx.fillStyle = "rgb(" + fill[0] + "," + fill[1] + "," + fill[2] + ")";
+        octx.fillRect(0, 0, size, size);
+        var k2 = size / side;
+        octx.drawImage(canvas, box.x, box.y, box.w, box.h,
+          (size - box.w * k2) / 2, (size - box.h * k2) / 2, box.w * k2, box.h * k2);
+        out.toBlob(function (blob) {
+          resolve(blob ? new File([blob], "logo.jpg", { type: "image/jpeg" }) : file);
+        }, "image/jpeg", 0.92);
+      };
+      img.onerror = function () { URL.revokeObjectURL(url); resolve(file); };
+      img.src = url;
+    });
+  }
+
   function photoPickerHtml(inputId, multiple, previewRowId) {
     return '<div class="photo-picker-row">' +
       '<input id="' + inputId + '" type="file" accept="image/*"' +
@@ -3951,9 +4029,9 @@
         // Yozilgan nom/tavsif qayta chizishda yo'qolmasin.
         var nameNow = document.getElementById("advertise-edit-name").value.trim();
         var descNow = document.getElementById("advertise-edit-desc").value.trim();
-        compressImage(file).then(function (compressed) {
+        prepareLogoImage(file).then(function (logo) {
           var fd = new FormData();
-          fd.append("photo", compressed);
+          fd.append("photo", logo);
           return api("POST", "/api/ads/brand-logo", fd);
         }).then(function (res) {
           if (currentPreviewForEdit() !== pv) return;
