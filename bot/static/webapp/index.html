@@ -402,17 +402,17 @@
   /* TOP-3 banner ostidagi kichik "REKLAMA — hissa qo'shing" taklifi. */
   .ad-cta {
     display: block; width: 100%; text-align: left; cursor: pointer;
-    margin: 0 0 20px; padding: 8px; border: none; border-radius: 16px;
-    color: #F5B40A; background: #FFFFFF; font-family: inherit;
+    margin: 0 0 20px; padding: 0; border: none; border-radius: 16px; overflow: hidden;
+    color: #FFFFFF; background: none; font-family: inherit;
   }
-  /* Ichida — Muhtoj/Saxiy tugmasidagi och havorang fonli qism (oq chetdan ajralib turadi). */
+  /* To'liq fon — Ucell brendining binafsha rangi, matn oq. */
   .ad-cta-inner {
-    display: flex; align-items: center; gap: 10px; min-height: 80px; padding: 12px 14px;
-    border-radius: 12px; background: rgba(28,147,243,0.12);
+    display: flex; align-items: center; gap: 10px; min-height: 92px; padding: 16px 18px;
+    background: linear-gradient(135deg, #8A2BA0, #6A1B80);
   }
-  .ad-cta:active .ad-cta-inner { background: rgba(28,147,243,0.2); }
+  .ad-cta:active .ad-cta-inner { filter: brightness(0.92); }
   .ad-cta-text { flex: 1 1 auto; min-width: 0; display: flex; flex-direction: column; gap: 8px; }
-  .ad-cta-title { font-size: 14.5px; font-weight: 800; letter-spacing: 1px; text-transform: uppercase; color: #1C93F3; }
+  .ad-cta-title { font-size: 14.5px; font-weight: 800; letter-spacing: 1px; text-transform: uppercase; color: #FFFFFF; }
   .ad-cta-pitch { font-size: 12.5px; font-weight: 500; line-height: 1.4; }
   .ad-cta-pitch .ad-pitch-emoji { font-size: 16px; vertical-align: -3px; }
   .ad-cta-arrow { font-size: 24px; font-weight: 300; flex-shrink: 0; }
