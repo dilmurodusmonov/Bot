@@ -785,6 +785,7 @@ async def _fetch_site_html(
                 url, timeout=aiohttp.ClientTimeout(total=6), max_redirects=5, headers=headers,
             ) as resp:
                 html_text, final_url = await resp.text(errors="ignore"), str(resp.url)
+                _note_instagram_block(url, resp.status, final_url)
                 if trace is not None:
                     trace.append(
                         f"{agent}: HTTP {resp.status} → {final_url[:60]} · "
@@ -987,6 +988,8 @@ async def _fetch_best_html(
         # platformaga mos (facebookexternalhit) so'rov bilan.
         fallback = None
         for agent in (None, *_PREVIEW_BOT_AGENTS):
+            if platform == "instagram" and _instagram_blocked():
+                break   # IP cheklangan — qolgan urinishlar faqat cheklovni uzaytiradi
             result = await _fetch_site_html(url, platform, user_agent=agent)
             if good(result):
                 return result
@@ -1025,6 +1028,26 @@ async def _fetch_best_html(
     finally:
         for task in pending:
             task.cancel()
+
+
+# Instagram serverimiz IP'sini vaqtincha cheklasa (HTTP 429 → /accounts/login/),
+# har bir yangi so'rov cheklovni uzaytiradi — shuning uchun 30 daqiqa
+# instagram.com'ga umuman murojaat qilinmaydi (faqat tashqi xizmatlar).
+_INSTAGRAM_BLOCK_SECONDS = 1800
+_instagram_blocked_until = 0.0
+
+
+def _note_instagram_block(url: str, status: Any, final_url: str = "") -> None:
+    global _instagram_blocked_until
+    host = (urlparse(url).hostname or "").lower()
+    if not host.endswith("instagram.com"):
+        return
+    if status == 429 or "/accounts/login" in final_url:
+        _instagram_blocked_until = time.monotonic() + _INSTAGRAM_BLOCK_SECONDS
+
+
+def _instagram_blocked() -> bool:
+    return time.monotonic() < _instagram_blocked_until
 
 
 # --- Instagram: profil sahifasi serverlarga "Login • Instagram" beradi, shuning
@@ -1086,16 +1109,38 @@ def _instagram_from_html(html_text: str, username: str) -> Optional[dict]:
     }
 
 
+async def _instagram_via_microlink(username: str) -> Optional[dict]:
+    microlink = await _fetch_microlink(f"https://www.instagram.com/{username}/")
+    if microlink and microlink["title"] and microlink["title"].strip().lower() != "instagram":
+        title = re.sub(r"\s*[•·]\s*Instagram.*$", "", microlink["title"]).strip()
+        return {
+            "title": title or "@" + username,
+            "description": microlink["description"],
+            "pic": microlink["image"] or microlink["logo"],
+        }
+    return None
+
+
 async def _fetch_instagram_profile(username: str) -> Optional[dict]:
     """{"title", "description", "pic"} — ism, bio va profil rasmi (CDN manzili;
     Instagram CDN boshqa saytlarga rasm bermaydi, shuning uchun u faqat server
     orqali — /api/ads/logo'da — yuklanadi)."""
     key = username.lower()
+    trace = _FETCH_TRACE.get()
     cached = _INSTAGRAM_CACHE.get(key)
     if cached and time.monotonic() < cached[1]:
+        if trace is not None:
+            trace.append("instagram profil: kesh" + (" ✓" if cached[0] else " (topilmagan)"))
         return cached[0]
-    trace = _FETCH_TRACE.get()
     result: Optional[dict] = None
+    if _instagram_blocked():
+        # instagram.com'ga so'rov yo'q — faqat Microlink (o'z serverlaridan).
+        if trace is not None:
+            left = int((_instagram_blocked_until - time.monotonic()) / 60) + 1
+            trace.append(f"instagram: serverimiz vaqtincha cheklangan (429), ~{left} daqiqa so'rov yuborilmaydi")
+        result = await _instagram_via_microlink(username)
+        _INSTAGRAM_CACHE[key] = (result, time.monotonic() + (21600 if result else 300))
+        return result
     # 1) Avval ishlab kelgan yo'l: profil sahifasining o'zi, bitta so'rov,
     # facebookexternalhit sifatida (Instagram unga og: teglarini beradi).
     fetched = await _fetch_site_html(f"https://www.instagram.com/{username}/", "instagram")
@@ -1104,6 +1149,10 @@ async def _fetch_instagram_profile(username: str) -> Optional[dict]:
         if result:
             _INSTAGRAM_CACHE[key] = (result, time.monotonic() + 21600)
             return result
+    if _instagram_blocked():   # birinchi so'rovning o'zi 429 oldi — boshqa urinish yo'q
+        result = await _instagram_via_microlink(username)
+        _INSTAGRAM_CACHE[key] = (result, time.monotonic() + (21600 if result else 300))
+        return result
     api_headers = {
         "x-ig-app-id": _INSTAGRAM_APP_ID,
         "Accept": "application/json",
@@ -1127,6 +1176,7 @@ async def _fetch_instagram_profile(username: str) -> Optional[dict]:
                         payload = json.loads(await resp.text(errors="ignore"))
         except Exception as e:
             status = type(e).__name__
+        _note_instagram_block(base, status)
         user = ((payload or {}).get("data") or {}).get("user") if isinstance(payload, dict) else None
         if trace is not None:
             trace.append(f"instagram API ({base.split('//')[1]}): {status}" + (" ✓" if user else ""))
@@ -1137,7 +1187,9 @@ async def _fetch_instagram_profile(username: str) -> Optional[dict]:
                 "pic": user.get("profile_pic_url_hd") or user.get("profile_pic_url"),
             }
             break
-    if result is None:
+        if _instagram_blocked():
+            break
+    if result is None and not _instagram_blocked():
         # Profil "embed" sahifasi (boshqa saytlarga joylash uchun) — kirish
         # talab qilmaydi; ichidagi JSON/og: teglaridan ism, bio, rasm.
         for embed_url in (f"https://www.instagram.com/{username}/embed/",
@@ -1147,14 +1199,7 @@ async def _fetch_instagram_profile(username: str) -> Optional[dict]:
             if result:
                 break
     if result is None:
-        microlink = await _fetch_microlink(f"https://www.instagram.com/{username}/")
-        if microlink and microlink["title"] and microlink["title"].strip().lower() != "instagram":
-            title = re.sub(r"\s*[•·]\s*Instagram.*$", "", microlink["title"]).strip()
-            result = {
-                "title": title or "@" + username,
-                "description": microlink["description"],
-                "pic": microlink["image"] or microlink["logo"],
-            }
+        result = await _instagram_via_microlink(username)
     if len(_INSTAGRAM_CACHE) > 300:
         _INSTAGRAM_CACHE.clear()
     _INSTAGRAM_CACHE[key] = (result, time.monotonic() + (21600 if result else 300))
@@ -1469,7 +1514,11 @@ async def _resolve_logo_for_url(url: str, trace: Optional[list] = None) -> Optio
         if logo:
             _logo_cache_put(key, logo)
             return logo
-    fetched = await _fetch_site_html(url, platform) if await _resolve_is_public_host(host) else None
+    fetched = (
+        await _fetch_site_html(url, platform)
+        if await _resolve_is_public_host(host) and not (platform == "instagram" and _instagram_blocked())
+        else None
+    )
     if platform != "website":
         if fetched and not _is_challenge(fetched[0]):
             og_image = _absolute_image_url(fetched[1], _extract_meta(fetched[0], "og:image", "twitter:image"))
