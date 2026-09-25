@@ -2303,6 +2303,20 @@ async def api_presence(request: web.Request) -> web.Response:
     return web.json_response({"online": max(online, 1), "visitors": max(visitors, 1)})
 
 
+async def api_ads_top(request: web.Request) -> web.Response:
+    """Bosh sahifadagi reklama banneri uchun reytingning TOP-3 reklamasi."""
+    await _require_user_id(request)
+    bids = (await get_ad_bids_ranked())[:3]
+    return web.json_response([
+        {
+            "id": b["id"], "rank": i + 1, "brand_name": b["brand_name"], "url": b["url"],
+            "platform": b.get("platform") or "website", "photo_url": b.get("photo_url"),
+            "description": b.get("description") or "",
+        }
+        for i, b in enumerate(bids)
+    ])
+
+
 async def api_ads_click(request: web.Request) -> web.Response:
     await _require_user_id(request)
     clicks = await increment_ad_bid_clicks(int(request.match_info["id"]))
@@ -2752,6 +2766,7 @@ def setup_api_routes(app: web.Application) -> None:
     app.router.add_get("/api/ads/preview", api_ads_preview)
     app.router.add_get("/api/ads/logo", api_ads_logo)
     app.router.add_get("/api/ads/leaderboard", api_ads_leaderboard)
+    app.router.add_get("/api/ads/top", api_ads_top)
     app.router.add_post("/api/presence", api_presence)
     app.router.add_post("/api/ads/payment", api_ads_payment)
     app.router.add_post("/api/ads/brand-logo", api_ads_brand_logo_upload)
