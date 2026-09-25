@@ -1659,11 +1659,20 @@
     }
   }
 
+  // Yangi sahifa har doim boshidan ochiladi (oldingi sahifaning scroll
+  // holati qolib ketmasin, masalan reklama banneri pastda bo'lsa).
+  function scrollToTop() {
+    window.scrollTo(0, 0);
+    document.documentElement.scrollTop = 0;
+    document.body.scrollTop = 0;
+  }
+
   function goto(screen, params, push) {
     if (push !== false) navStack.push({ screen: state.screen, params: state.params });
     state.screen = screen;
     state.params = params || {};
     render();
+    scrollToTop();
     saveNavState();
   }
 
@@ -1673,6 +1682,7 @@
     state.screen = prev.screen;
     state.params = prev.params;
     render();
+    scrollToTop();
     saveNavState();
   }
 
@@ -3585,6 +3595,7 @@
         "</div>";
 
       renderList();
+      scrollToTop();   // ma'lumot kelgach ham sahifa boshida
       watchPendingPayments();
 
       // "Rad etildi" blokini yopish: serverda ko'rildi deb belgilanadi.
