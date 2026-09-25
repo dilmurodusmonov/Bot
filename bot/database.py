@@ -279,6 +279,34 @@ async def touch_app_presence(telegram_id: int) -> None:
     )
 
 
+async def get_ad_panel_stats() -> dict[str, Any]:
+    """Admin panelning "Reklama" bo'limi: tashrif buyuruvchilar, kliklar,
+    to'lovlar va reytingdagi reklamalar (o'rni, kliklari bilan)."""
+    pool = _get_pool()
+    row = await pool.fetchrow(
+        """SELECT
+             (SELECT count(*) FROM app_presence) AS visitors,
+             (SELECT count(*) FROM app_presence WHERE first_seen > now() - interval '1 day') AS visitors_new_day,
+             (SELECT count(*) FROM app_presence WHERE last_seen > now() - interval '2 minutes') AS online,
+             (SELECT count(*) FROM app_presence WHERE last_seen > now() - interval '1 day') AS active_day,
+             (SELECT count(*) FROM app_presence WHERE last_seen > now() - interval '7 days') AS active_week,
+             (SELECT coalesce(sum(views), 0) FROM ad_stats) AS banner_views,
+             (SELECT coalesce(sum(clicks), 0) FROM ad_bids WHERE status = 'approved') AS clicks,
+             (SELECT count(*) FROM ad_bids WHERE status = 'approved') AS ads,
+             (SELECT coalesce(sum(amount), 0) FROM ad_payments WHERE status = 'approved') AS paid_sum,
+             (SELECT count(*) FROM ad_payments WHERE status = 'approved') AS paid_count,
+             (SELECT count(*) FROM ad_payments WHERE status = 'pending') AS pending_count,
+             (SELECT count(*) FROM ad_payments WHERE status = 'rejected') AS rejected_count"""
+    )
+    bids = await pool.fetch(
+        """SELECT id, brand_name, url, platform, category, bid_amount, clicks, created_at
+           FROM ad_bids WHERE status = 'approved' ORDER BY bid_amount DESC, created_at ASC"""
+    )
+    stats = {k: int(v) for k, v in dict(row).items()}
+    stats["bids"] = [dict(b, rank=i + 1) for i, b in enumerate(bids)]
+    return stats
+
+
 async def get_bot_stats() -> dict[str, int]:
     """/stats (admin) uchun: foydalanuvchilar, tashrif buyuruvchilar, faollik."""
     row = await _get_pool().fetchrow(
