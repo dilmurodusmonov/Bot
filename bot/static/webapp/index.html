@@ -72,6 +72,32 @@
     display: flex; align-items: center; justify-content: center; padding: 24px;
   }
   .picker-overlay[hidden] { display: none; }
+  /* Logotipni kesish (Telegram avatari kabi): kvadrat ramka, ikki barmoq bilan
+     kattalashtirish, surish. */
+  .logo-cropper {
+    position: fixed; inset: 0; z-index: 200; background: #000; touch-action: none;
+    overflow: hidden; user-select: none; -webkit-user-select: none;
+  }
+  .logo-cropper img {
+    position: absolute; left: 0; top: 0; transform-origin: 0 0; max-width: none; pointer-events: none;
+  }
+  .logo-cropper-frame {
+    position: absolute; border-radius: 22%; box-shadow: 0 0 0 9999px rgba(0,0,0,0.62);
+    outline: 2px solid rgba(255,255,255,0.9); outline-offset: -1px; pointer-events: none;
+  }
+  .logo-cropper-hint {
+    position: absolute; left: 16px; right: 16px; top: max(20px, env(safe-area-inset-top));
+    color: rgba(255,255,255,0.85); font-size: 13.5px; text-align: center; pointer-events: none;
+  }
+  .logo-cropper-bar {
+    position: absolute; left: 0; right: 0; bottom: 0; display: flex; align-items: center;
+    justify-content: space-between; padding: 14px 20px calc(18px + env(safe-area-inset-bottom));
+  }
+  .logo-cropper-cancel { background: none; border: none; color: #fff; font-size: 16px; padding: 10px 6px; font-family: inherit; }
+  .logo-cropper-done {
+    display: flex; align-items: center; gap: 8px; background: #2AABEE; color: #fff; border: none;
+    border-radius: 999px; padding: 12px 22px; font-size: 16px; font-weight: 600; font-family: inherit;
+  }
   .picker-sheet {
     background: var(--section-bg); border-radius: 16px; width: 100%; max-width: 380px;
     max-height: 80vh; overflow-y: auto;
@@ -1002,6 +1028,9 @@
       advertise_edit_save: "Saqlash",
       advertise_edit_hint: "Ma'lumot to'liq topilmadi — brend nomi, tavsif va logotipni o'zingiz kiriting.",
       advertise_edit_btn: "O'zgartirish",
+      advertise_crop_hint: "Ikki barmoq bilan kattalashtiring, surib joylashtiring",
+      advertise_crop_cancel: "Bekor qilish",
+      advertise_crop_done: "Tayyor",
       advertise_err_url: "Veb-sayt, Telegram, Instagram, YouTube kanali yoki App Store/Google Play ilovasi URL manzilini kiriting!",
       advertise_err_category: "Yangi brend uchun kategoriya tanlang!",
       advertise_filter_all: "Barchasi", advertise_top_n_label: "TOP {n}", advertise_submit: "Reytingni sindirish",
@@ -1103,6 +1132,9 @@
       advertise_edit_save: "Сохранить",
       advertise_edit_hint: "Данные не найдены полностью — укажите название, описание и логотип сами.",
       advertise_edit_btn: "Изменить",
+      advertise_crop_hint: "Увеличьте двумя пальцами и перетащите",
+      advertise_crop_cancel: "Отмена",
+      advertise_crop_done: "Готово",
       advertise_err_url: "Введите ссылку на сайт, Telegram, Instagram, YouTube-канал или приложение в App Store/Google Play!",
       advertise_err_category: "Выберите категорию для нового бренда!",
       advertise_filter_all: "Все", advertise_top_n_label: "ТОП {n}", advertise_submit: "Побороться за рейтинг",
@@ -1204,6 +1236,9 @@
       advertise_edit_save: "Save",
       advertise_edit_hint: "Couldn't find full details — enter the brand name, description and logo yourself.",
       advertise_edit_btn: "Edit",
+      advertise_crop_hint: "Pinch to zoom, drag to position",
+      advertise_crop_cancel: "Cancel",
+      advertise_crop_done: "Done",
       advertise_err_url: "Enter the URL of a website, Telegram, Instagram, YouTube channel or App Store/Google Play app!",
       advertise_err_category: "Choose a category for the new brand!",
       advertise_filter_all: "All", advertise_top_n_label: "TOP {n}", advertise_submit: "Break the rating",
@@ -1305,6 +1340,9 @@
       advertise_edit_save: "Сақтау",
       advertise_edit_hint: "Деректер толық табылмады — бренд атауын, сипаттамасын және логотипін өзіңіз енгізіңіз.",
       advertise_edit_btn: "Өзгерту",
+      advertise_crop_hint: "Екі саусақпен үлкейтіп, жылжытып орналастырыңыз",
+      advertise_crop_cancel: "Бас тарту",
+      advertise_crop_done: "Дайын",
       advertise_err_url: "Веб-сайт, Telegram, Instagram, YouTube арнасы немесе App Store/Google Play қосымшасының сілтемесін енгізіңіз!",
       advertise_err_category: "Жаңа бренд үшін санатты таңдаңыз!",
       advertise_filter_all: "Барлығы", advertise_top_n_label: "ТОП {n}", advertise_submit: "Рейтинг үшін күресу",
@@ -1398,6 +1436,9 @@
       advertise_edit_save: "Нигоҳ доштан",
       advertise_edit_hint: "Маълумот пурра ёфт нашуд — номи бренд, тавсиф ва логотипро худатон ворид кунед.",
       advertise_edit_btn: "Тағйир додан",
+      advertise_crop_hint: "Бо ду ангушт калон кунед ва кашида ҷой диҳед",
+      advertise_crop_cancel: "Бекор кардан",
+      advertise_crop_done: "Тайёр",
       advertise_err_url: "Пайванди сомона, Telegram, Instagram, канали YouTube ё барномаи App Store/Google Play-ро ворид кунед!",
       advertise_err_category: "Барои бренди нав категорияро интихоб кунед!",
       advertise_filter_all: "Ҳама", advertise_top_n_label: "ТОП {n}", advertise_submit: "Барои рейтинг мубориза бурдан",
@@ -1491,6 +1532,9 @@
       advertise_edit_save: "Сактоо",
       advertise_edit_hint: "Маалымат толук табылган жок — бренддин аталышын, сүрөттөмөсүн жана логотибин өзүңүз киргизиңиз.",
       advertise_edit_btn: "Өзгөртүү",
+      advertise_crop_hint: "Эки манжа менен чоңойтуп, сүйрөп жайгаштырыңыз",
+      advertise_crop_cancel: "Жокко чыгаруу",
+      advertise_crop_done: "Даяр",
       advertise_err_url: "Веб-сайттын, Telegram, Instagram, YouTube каналынын же App Store/Google Play тиркемесинин шилтемесин киргизиңиз!",
       advertise_err_category: "Жаңы бренд үчүн категорияны тандаңыз!",
       advertise_filter_all: "Баары", advertise_top_n_label: "ТОП {n}", advertise_submit: "Рейтинг үчүн күрөшүү",
@@ -1584,6 +1628,9 @@
       advertise_edit_save: "Ýatda sakla",
       advertise_edit_hint: "Maglumat doly tapylmady — brendiň adyny, beýanyny we logotipini özüňiz giriziň.",
       advertise_edit_btn: "Üýtget",
+      advertise_crop_hint: "Iki barmak bilen ulalt, süýşürip ýerleşdir",
+      advertise_crop_cancel: "Ýatyr",
+      advertise_crop_done: "Taýýar",
       advertise_err_url: "Websahypanyň, Telegram, Instagram, YouTube kanalynyň ýa-da App Store/Google Play programmasynyň salgysyny giriziň!",
       advertise_err_category: "Täze brend üçin kategoriýa saýlaň!",
       advertise_filter_all: "Ählisi", advertise_top_n_label: "TOP {n}", advertise_submit: "Reýting üçin göreşmek",
@@ -2191,80 +2238,197 @@
     });
   }
 
-  // Brend logotipi: rasm atrofidagi bo'sh joy (skrinshot foni, oq hoshiya,
-  // shaffof qism) avtomatik kesiladi va kvadratga keltiriladi — kartadagi
-  // kichik joyda logotip to'liq ko'rinadi.
-  function prepareLogoImage(file, size) {
-    size = size || 512;
+  // Brend logotipi rasmda qayerda: chetdagi fon rangi aniqlanadi va markazga
+  // eng yaqin, fondan farq qiladigan bog'langan qism olinadi (skrinshotdagi
+  // status bar, pastki panel kabi chetdagi narsalar hisobga olinmaydi).
+  // Qaytaradi: {x, y, w, h} (canvas koordinatalarida) yoki null.
+  function detectLogoBox(canvas) {
+    var W = canvas.width, H = canvas.height;
+    var g = Math.min(1, 220 / Math.max(W, H));
+    var gw = Math.max(1, Math.round(W * g)), gh = Math.max(1, Math.round(H * g));
+    var gc = document.createElement("canvas");
+    gc.width = gw; gc.height = gh;
+    var gctx = gc.getContext("2d");
+    gctx.drawImage(canvas, 0, 0, gw, gh);
+    var data;
+    try { data = gctx.getImageData(0, 0, gw, gh).data; } catch (e) { return null; }
+    function px(x, y) { var i = (y * gw + x) * 4; return [data[i], data[i + 1], data[i + 2], data[i + 3]]; }
+    function key(c) { return c[3] < 20 ? "t" : [c[0] >> 4, c[1] >> 4, c[2] >> 4].join(","); }
+    function differs(c, bg) {
+      if (bg[3] < 20) return c[3] >= 20;
+      if (c[3] < 20) return false;
+      return Math.abs(c[0] - bg[0]) + Math.abs(c[1] - bg[1]) + Math.abs(c[2] - bg[2]) > 48;
+    }
+    function borderBg(b) {
+      var counts = {}, samples = {}, total = 0;
+      function add(x, y) { var c = px(x, y), k = key(c); counts[k] = (counts[k] || 0) + 1; samples[k] = samples[k] || c; total++; }
+      for (var x = b.x; x < b.x + b.w; x++) { add(x, b.y); add(x, b.y + b.h - 1); }
+      for (var y = b.y; y < b.y + b.h; y++) { add(b.x, y); add(b.x + b.w - 1, y); }
+      var best = null;
+      for (var k in counts) if (!best || counts[k] > counts[best]) best = k;
+      return best && counts[best] / total >= 0.45 ? samples[best] : null;
+    }
+    var box = { x: 0, y: 0, w: gw, h: gh };
+    for (var pass = 0; pass < 4; pass++) {
+      var bg = borderBg(box);
+      if (!bg) break;
+      var fg = new Uint8Array(gw * gh), any = false;
+      for (var y = box.y; y < box.y + box.h; y++) for (var x = box.x; x < box.x + box.w; x++) {
+        if (differs(px(x, y), bg)) { fg[y * gw + x] = 1; any = true; }
+      }
+      if (!any) break;
+      // Markazga eng yaqin oldingi plan nuqtasi — urug'.
+      var cx = box.x + (box.w >> 1), cy = box.y + (box.h >> 1), seed = -1, bestD = Infinity;
+      for (var y2 = box.y; y2 < box.y + box.h; y2++) for (var x2 = box.x; x2 < box.x + box.w; x2++) {
+        if (fg[y2 * gw + x2]) { var d = (x2 - cx) * (x2 - cx) + (y2 - cy) * (y2 - cy); if (d < bestD) { bestD = d; seed = y2 * gw + x2; } }
+      }
+      var stack = [seed], seen = new Uint8Array(gw * gh), minX = gw, minY = gh, maxX = -1, maxY = -1, area = 0;
+      seen[seed] = 1;
+      while (stack.length) {
+        var idx = stack.pop(), sx = idx % gw, sy = (idx - sx) / gw;
+        area++;
+        if (sx < minX) minX = sx; if (sx > maxX) maxX = sx; if (sy < minY) minY = sy; if (sy > maxY) maxY = sy;
+        var nbs = [idx - 1, idx + 1, idx - gw, idx + gw];
+        for (var n = 0; n < 4; n++) {
+          var j = nbs[n], jx = j % gw, jy = (j - jx) / gw;
+          if (j < 0 || j >= gw * gh || seen[j] || !fg[j] || Math.abs(jx - sx) > 1) continue;
+          if (jx < box.x || jx >= box.x + box.w || jy < box.y || jy >= box.y + box.h) continue;
+          seen[j] = 1; stack.push(j);
+        }
+      }
+      var nb = { x: minX, y: minY, w: maxX - minX + 1, h: maxY - minY + 1 };
+      if (area < box.w * box.h * 0.005 || (nb.w >= box.w - 1 && nb.h >= box.h - 1)) break;
+      box = nb;
+    }
+    if (box.w >= gw - 1 && box.h >= gh - 1) return null;
+    return { x: box.x / g, y: box.y / g, w: box.w / g, h: box.h / g };
+  }
+
+  // Telegram avatari kabi kesish oynasi: kvadrat ramka (kartadagi logotip
+  // shaklida), ikki barmoq bilan kattalashtirish, surish. Boshida topilgan
+  // logotipga yaqinlashtirilgan bo'ladi. Promise<File|null> (null — bekor).
+  function openLogoCropper(file, outSize) {
+    outSize = outSize || 512;
     return new Promise(function (resolve) {
-      if (!file.type || file.type.indexOf("image/") !== 0) { resolve(file); return; }
+      if (!file.type || file.type.indexOf("image/") !== 0) { resolve(null); return; }
       var img = new Image();
       var url = URL.createObjectURL(file);
+      img.onerror = function () { URL.revokeObjectURL(url); resolve(null); };
       img.onload = function () {
         URL.revokeObjectURL(url);
-        var scale = Math.min(1, 1024 / Math.max(img.width, img.height));
-        var w = Math.max(1, Math.round(img.width * scale)), h = Math.max(1, Math.round(img.height * scale));
-        var canvas = document.createElement("canvas");
-        canvas.width = w; canvas.height = h;
-        var ctx = canvas.getContext("2d");
-        ctx.drawImage(img, 0, 0, w, h);
-        var data;
-        try { data = ctx.getImageData(0, 0, w, h).data; } catch (e) { compressImage(file, size).then(resolve); return; }
-        function px(x, y) { var i = (y * w + x) * 4; return [data[i], data[i + 1], data[i + 2], data[i + 3]]; }
-        function key(c) { return c[3] < 20 ? "t" : [c[0] >> 4, c[1] >> 4, c[2] >> 4].join(","); }
-        function differs(c, bg) {
-          if (bg[3] < 20) return c[3] >= 20;
-          if (c[3] < 20) return false;
-          return Math.abs(c[0] - bg[0]) + Math.abs(c[1] - bg[1]) + Math.abs(c[2] - bg[2]) > 48;
+        var k = Math.min(1, 2048 / Math.max(img.width, img.height));
+        var src = document.createElement("canvas");
+        src.width = Math.max(1, Math.round(img.width * k));
+        src.height = Math.max(1, Math.round(img.height * k));
+        src.getContext("2d").drawImage(img, 0, 0, src.width, src.height);
+        var iw = src.width, ih = src.height;
+
+        var root = document.createElement("div");
+        root.className = "logo-cropper";
+        root.innerHTML =
+          '<img alt="">' +
+          '<div class="logo-cropper-frame"></div>' +
+          '<div class="logo-cropper-hint">' + escapeHtml(tr("advertise_crop_hint")) + "</div>" +
+          '<div class="logo-cropper-bar">' +
+          '<button type="button" class="logo-cropper-cancel">' + escapeHtml(tr("advertise_crop_cancel")) + "</button>" +
+          '<button type="button" class="logo-cropper-done">✓ ' + escapeHtml(tr("advertise_crop_done")) + "</button>" +
+          "</div>";
+        document.body.appendChild(root);
+        var view = root.querySelector("img");
+        view.src = src.toDataURL("image/png");
+        view.style.width = iw + "px";
+        view.style.height = ih + "px";
+        var frameEl = root.querySelector(".logo-cropper-frame");
+
+        var VW = root.clientWidth, VH = root.clientHeight;
+        var f = Math.round(Math.min(VW - 48, VH - 220, 420));
+        var F = { x: Math.round((VW - f) / 2), y: Math.round((VH - f) / 2) - 20, s: f };
+        frameEl.style.left = F.x + "px"; frameEl.style.top = F.y + "px";
+        frameEl.style.width = f + "px"; frameEl.style.height = f + "px";
+
+        var sMin = f / Math.max(iw, ih) * 0.5;
+        var sMax = f / 24;   // eng kichik kesim ~24px
+        var box = detectLogoBox(src) || { x: 0, y: 0, w: iw, h: ih };
+        var side = Math.max(box.w, box.h) * 1.12;
+        var s = Math.min(sMax, Math.max(sMin, f / side));
+        var tx = F.x + f / 2 - (box.x + box.w / 2) * s;
+        var ty = F.y + f / 2 - (box.y + box.h / 2) * s;
+
+        function clamp() {
+          s = Math.min(sMax, Math.max(sMin, s));
+          // Ramka markazi rasm ichida qolsin.
+          var cx = F.x + f / 2, cy = F.y + f / 2;
+          tx = Math.min(cx, Math.max(cx - iw * s, tx));
+          ty = Math.min(cy, Math.max(cy - ih * s, ty));
         }
-        // Chetdagi eng ko'p uchragan rang — fon (kamida 55% bo'lsa).
-        function borderBg(box) {
-          var counts = {}, samples = {}, total = 0;
-          var step = Math.max(1, Math.round(Math.max(box.w, box.h) / 150));
-          function add(x, y) {
-            var c = px(x, y), k = key(c);
-            counts[k] = (counts[k] || 0) + 1; samples[k] = samples[k] || c; total++;
+        function apply() {
+          clamp();
+          view.style.transform = "translate(" + tx + "px," + ty + "px) scale(" + s + ")";
+        }
+        apply();
+
+        var pointers = {}, start = null;
+        function snapshot() {
+          var ids = Object.keys(pointers);
+          var a = pointers[ids[0]], b = pointers[ids[1]] || a;
+          start = { s: s, tx: tx, ty: ty, mx: (a.x + b.x) / 2, my: (a.y + b.y) / 2,
+                    d: Math.max(1, Math.hypot(a.x - b.x, a.y - b.y)), n: ids.length };
+        }
+        root.addEventListener("pointerdown", function (e) {
+          if (e.target.closest("button")) return;
+          root.setPointerCapture && root.setPointerCapture(e.pointerId);
+          pointers[e.pointerId] = { x: e.clientX, y: e.clientY };
+          snapshot();
+        });
+        root.addEventListener("pointermove", function (e) {
+          if (!pointers[e.pointerId]) return;
+          pointers[e.pointerId] = { x: e.clientX, y: e.clientY };
+          var ids = Object.keys(pointers);
+          if (ids.length !== start.n) snapshot();
+          var a = pointers[ids[0]], b = pointers[ids[1]] || a;
+          var mx = (a.x + b.x) / 2, my = (a.y + b.y) / 2;
+          var ns = ids.length > 1 ? start.s * Math.hypot(a.x - b.x, a.y - b.y) / start.d : start.s;
+          ns = Math.min(sMax, Math.max(sMin, ns));
+          // Barmoqlar orasidagi nuqta rasmda joyida qoladi.
+          var u = (start.mx - start.tx) / start.s, v = (start.my - start.ty) / start.s;
+          s = ns; tx = mx - u * ns; ty = my - v * ns;
+          apply();
+        });
+        function up(e) { delete pointers[e.pointerId]; if (Object.keys(pointers).length) snapshot(); }
+        root.addEventListener("pointerup", up);
+        root.addEventListener("pointercancel", up);
+        root.addEventListener("wheel", function (e) {
+          e.preventDefault();
+          var ns = Math.min(sMax, Math.max(sMin, s * Math.exp(-e.deltaY * 0.0015)));
+          var u = (e.clientX - tx) / s, v = (e.clientY - ty) / s;
+          s = ns; tx = e.clientX - u * ns; ty = e.clientY - v * ns;
+          apply();
+        }, { passive: false });
+
+        function close(result) {
+          if (root.parentNode) root.parentNode.removeChild(root);
+          resolve(result);
+        }
+        root.querySelector(".logo-cropper-cancel").addEventListener("click", function () { close(null); });
+        root.querySelector(".logo-cropper-done").addEventListener("click", function () {
+          // Ramka ichidagi qism → outSize×outSize (bo'sh joy oq).
+          var u0 = (F.x - tx) / s, v0 = (F.y - ty) / s, side = f / s;
+          var out = document.createElement("canvas");
+          out.width = out.height = outSize;
+          var octx = out.getContext("2d");
+          octx.fillStyle = "#FFFFFF";
+          octx.fillRect(0, 0, outSize, outSize);
+          var sx = Math.max(0, u0), sy = Math.max(0, v0);
+          var ex = Math.min(iw, u0 + side), ey = Math.min(ih, v0 + side);
+          if (ex > sx && ey > sy) {
+            var r = outSize / side;
+            octx.drawImage(src, sx, sy, ex - sx, ey - sy, (sx - u0) * r, (sy - v0) * r, (ex - sx) * r, (ey - sy) * r);
           }
-          for (var x = box.x; x < box.x + box.w; x += step) { add(x, box.y); add(x, box.y + box.h - 1); }
-          for (var y = box.y; y < box.y + box.h; y += step) { add(box.x, y); add(box.x + box.w - 1, y); }
-          var best = null;
-          for (var k in counts) if (!best || counts[k] > counts[best]) best = k;
-          return best && counts[best] / total >= 0.55 ? samples[best] : null;
-        }
-        var box = { x: 0, y: 0, w: w, h: h }, fill = [255, 255, 255, 255];
-        for (var pass = 0; pass < 3; pass++) {
-          var bg = borderBg(box);
-          if (!bg) break;
-          var minX = box.x + box.w, minY = box.y + box.h, maxX = -1, maxY = -1;
-          for (var yy = box.y; yy < box.y + box.h; yy++) {
-            for (var xx = box.x; xx < box.x + box.w; xx++) {
-              if (differs(px(xx, yy), bg)) {
-                if (xx < minX) minX = xx; if (xx > maxX) maxX = xx;
-                if (yy < minY) minY = yy; if (yy > maxY) maxY = yy;
-              }
-            }
-          }
-          if (maxX < 0) break;
-          var nb = { x: minX, y: minY, w: maxX - minX + 1, h: maxY - minY + 1 };
-          // Juda kichik (shovqin) yoki deyarli o'zgarmagan — to'xtaymiz.
-          if (nb.w * nb.h < w * h * 0.01 || (nb.w >= box.w - 2 && nb.h >= box.h - 2)) break;
-          box = nb;
-          if (bg[3] >= 20) fill = bg;
-        }
-        var side = Math.round(Math.max(box.w, box.h) * 1.12);
-        var out = document.createElement("canvas");
-        out.width = out.height = size;
-        var octx = out.getContext("2d");
-        octx.fillStyle = "rgb(" + fill[0] + "," + fill[1] + "," + fill[2] + ")";
-        octx.fillRect(0, 0, size, size);
-        var k2 = size / side;
-        octx.drawImage(canvas, box.x, box.y, box.w, box.h,
-          (size - box.w * k2) / 2, (size - box.h * k2) / 2, box.w * k2, box.h * k2);
-        out.toBlob(function (blob) {
-          resolve(blob ? new File([blob], "logo.jpg", { type: "image/jpeg" }) : file);
-        }, "image/jpeg", 0.92);
+          out.toBlob(function (blob) {
+            close(blob ? new File([blob], "logo.jpg", { type: "image/jpeg" }) : null);
+          }, "image/jpeg", 0.92);
+        });
       };
-      img.onerror = function () { URL.revokeObjectURL(url); resolve(file); };
       img.src = url;
     });
   }
@@ -4025,11 +4189,13 @@
         if (!file || !pv) return;
         var url = lastAdvertisePreviewUrl;
         var btn = document.getElementById("advertise-edit-logo-btn");
-        if (btn) btn.textContent = tr("advertise_edit_uploading");
+        e.target.value = "";
         // Yozilgan nom/tavsif qayta chizishda yo'qolmasin.
         var nameNow = document.getElementById("advertise-edit-name").value.trim();
         var descNow = document.getElementById("advertise-edit-desc").value.trim();
-        prepareLogoImage(file).then(function (logo) {
+        openLogoCropper(file).then(function (logo) {
+          if (!logo) throw "cancel";
+          if (btn) btn.textContent = tr("advertise_edit_uploading");
           var fd = new FormData();
           fd.append("photo", logo);
           return api("POST", "/api/ads/brand-logo", fd);
@@ -4039,8 +4205,8 @@
           if (nameNow) pv.title = nameNow;
           pv.description = descNow;
           renderAdvertisePreview(pv, url);
-        }).catch(function () {
-          showError();
+        }).catch(function (err) {
+          if (err !== "cancel") showError();
           if (btn) btn.textContent = "📷 " + tr("advertise_edit_logo");
         });
       });
