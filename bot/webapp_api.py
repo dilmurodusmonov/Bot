@@ -813,6 +813,8 @@ _CHALLENGE_TITLE_RE = re.compile(
     r"captcha|security check|are you a robot|robot check|доступ ограничен|bot protection|"
     # Vercel/Cloudflare/DDoS-Guard kabi hosting himoyasi sahifalari.
     r"security checkpoint|checking your browser|checking if the site|один момент|подождите|"
+    # Instagram/Facebook profil o'rniga kirish sahifasini beradi.
+    r"^\s*(log\s?in|sign up|вход|войти|регистрация)\s*[•·|–—-]\s*(instagram|facebook)|"
     # Xato sahifalari: "400", "403 Forbidden", "404 - Not Found", "Error"...
     # ("100 ta eng yaxshi..." kabi oddiy sarlavhalar tushib qolmasligi uchun
     # faqat 4xx/5xx kodi yolg'iz yoki xato so'zi bilan, xato so'zi esa yolg'iz).
@@ -1010,6 +1012,86 @@ async def _fetch_best_html(
     finally:
         for task in pending:
             task.cancel()
+
+
+# --- Instagram: profil sahifasi serverlarga "Login • Instagram" beradi, shuning
+# uchun veb-ilovaning ochiq profil API'si (bo'lmasa Microlink) ishlatiladi.
+_INSTAGRAM_RESERVED = {"p", "reel", "reels", "tv", "stories", "explore", "accounts", "direct", "about", "legal"}
+_INSTAGRAM_CACHE: dict[str, tuple[Optional[dict], float]] = {}
+_INSTAGRAM_APP_ID = "936619743392459"   # instagram.com veb-ilovasining ochiq identifikatori
+
+
+def _instagram_username(url: str) -> Optional[str]:
+    parsed = urlparse(url if re.match(r"^https?://", url, re.I) else "https://" + url)
+    if _derive_ad_platform(parsed.geturl()) != "instagram":
+        return None
+    parts = [p for p in parsed.path.split("/") if p]
+    if not parts:
+        return None
+    if parts[0].lower() == "stories" and len(parts) > 1:
+        parts = parts[1:]
+    name = parts[0].lstrip("@")
+    if name.lower() in _INSTAGRAM_RESERVED or not re.fullmatch(r"[A-Za-z0-9._]{1,30}", name):
+        return None
+    return name
+
+
+async def _fetch_instagram_profile(username: str) -> Optional[dict]:
+    """{"title", "description", "pic"} — ism, bio va profil rasmi (CDN manzili;
+    Instagram CDN boshqa saytlarga rasm bermaydi, shuning uchun u faqat server
+    orqali — /api/ads/logo'da — yuklanadi)."""
+    key = username.lower()
+    cached = _INSTAGRAM_CACHE.get(key)
+    if cached and time.monotonic() < cached[1]:
+        return cached[0]
+    trace = _FETCH_TRACE.get()
+    result: Optional[dict] = None
+    api_headers = {
+        "x-ig-app-id": _INSTAGRAM_APP_ID,
+        "Accept": "application/json",
+        "Referer": f"https://www.instagram.com/{username}/",
+        "X-Requested-With": "XMLHttpRequest",
+    }
+    for base, ua in (
+        ("https://www.instagram.com", None),
+        ("https://i.instagram.com", "Instagram 275.0.0.27.98 Android (33/13; 420dpi; 1080x2340; samsung; SM-G991B; o1s; exynos2100; en_US; 458229237)"),
+    ):
+        headers = dict(api_headers, **({"User-Agent": ua} if ua else {}))
+        status, payload = None, None
+        try:
+            async with aiohttp.ClientSession() as session:
+                async with session.get(
+                    f"{base}/api/v1/users/web_profile_info/?username={quote(username)}",
+                    timeout=aiohttp.ClientTimeout(total=6), headers={**_BROWSER_HEADERS, **headers},
+                ) as resp:
+                    status = resp.status
+                    if resp.status == 200:
+                        payload = json.loads(await resp.text(errors="ignore"))
+        except Exception as e:
+            status = type(e).__name__
+        user = ((payload or {}).get("data") or {}).get("user") if isinstance(payload, dict) else None
+        if trace is not None:
+            trace.append(f"instagram API ({base.split('//')[1]}): {status}" + (" ✓" if user else ""))
+        if isinstance(user, dict):
+            result = {
+                "title": str(user.get("full_name") or "").strip() or "@" + username,
+                "description": str(user.get("biography") or "").strip(),
+                "pic": user.get("profile_pic_url_hd") or user.get("profile_pic_url"),
+            }
+            break
+    if result is None:
+        microlink = await _fetch_microlink(f"https://www.instagram.com/{username}/")
+        if microlink and microlink["title"] and microlink["title"].strip().lower() != "instagram":
+            title = re.sub(r"\s*[•·]\s*Instagram.*$", "", microlink["title"]).strip()
+            result = {
+                "title": title or "@" + username,
+                "description": microlink["description"],
+                "pic": microlink["image"] or microlink["logo"],
+            }
+    if len(_INSTAGRAM_CACHE) > 300:
+        _INSTAGRAM_CACHE.clear()
+    _INSTAGRAM_CACHE[key] = (result, time.monotonic() + (21600 if result else 900))
+    return result
 
 
 # --- Uzum Market: tovar ma'lumoti saytning o'z API'sidan -----------------------
@@ -1308,6 +1390,15 @@ async def _resolve_logo_for_url(url: str, trace: Optional[list] = None) -> Optio
         if logo:
             _logo_cache_put(key, logo)
             return logo
+    ig_username = _instagram_username(url)
+    if ig_username:
+        profile = await _fetch_instagram_profile(ig_username)
+        logo = await _fetch_image(profile["pic"]) if profile and profile.get("pic") else None
+        if trace is not None:
+            trace.append({"instagram": ig_username, "profile": bool(profile), "pic": bool(logo)})
+        if logo:
+            _logo_cache_put(key, logo)
+            return logo
     fetched = await _fetch_site_html(url, platform) if await _resolve_is_public_host(host) else None
     if platform != "website":
         if fetched:
@@ -1329,6 +1420,9 @@ async def _resolve_logo_for_url(url: str, trace: Optional[list] = None) -> Optio
 
     _logo_cache_put(key, logo)
     return logo
+
+
+_LOGO_DB_VERSION = "v2:"
 
 
 async def _db_cached_logo(key: str) -> Optional[tuple[bytes, str]]:
@@ -1381,11 +1475,14 @@ async def api_ads_logo(request: web.Request) -> web.Response:
             raise web.HTTPBadRequest(text="invalid host")
         key = "host:" + host
         resolve = lambda: _resolve_brand_logo(host, trace)  # noqa: E731
-    logo = await _db_cached_logo(key) if trace is None else None
+    # Qidiruv mantiqi o'zgarganda versiya oshiriladi — bazadagi eski
+    # (noto'g'ri) logotiplar ishlatilmaydi.
+    db_key = _LOGO_DB_VERSION + key
+    logo = await _db_cached_logo(db_key) if trace is None else None
     if logo is None:
         logo = await resolve()
         if logo and trace is None:
-            _spawn(_save_logo_db(key, logo))
+            _spawn(_save_logo_db(db_key, logo))
     if trace is not None:
         return web.json_response({
             "found": bool(logo), "bytes": len(logo[0]) if logo else 0,
@@ -1666,6 +1763,14 @@ async def _fetch_ad_preview_uncached(bot: Bot, url: str) -> dict:
     if not await _resolve_is_public_host(host):
         raise _AdPreviewError(400, "host_not_allowed")
 
+    ig_username = _instagram_username(url)
+    if ig_username:
+        profile = await _fetch_instagram_profile(ig_username)
+        if profile:
+            # Rasm server orqali (/api/ads/logo) — photo_url bo'sh qoldiriladi.
+            return {"platform": "instagram", "title": profile["title"][:120],
+                    "description": profile["description"][:200], "photo_url": None}
+
     wb_nm_id = _wildberries_nm_id(url)
     if wb_nm_id:
         wb = await _fetch_wildberries(wb_nm_id)
@@ -1703,7 +1808,9 @@ async def _fetch_ad_preview_uncached(bot: Bot, url: str) -> dict:
                 "description": microlink["description"][:200],
                 "photo_url": microlink["image"] if _is_content_page(url, "") else _microlink_photo(microlink),
             }
-        return {"platform": platform, "title": "", "description": "", "photo_url": None}
+        # Instagram hech narsa bermasa ham — hech bo'lmasa "@username".
+        title = "@" + ig_username if ig_username else ""
+        return {"platform": platform, "title": title, "description": "", "photo_url": None}
     html_text, base_url = fetched
     product = _json_ld_product(html_text) or {}
 
