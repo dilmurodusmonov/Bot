@@ -399,6 +399,17 @@
     padding: 6px 16px 26px; cursor: pointer;
   }
   .ad-placeholder-title { font-size: 16px; font-weight: 700; letter-spacing: 1px; text-transform: uppercase; }
+  /* TOP-3 banner ostidagi kichik "REKLAMA — hissa qo'shing" taklifi. */
+  .ad-cta {
+    display: flex; align-items: center; gap: 10px; width: 100%; text-align: left; cursor: pointer;
+    margin: -8px 0 20px; padding: 10px 14px; border: none; border-radius: 14px; color: #fff;
+    background: linear-gradient(135deg, #AEE0FF, #6EC3F5); font-family: inherit;
+  }
+  .ad-cta-text { flex: 1 1 auto; min-width: 0; display: flex; flex-direction: column; gap: 2px; }
+  .ad-cta-title { font-size: 12px; font-weight: 700; letter-spacing: 1px; text-transform: uppercase; }
+  .ad-cta-pitch { font-size: 11px; font-weight: 500; line-height: 1.3; opacity: 0.95; }
+  .ad-cta-pitch .ad-pitch-emoji { font-size: 14px; vertical-align: -2px; }
+  .ad-cta-arrow { font-size: 22px; font-weight: 300; opacity: 0.9; flex-shrink: 0; }
   /* TOP-3 reklama slaydi: logotip, "TOP-N · Reklama", nom, tavsif. */
   .ad-slide-brand { gap: 14px; padding: 10px 16px 24px; cursor: pointer; letter-spacing: normal; }
   .ad-brand-logo { flex-shrink: 0; display: flex; }
@@ -2694,11 +2705,8 @@
             (ad.description ? '<div class="ad-brand-desc">' + escapeHtml(ad.description) + "</div>" : "") +
             "</div></div>";
         });
-        ads2Slides.push(
-          '<div class="ad-slide ad-' + ((ads2Slides.length % 4) + 1) + ' ad-slide-placeholder"><div class="ad-placeholder-title">' +
-          tr("ad_placeholder") + '</div><div class="ad-placeholder-pitch">' + adPitchHtml() + "</div></div>"
-        );
-        // Reklama bo'lmasa — avvalgidek 4 ta taklif slaydi.
+        // Reklama bo'lmasa — avvalgidek 4 ta taklif slaydi; bor bo'lsa taklif
+        // banner ostida alohida kichik blok bo'lib turadi.
         while (!topAds.length && ads2Slides.length < 4) {
           ads2Slides.push('<div class="ad-slide ad-' + (ads2Slides.length + 1) + ' ad-slide-placeholder"><div class="ad-placeholder-title">' +
             tr("ad_placeholder") + '</div><div class="ad-placeholder-pitch">' + adPitchHtml() + "</div></div>");
@@ -2710,7 +2718,13 @@
           ads2Slides.map(function (_, i) { return '<span class="ad-dot' + (i === 0 ? " active" : "") + '" data-i="' + i + '"></span>'; }).join("") +
           "</div>" +
           '<div class="ad-views" id="ad-views-2">' + ICONS.eye + '<span id="ad-views-count-2">0</span></div>' +
-          "</div>";
+          "</div>" +
+          (topAds.length
+            ? '<button type="button" class="ad-cta" id="ad-cta">' +
+              '<span class="ad-cta-text"><span class="ad-cta-title">' + tr("ad_placeholder") + "</span>" +
+              '<span class="ad-cta-pitch">' + adPitchHtml() + "</span></span>" +
+              '<span class="ad-cta-arrow">›</span></button>'
+            : "");
 
         var fireworkColors = ["#FF9A5C", "#1C93F3", "#E5484D", "#FFD23F", "#7C5CFF", "#2ECC71"];
         var salutePositions = [
@@ -2782,6 +2796,8 @@
 
         startAdCarousel();
         ad2Timer = startSimpleCarousel("ad-banner-2", "ad-dots-2", 5, "ad-views-count-2");
+        var adCtaEl = document.getElementById("ad-cta");
+        if (adCtaEl) adCtaEl.addEventListener("click", function () { goto("advertise"); });
         hideMainButton();
         setBackButton();
       })
