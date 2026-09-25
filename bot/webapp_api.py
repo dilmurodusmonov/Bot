@@ -1036,6 +1036,43 @@ def _instagram_username(url: str) -> Optional[str]:
     return name
 
 
+def _json_str_field(text: str, name: str) -> str:
+    m = re.search(r'"' + name + r'"\s*:\s*"((?:[^"\\]|\\.)*)"', text)
+    if not m:
+        return ""
+    try:
+        return str(json.loads('"' + m.group(1) + '"')).strip()
+    except ValueError:
+        return ""
+
+
+def _instagram_from_html(html_text: str, username: str) -> Optional[dict]:
+    """Instagram sahifasidagi JSON (full_name, biography, profile_pic_url) yoki
+    og: teglari. Kirish/himoya sahifasi bo'lsa None."""
+    if _is_challenge(html_text):
+        return None
+    full_name = _json_str_field(html_text, "full_name")
+    bio = _json_str_field(html_text, "biography")
+    pic = _json_str_field(html_text, "profile_pic_url_hd") or _json_str_field(html_text, "profile_pic_url")
+    og_title = _extract_meta(html_text, "og:title")
+    if og_title and og_title.strip().lower() != "instagram" and not full_name:
+        full_name = re.sub(r"\s*[•·]\s*Instagram.*$", "", og_title).strip()
+    if not pic:
+        pic = _extract_meta(html_text, "og:image") or ""
+        if not pic:
+            m = re.search(r'<img[^>]+class="[^"]*(?:Avatar|ProfilePic|profile)[^"]*"[^>]+src="([^"]+)"', html_text, re.I) \
+                or re.search(r'<img[^>]+src="([^"]+)"[^>]+class="[^"]*(?:Avatar|ProfilePic|profile)[^"]*"', html_text, re.I)
+            pic = unescape(m.group(1)) if m else ""
+    # Faqat umumiy og:image (Instagram logotipi) bo'lsa — profil topilmagan.
+    if not (full_name or bio or _json_str_field(html_text, "profile_pic_url")):
+        return None
+    return {
+        "title": full_name or "@" + username,
+        "description": bio or _extract_meta(html_text, "og:description"),
+        "pic": pic or None,
+    }
+
+
 async def _fetch_instagram_profile(username: str) -> Optional[dict]:
     """{"title", "description", "pic"} — ism, bio va profil rasmi (CDN manzili;
     Instagram CDN boshqa saytlarga rasm bermaydi, shuning uchun u faqat server
@@ -1079,6 +1116,15 @@ async def _fetch_instagram_profile(username: str) -> Optional[dict]:
                 "pic": user.get("profile_pic_url_hd") or user.get("profile_pic_url"),
             }
             break
+    if result is None:
+        # Profil "embed" sahifasi (boshqa saytlarga joylash uchun) — kirish
+        # talab qilmaydi; ichidagi JSON/og: teglaridan ism, bio, rasm.
+        for embed_url in (f"https://www.instagram.com/{username}/embed/",
+                          f"https://www.instagram.com/{username}/embed/?cr=1&v=14"):
+            fetched = await _fetch_site_html(embed_url, "website")
+            result = _instagram_from_html(fetched[0], username) if fetched else None
+            if result:
+                break
     if result is None:
         microlink = await _fetch_microlink(f"https://www.instagram.com/{username}/")
         if microlink and microlink["title"] and microlink["title"].strip().lower() != "instagram":
@@ -1394,6 +1440,9 @@ async def _resolve_logo_for_url(url: str, trace: Optional[list] = None) -> Optio
     if ig_username:
         profile = await _fetch_instagram_profile(ig_username)
         logo = await _fetch_image(profile["pic"]) if profile and profile.get("pic") else None
+        if not logo:
+            # unavatar.io — ijtimoiy tarmoq profil rasmlarini o'zi yuklab beradi.
+            logo = await _fetch_image(f"https://unavatar.io/instagram/{quote(ig_username)}?fallback=false")
         if trace is not None:
             trace.append({"instagram": ig_username, "profile": bool(profile), "pic": bool(logo)})
         if logo:
