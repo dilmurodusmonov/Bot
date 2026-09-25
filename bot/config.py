@@ -45,6 +45,11 @@ AD_ADMIN_IDS = [
 IG_GRAPH_TOKEN = os.getenv("IG_GRAPH_TOKEN", "").strip()
 IG_BUSINESS_ID = os.getenv("IG_BUSINESS_ID", "").strip()
 
+# Instagram so'rovlari uchun proksi(lar) — server IP'si cheklansa ham ishlashi
+# uchun (uy/mobil internet proksisi eng yaxshi). Vergul bilan bir nechta:
+#   INSTAGRAM_PROXY=http://user:pass@1.2.3.4:8080,http://5.6.7.8:3128
+INSTAGRAM_PROXIES = [p.strip() for p in os.getenv("INSTAGRAM_PROXY", "").split(",") if p.strip()]
+
 if not BOT_TOKEN:
     raise RuntimeError(
         "BOT_TOKEN topilmadi. .env faylini yarating (.env.example asosida) "
