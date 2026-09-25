@@ -420,6 +420,22 @@
   .section-title-blue { font-size: 17px; color: #1C93F3; font-weight: 700; margin: 2px 6px 10px; }
   .advertise-page { margin: 0 -16px; background: #FFFFFF; }
   .advertise-hero-card { background: none; border-radius: 0; padding: 14px 6px; }
+  /* Eng yuqorida: "● N onlayn · M tashrif buyuruvchi" (sindr.uz kabi). */
+  .advertise-presence {
+    display: table; margin: 2px auto 14px; padding: 6px 14px; border-radius: 999px;
+    background: #F2F2F4; color: var(--hint); font-size: 12.5px; white-space: nowrap;
+  }
+  .advertise-presence[hidden] { display: none; }
+  .advertise-presence-dot {
+    display: inline-block; width: 8px; height: 8px; border-radius: 50%; background: #1FA84F;
+    margin-right: 6px; vertical-align: 1px; animation: advertise-presence-pulse 2s ease-out infinite;
+  }
+  @keyframes advertise-presence-pulse {
+    0% { box-shadow: 0 0 0 0 rgba(31, 168, 79, 0.55); }
+    70% { box-shadow: 0 0 0 7px rgba(31, 168, 79, 0); }
+    100% { box-shadow: 0 0 0 0 rgba(31, 168, 79, 0); }
+  }
+  .advertise-presence-online { color: #1A8F3C; font-weight: 600; }
   .advertise-top-row { margin: 0 6px 10px; line-height: 1.35; text-align: center; white-space: nowrap; }
   .advertise-top-label { font-size: min(25px, 6.8vw); color: #1C1C1E; font-weight: 600; }
   .advertise-top-amount {
@@ -1017,6 +1033,7 @@
       ad_placeholder: "REKLAMA",
       ad_placeholder_pitch: "Ijtimoiy sahifangizni reklama qilib hissa qo'shing...",
       advertise_top_prefix: "TOP-1 uchun", advertise_rules: "{min}dan boshlang. Har bir oshirish kamida {inc}.",
+      advertise_presence_online: "{n} onlayn", advertise_presence_visitors: "{n} tashrif buyuruvchi",
       advertise_url_placeholder: "Brendingiz URL manzili",
       advertise_url_hint: "Veb-sayt, Telegram, Instagram, YouTube, App Store yoki Google Play URL",
       advertise_preview_new_brand: "Yangi brend",
@@ -1121,6 +1138,7 @@
       ad_placeholder: "РЕКЛАМА",
       ad_placeholder_pitch: "Помогите развитию нашего социального проекта «Ehsonli qo'llar», разместив рекламу на своей странице в соцсетях...",
       advertise_top_prefix: "За ТОП-1", advertise_rules: "Начните от {min}. Каждое повышение минимум {inc}.",
+      advertise_presence_online: "{n} онлайн", advertise_presence_visitors: "{n} посетителей",
       advertise_url_placeholder: "URL вашего бренда",
       advertise_url_hint: "Сайт, Telegram, Instagram, YouTube, App Store или Google Play ссылка",
       advertise_preview_new_brand: "Новый бренд",
@@ -1225,6 +1243,7 @@
       ad_placeholder: "AD",
       ad_placeholder_pitch: "Help grow our social project \"Ehsonli qo'llar\" by advertising it on your own social media page...",
       advertise_top_prefix: "For TOP-1", advertise_rules: "Start from {min}. Each raise is at least {inc}.",
+      advertise_presence_online: "{n} online", advertise_presence_visitors: "{n} visitors",
       advertise_url_placeholder: "Your brand's URL",
       advertise_url_hint: "Website, Telegram, Instagram, YouTube, App Store or Google Play URL",
       advertise_preview_new_brand: "New brand",
@@ -1329,6 +1348,7 @@
       ad_placeholder: "ЖАРНАМА",
       ad_placeholder_pitch: "«Ehsonli qo'llar» әлеуметтік жобамызды дамытуға өз әлеуметтік желі бетіңізде жарнамалап үлес қосыңыз...",
       advertise_top_prefix: "TOP-1 үшін", advertise_rules: "{min} бастаңыз. Әр өсіру кемінде {inc}.",
+      advertise_presence_online: "{n} онлайн", advertise_presence_visitors: "{n} келуші",
       advertise_url_placeholder: "Брендіңіздің URL мекенжайы",
       advertise_url_hint: "Веб-сайт, Telegram, Instagram, YouTube, App Store немесе Google Play сілтемесі",
       advertise_preview_new_brand: "Жаңа бренд",
@@ -1425,6 +1445,7 @@
       ad_placeholder: "РЕКЛАМА",
       ad_placeholder_pitch: "Барои рушди лоиҳаи иҷтимоии «Ehsonli qo'llar» бо реклама кардани он дар саҳифаи шабакаи иҷтимоии худ саҳм гузоред...",
       advertise_top_prefix: "Барои TOP-1", advertise_rules: "Аз {min} сар кунед. Ҳар боло баровардан ҳадди ақал {inc}.",
+      advertise_presence_online: "{n} онлайн", advertise_presence_visitors: "{n} боздидкунанда",
       advertise_url_placeholder: "Суроғаи URL-и бренди шумо",
       advertise_url_hint: "Сомона, Telegram, Instagram, YouTube, App Store ё Google Play пайванд",
       advertise_preview_new_brand: "Бренди нав",
@@ -1521,6 +1542,7 @@
       ad_placeholder: "ЖАРНАМА",
       ad_placeholder_pitch: "«Ehsonli qo'llar» коомдук долбоорубуздун өнүгүшүнө өз социалдык тармак баракчаңызда жарнамалап үлүш кошуңуз...",
       advertise_top_prefix: "TOP-1 үчүн", advertise_rules: "{min} баштаңыз. Ар бир көтөрүү кеминде {inc}.",
+      advertise_presence_online: "{n} онлайн", advertise_presence_visitors: "{n} келүүчү",
       advertise_url_placeholder: "Брендиңиздин URL дареги",
       advertise_url_hint: "Веб-сайт, Telegram, Instagram, YouTube, App Store же Google Play шилтемеси",
       advertise_preview_new_brand: "Жаңы бренд",
@@ -1617,6 +1639,7 @@
       ad_placeholder: "REKLAMA",
       ad_placeholder_pitch: "«Ehsonli qo'llar» durmuş taslamamyzy ösdürmekde, öz sosial ulgam sahypaňyzda mahabatlandyryp goşant goşuň...",
       advertise_top_prefix: "TOP-1 üçin", advertise_rules: "{min} başlaň. Her ýokarlandyrma iň az {inc}.",
+      advertise_presence_online: "{n} onlaýn", advertise_presence_visitors: "{n} myhman",
       advertise_url_placeholder: "Brendiňiziň URL salgysy",
       advertise_url_hint: "Websahypa, Telegram, Instagram, YouTube, App Store ýa-da Google Play salgysy",
       advertise_preview_new_brand: "Täze brend",
@@ -3873,6 +3896,7 @@
       app.innerHTML =
         '<div class="advertise-page">' +
         '<div class="section-card advertise-hero-card">' +
+        '<div class="advertise-presence" id="advertise-presence"' + (presenceCounts ? "" : " hidden") + ">" + presenceHtml() + "</div>" +
         '<div class="advertise-top-row">' +
         '<span class="advertise-top-label" id="advertise-top-label">' + escapeHtml(tr("advertise_top_prefix")) + "</span>" +
         '<span class="advertise-top-amount" id="advertise-top-amount">' + escapeHtml(topAmountParts.value) + "</span>" +
@@ -3905,6 +3929,7 @@
 
       renderList();
       scrollToTop();   // ma'lumot kelgach ham sahifa boshida
+      pingPresence();  // onlayn sonini yangilash
       watchPendingPayments();
 
       // "Rad etildi" blokini yopish: serverda ko'rildi deb belgilanadi.
@@ -4786,9 +4811,39 @@
     goto(link.screen, { activeTab: link.activeTab, highlightReservationId: link.reservationId }, false);
   }
 
+  // Onlayn / tashrif buyuruvchilar: ilova ochiq turganda har 45 soniyada.
+  var presenceCounts = null;
+  function presenceHtml() {
+    if (!presenceCounts) return "";
+    function num(n) { return (n || 0).toLocaleString("ru-RU").replace(/\u00a0/g, " "); }
+    return '<span class="advertise-presence-dot"></span>' +
+      '<span class="advertise-presence-online">' + escapeHtml(trf("advertise_presence_online", { n: num(presenceCounts.online) })) + "</span>" +
+      " · " + escapeHtml(trf("advertise_presence_visitors", { n: num(presenceCounts.visitors) }));
+  }
+  function updatePresencePill() {
+    var el = document.getElementById("advertise-presence");
+    if (!el) return;
+    el.innerHTML = presenceHtml();
+    el.hidden = !presenceCounts;
+  }
+  function pingPresence() {
+    api("POST", "/api/presence").then(function (c) {
+      presenceCounts = c;
+      updatePresencePill();
+    }).catch(function () {});
+  }
+  var presenceTimer = null;
+  function startPresence() {
+    if (presenceTimer) return;
+    pingPresence();
+    presenceTimer = setInterval(function () { if (!document.hidden) pingPresence(); }, 45000);
+    document.addEventListener("visibilitychange", function () { if (!document.hidden) pingPresence(); });
+  }
+
   api("GET", "/api/me")
     .then(function (me) {
       state.me = me;
+      startPresence();
       state.lang = me.language || "uz";
       if (!me.language) { goto("language", {}, false); return; }
       if (!me.role) { goto("role", {}, false); return; }

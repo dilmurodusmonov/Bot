@@ -103,6 +103,7 @@ async def init_db() -> None:
         await _migrate_ad_bids_clicks(conn)
         await _migrate_ad_payments(conn)
         await _migrate_ad_logo_cache(conn)
+        await _migrate_app_presence(conn)
         # Instagram vaqtincha bloklagan paytda joylangan (tavsifsiz) takliflar
         # har ishga tushishda qayta tekshiriladi.
         await conn.execute(
@@ -249,6 +250,46 @@ async def _migrate_ad_payments(conn: asyncpg.Connection) -> None:
     await conn.execute(
         "ALTER TABLE ad_payments ADD COLUMN IF NOT EXISTS rejection_seen BOOLEAN NOT NULL DEFAULT FALSE"
     )
+
+
+async def _migrate_app_presence(conn: asyncpg.Connection) -> None:
+    """Mini App'dagi onlayn foydalanuvchilar va tashrif buyuruvchilar soni.
+    Birinchi marta yaratilganda botdan foydalangan barcha foydalanuvchilar
+    tashrif buyuruvchi sifatida qo'shiladi (onlayn emas)."""
+    created = not await conn.fetchval("SELECT to_regclass('app_presence') IS NOT NULL")
+    await conn.execute(
+        """CREATE TABLE IF NOT EXISTS app_presence (
+               telegram_id BIGINT PRIMARY KEY,
+               first_seen TIMESTAMPTZ NOT NULL DEFAULT now(),
+               last_seen TIMESTAMPTZ NOT NULL DEFAULT now()
+           )"""
+    )
+    await conn.execute("CREATE INDEX IF NOT EXISTS app_presence_last_seen ON app_presence (last_seen)")
+    if created:
+        await conn.execute(
+            """INSERT INTO app_presence (telegram_id, first_seen, last_seen)
+               SELECT telegram_id, created_at, created_at FROM users
+               ON CONFLICT (telegram_id) DO NOTHING"""
+        )
+
+
+async def touch_app_presence(telegram_id: int) -> None:
+    await _get_pool().execute(
+        """INSERT INTO app_presence (telegram_id) VALUES ($1)
+           ON CONFLICT (telegram_id) DO UPDATE SET last_seen = now()""",
+        telegram_id,
+    )
+
+
+async def get_app_presence_counts(online_seconds: int = 120) -> tuple[int, int]:
+    """(onlayn — oxirgi online_seconds ichida faol, jami tashrif buyuruvchilar)."""
+    row = await _get_pool().fetchrow(
+        """SELECT count(*) FILTER (WHERE last_seen > now() - make_interval(secs => $1)) AS online,
+                  count(*) AS visitors
+           FROM app_presence""",
+        online_seconds,
+    )
+    return int(row["online"]), int(row["visitors"])
 
 
 async def _migrate_ad_logo_cache(conn: asyncpg.Connection) -> None:
