@@ -2743,6 +2743,45 @@ async def _get_photo_bytes(bot: Bot, file_id: str) -> bytes:
     return body
 
 
+# Ilova sarlavhasidagi logotip: botning profil rasmi, u bo'lmasa kanal
+# rasmi. Har bot o'z logotipini ko'rsatadi (test/asosiy); 6 soat keshlanadi.
+_BRAND_LOGO: dict[str, Any] = {"body": None, "at": 0.0}
+_BRAND_LOGO_TTL = 6 * 3600
+
+
+async def _load_brand_logo(bot: Bot) -> Optional[bytes]:
+    try:
+        photos = await bot.get_user_profile_photos(user_id=bot.id, limit=1)
+        if photos.total_count and photos.photos:
+            sizes = photos.photos[0]
+            # 320px atrofidagi o'lcham — sarlavhadagi 44px doira uchun yetarli.
+            size = next((p for p in sizes if p.width >= 300), sizes[-1])
+            return await _get_photo_bytes(bot, size.file_id)
+    except Exception:
+        logger.warning("Bot profil rasmini olib bo'lmadi", exc_info=True)
+    if CHANNEL_ID:
+        try:
+            chat = await bot.get_chat(CHANNEL_ID)
+            if chat.photo:
+                return await _get_photo_bytes(bot, chat.photo.big_file_id)
+        except Exception:
+            logger.warning("Kanal rasmini olib bo'lmadi", exc_info=True)
+    return None
+
+
+async def api_brand_logo(request: web.Request) -> web.Response:
+    now = time.time()
+    if now - _BRAND_LOGO["at"] > _BRAND_LOGO_TTL:
+        _BRAND_LOGO["body"] = await _load_brand_logo(request.app["bot"])
+        _BRAND_LOGO["at"] = now
+    if not _BRAND_LOGO["body"]:
+        raise web.HTTPNotFound()
+    return web.Response(
+        body=_BRAND_LOGO["body"], content_type="image/jpeg",
+        headers={"Cache-Control": "public, max-age=3600"},
+    )
+
+
 async def api_photo(request: web.Request) -> web.Response:
     file_id = request.match_info["file_id"]
     if request.headers.get("If-None-Match") == f'"{file_id}"':
@@ -3012,4 +3051,5 @@ def setup_api_routes(app: web.Application) -> None:
     app.router.add_post("/api/donations/{id:\\d+}/like", api_toggle_donation_like)
     app.router.add_post("/api/donations/{id:\\d+}/share", api_share_donation)
     app.router.add_get("/api/photo/{file_id}", api_photo)
+    app.router.add_get("/api/brand-logo", api_brand_logo)
     app.router.add_get("/d/{id:\\d+}", donation_share_page)

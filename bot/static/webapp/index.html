@@ -2635,16 +2635,14 @@
     hideMainButton();
   }
 
-  // Til/rol tanlash sahifalari sarlavhasi: bosh sahifadagidek foydalanuvchining
-  // Telegram rasmi (bo'lmasa ism bosh harfi) va "Ehson App" nomi.
+  // Til/rol tanlash sahifalari sarlavhasi: bot logotipi (botning profil
+  // rasmi yoki kanal rasmi, serverdan) va "Ehson App" nomi. Logotip
+  // yuklanmasa "EA" harflari ko'rinadi.
   function brandHeaderHtml() {
-    var user = tg && tg.initDataUnsafe && tg.initDataUnsafe.user;
-    var photoUrl = user && user.photo_url;
-    var initial = ((user && user.first_name) || "E").charAt(0).toUpperCase();
-    var avatar = photoUrl
-      ? '<img class="avatar-img" src="' + escapeHtml(photoUrl) + '" alt="">'
-      : '<div class="avatar">' + escapeHtml(initial) + "</div>";
-    return '<div class="brand">' + avatar + "<h1>Ehson App</h1></div>";
+    return '<div class="brand">' +
+      '<img class="avatar-img" src="/api/brand-logo" alt="" ' +
+      'onerror="this.outerHTML=\'<div class=&quot;avatar&quot;>EA</div>\'">' +
+      "<h1>Ehson App</h1></div>";
   }
 
   function renderLanguage() {
