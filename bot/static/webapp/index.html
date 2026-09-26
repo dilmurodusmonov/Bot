@@ -795,13 +795,14 @@
   .advertise-refresh-wrap { display: flex; justify-content: center; margin: 26px 0 10px; }
   /* sindr.uz'dagi "Yangilash" o'lchamlari: ~34px balandlik, 16px oddiy shrift. */
   .advertise-refresh-btn {
-    display: inline-flex; align-items: center; gap: 9px; padding: 7px 18px; border-radius: 999px;
+    display: inline-flex; align-items: center; gap: 7px; padding: 5px 14px; border-radius: 999px;
     background: #F5F5F7; border: 1px solid #E3E3E8; color: #2C2C2E; font-family: inherit;
-    font-size: 16px; line-height: 20px; font-weight: 400; cursor: pointer; -webkit-tap-highlight-color: transparent;
+    font-size: 14px; line-height: 18px; font-weight: 400; cursor: pointer; -webkit-tap-highlight-color: transparent;
   }
-  .advertise-refresh-btn svg { width: 18px; height: 18px; }
+  .advertise-refresh-btn svg { width: 15px; height: 15px; }
   .advertise-refresh-btn:disabled { opacity: 0.6; }
-  .advertise-refresh-btn.loading svg { animation: advertise-spin 0.8s linear infinite; }
+  /* Bosilganda strelkalar to'liq 360° aylanadi (ma'lumot tez kelsa ham). */
+  .advertise-refresh-btn.loading svg { animation: advertise-spin 0.7s ease-in-out infinite; }
   @keyframes advertise-spin { to { transform: rotate(360deg); } }
   /* Pastda qisqa muddat chiqadigan xabar (sindr.uz'dagi "Reyting yangilandi" kabi). */
   .snackbar {
@@ -3804,10 +3805,15 @@
       function refreshLeaderboard() {
         var btn = document.getElementById("advertise-refresh-btn");
         if (btn) { btn.disabled = true; btn.classList.add("loading"); }
+        var startedAt = Date.now();
         api("GET", "/api/ads/leaderboard")
           .then(function (fresh) {
-            applyFreshLeaderboard(fresh);
-            showSnackbar(tr("advertise_refreshed"));
+            // Kamida bitta to'liq aylanish (0.7 s) ko'rinsin, keyin ro'yxat yangilanadi.
+            var wait = Math.max(0, 700 - (Date.now() - startedAt));
+            setTimeout(function () {
+              applyFreshLeaderboard(fresh);
+              showSnackbar(tr("advertise_refreshed"));
+            }, wait);
           })
           .catch(function () {
             if (btn) { btn.disabled = false; btn.classList.remove("loading"); }
