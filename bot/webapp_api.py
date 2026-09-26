@@ -2414,6 +2414,9 @@ async def api_create_donation(request: web.Request) -> web.Response:
     description = (fields.get("description") or "").strip()
     if category not in CATEGORIES or not description:
         raise web.HTTPBadRequest(text="missing fields")
+    # Ehson aniq 3 ta rasm bilan joylanadi.
+    if len(photos) < MAX_DONATION_PHOTOS:
+        raise web.HTTPBadRequest(text="three_photos_required")
 
     await create_user_if_missing(telegram_id)
     bot: Bot = request.app["bot"]
