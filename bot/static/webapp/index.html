@@ -965,6 +965,7 @@
     background: none; border: none; color: #1C93F3; font-weight: 700; font-size: 15px;
     padding: 0; font-family: inherit;
   }
+  .list-sentinel { height: 1px; }
   .fab {
     position: fixed; right: 20px; bottom: max(108px, calc(env(safe-area-inset-bottom) + 88px));
     width: 56px; height: 56px; border-radius: 50%; background: var(--blue);
@@ -3110,8 +3111,11 @@
     );
   }
 
-  function wireCardActions() {
-    app.querySelectorAll("[data-like]").forEach(function (btn) {
+  // root berilsa, faqat shu ichidagi (yangi qo'shilgan) kartalar ulanadi —
+  // sahifalab yuklashda eski kartalarga ikkinchi marta ulanmaydi.
+  function wireCardActions(root) {
+    var scope = root || app;
+    scope.querySelectorAll("[data-like]").forEach(function (btn) {
       btn.addEventListener("click", function () {
         var id = btn.getAttribute("data-like");
         var wasLiked = btn.classList.contains("liked");
@@ -3134,7 +3138,7 @@
         });
       });
     });
-    app.querySelectorAll("[data-share]").forEach(function (btn) {
+    scope.querySelectorAll("[data-share]").forEach(function (btn) {
       btn.addEventListener("click", function () {
         var id = btn.getAttribute("data-share");
         if (!id) return;
@@ -3156,8 +3160,8 @@
     });
   }
 
-  function wireCardGalleries() {
-    app.querySelectorAll(".card-gallery").forEach(function (gallery) {
+  function wireCardGalleries(root) {
+    (root || app).querySelectorAll(".card-gallery").forEach(function (gallery) {
       var card = gallery.closest(".card");
       var dots = card ? card.querySelectorAll(".card-gallery-dots .card-gallery-dot") : [];
       var counter = gallery.parentNode.querySelector(".card-gallery-counter");
@@ -3370,54 +3374,118 @@
     }).catch(function () { showError(); });
   }
 
+  // Bo'limdagi ehsonlar sahifalab yuklanadi: avval NEEDY_PAGE_SIZE ta,
+  // pastga yetganda keyingilari — ehsonlar ko'p bo'lsa ham tez ochiladi.
+  var NEEDY_PAGE_SIZE = 20;
+
   function renderNeedyList() {
     var category = state.params.category;
+    var screenToken = {};
+    renderNeedyList.token = screenToken;
     // Kanal havolasi orqali kelgan odam ehson olish niyatida — bu holatda
     // "Ehson joylash" FAB tugmasi chalg'ituvchi, shuning uchun ko'rsatilmaydi.
     var canAdd = state.me.role === "donor" && !state.params.fromChannel;
     var fabHtml = canAdd ? '<button class="fab" id="add-donation-fab">' + ICONS.plus + "</button>" : "";
-    api("GET", "/api/donations?category=" + encodeURIComponent(category)).then(function (donations) {
-      if (!donations.length) {
+    // Kanaldagi "Ehsonni ko'rish" havolasi orqali kelgan odam ham ehsonni
+    // ola bilishi kerak — u hali "Muhtoj" rolini tanlamagan bo'lishi
+    // mumkin.
+    var canReserve = state.me.role === "needy" || !!state.params.fromChannel;
+    var highlightId = state.params.highlightId;
+    var nextCursor = null;
+    var loading = false;
+    var sentinel = null;
+    var observer = null;
+
+    function fetchPage(before) {
+      return api("GET", "/api/donations?category=" + encodeURIComponent(category) +
+        "&limit=" + NEEDY_PAGE_SIZE + (before ? "&before=" + before : ""));
+    }
+
+    // BETA: bitta test akkaunt bilan ham saxiy, ham muhtoj rolini
+    // sinash uchun "d.is_mine" tekshiruvi vaqtincha o'chirilgan.
+    // Ilova ishga tushirilganda "canReserve && !d.is_mine" qaytarilishi
+    // kerak — hozircha o'z ehsonini ham band qilib ko'rish mumkin.
+    function cardsHtml(items) {
+      return items.map(function (d) {
+        var body = donationCardHtml(d);
+        if (canReserve) {
+          body += '<button class="card-btn" data-take="' + d.id + '">' + tr("take_it") + "</button>";
+        }
+        return body + "</div></div>";
+      }).join("");
+    }
+
+    function wireChunk(root) {
+      wireCardGalleries(root);
+      wireCardActions(root);
+      if (canReserve) {
+        root.querySelectorAll("[data-take]").forEach(function (btn) {
+          btn.addEventListener("click", function () {
+            goto("needy_reserve_form", { donationId: parseInt(btn.getAttribute("data-take"), 10) });
+          });
+        });
+      }
+    }
+
+    function appendPage(items) {
+      var chunk = document.createElement("div");
+      chunk.innerHTML = cardsHtml(items);
+      wireChunk(chunk);
+      while (chunk.firstChild) app.insertBefore(chunk.firstChild, sentinel);
+    }
+
+    function highlightIfLoaded() {
+      if (!highlightId) return true;
+      var targetCard = app.querySelector('[data-donation-id="' + highlightId + '"]');
+      if (!targetCard) return false;
+      highlightId = null;
+      targetCard.scrollIntoView({ behavior: "smooth", block: "center" });
+      targetCard.classList.add("card-highlight");
+      setTimeout(function () { targetCard.classList.remove("card-highlight"); }, 2000);
+      return true;
+    }
+
+    function loadMore() {
+      if (loading || !nextCursor || renderNeedyList.token !== screenToken) return;
+      loading = true;
+      fetchPage(nextCursor).then(function (page) {
+        if (renderNeedyList.token !== screenToken) return;
+        appendPage(page.items);
+        nextCursor = page.next;
+        loading = false;
+        if (!nextCursor) {
+          if (observer) observer.disconnect();
+          if (sentinel.parentNode) sentinel.parentNode.removeChild(sentinel);
+        }
+        // Kanal havolasidagi ehson hali yuklanmagan bo'lsa — topilguncha davom etadi.
+        if (!highlightIfLoaded()) loadMore();
+      }).catch(function () { loading = false; });
+    }
+
+    fetchPage(null).then(function (page) {
+      if (renderNeedyList.token !== screenToken) return;
+      if (!page.items.length) {
         app.innerHTML = '<div class="empty-state">' + tr("empty_donations") + "</div>" + fabHtml;
       } else {
-        // Kanaldagi "Ehsonni ko'rish" havolasi orqali kelgan odam ham ehsonni
-        // ola bilishi kerak — u hali "Muhtoj" rolini tanlamagan bo'lishi
-        // mumkin.
-        var canReserve = state.me.role === "needy" || !!state.params.fromChannel;
-        // BETA: bitta test akkaunt bilan ham saxiy, ham muhtoj rolini
-        // sinash uchun "d.is_mine" tekshiruvi vaqtincha o'chirilgan.
-        // Ilova ishga tushirilganda "canReserve && !d.is_mine" qaytarilishi
-        // kerak — hozircha o'z ehsonini ham band qilib ko'rish mumkin.
-        app.innerHTML = donations.map(function (d) {
-          var body = donationCardHtml(d);
-          if (canReserve) {
-            body += '<button class="card-btn" data-take="' + d.id + '">' + tr("take_it") + "</button>";
-          }
-          return body + "</div></div>";
-        }).join("") + fabHtml;
-        wireCardGalleries();
-        wireCardActions();
-        if (canReserve) {
-          app.querySelectorAll("[data-take]").forEach(function (btn) {
-            btn.addEventListener("click", function () {
-              goto("needy_reserve_form", { donationId: parseInt(btn.getAttribute("data-take"), 10) });
-            });
-          });
+        app.innerHTML = '<div class="list-sentinel"></div>' + fabHtml;
+        sentinel = app.querySelector(".list-sentinel");
+        appendPage(page.items);
+        nextCursor = page.next;
+        if (nextCursor && "IntersectionObserver" in window) {
+          observer = new IntersectionObserver(function (entries) {
+            if (entries[0].isIntersecting) loadMore();
+          }, { rootMargin: "800px 0px" });
+          observer.observe(sentinel);
+        } else if (nextCursor) {
+          // Eski brauzerlar uchun: qolganlarini ketma-ket yuklab qo'yamiz.
+          (function loadAll() { if (nextCursor) { loadMore(); setTimeout(loadAll, 400); } })();
         }
+        if (!highlightIfLoaded()) loadMore();
       }
       if (canAdd) {
         document.getElementById("add-donation-fab").addEventListener("click", function () {
           goto("donor_add", { category: category });
         });
-      }
-      var highlightId = state.params.highlightId;
-      if (highlightId) {
-        var targetCard = app.querySelector('[data-donation-id="' + highlightId + '"]');
-        if (targetCard) {
-          targetCard.scrollIntoView({ behavior: "smooth", block: "center" });
-          targetCard.classList.add("card-highlight");
-          setTimeout(function () { targetCard.classList.remove("card-highlight"); }, 2000);
-        }
       }
       hideMainButton();
       setBackButton();
