@@ -85,6 +85,15 @@ environment o'zgaruvchilarida:
 
 Ikki bot hech qachon bitta token yoki bitta bazani ishlatmasligi kerak.
 
+### Tarmoqlar va chiqarish tartibi
+
+- `main` — test bot. Barcha o'zgarishlar avval shu yerga tushadi va test
+  xizmati (Render, Branch: `main`) avtomatik yangilanadi.
+- `production` — asosiy bot (@ehsonli_qollar_bot). Render'dagi asosiy
+  xizmat Branch: `production` ni kuzatadi.
+- Test botda sinab ko'rilgach, `main` → `production` ga PR ochilib
+  birlashtiriladi — shundagina asosiy bot yangilanadi.
+
 ### Ishga tushirishdan oldin tekshiring
 - Bot kanalda admin (post yozish, tahrirlash, o'chirish huquqlari bilan).
 - `AD_ADMIN_IDS`dagi adminlar botga /start bosgan.
