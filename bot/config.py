@@ -27,6 +27,10 @@ MINI_APP_SHORT_NAME = os.getenv("MINI_APP_SHORT_NAME", "app")
 # muhitda aniq yoziladi (asosiy bot: CHANNEL_ID=@ehsonli_qollar).
 CHANNEL_ID = os.getenv("CHANNEL_ID", "").strip()
 
+# Aloqa (qo'llab-quvvatlash) boti — ilova sozlamalarida va /start xabarida
+# "Aloqa" tugmasi shu botni ochadi. Bo'sh qoldirilsa tugma ko'rinmaydi.
+SUPPORT_BOT = os.getenv("SUPPORT_BOT", "ceo_ehson_bot").strip().lstrip("@")
+
 # Render bepul tarifida server uxlab qolmasligi uchun o'ziga so'rov
 # yuboradi. Bepul soatlar (750 soat/oy) bitta xizmatga yetadi — test
 # xizmatida KEEP_AWAKE=0 qo'yib, soatlarni asosiy botga qoldiring.
