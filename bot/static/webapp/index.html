@@ -6,7 +6,8 @@
 <title>Ehson bot</title>
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-<link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800&display=swap" rel="stylesheet">
+<link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800&display=swap" rel="stylesheet" media="print" onload="this.media='all'">
+<noscript><link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800&display=swap" rel="stylesheet"></noscript>
 <script src="https://telegram.org/js/telegram-web-app.js"></script>
 <style>
   :root {
@@ -1909,6 +1910,18 @@
     });
   }
 
+  // Bo'limlar ro'yxati til bo'yicha o'zgarmaydi — bir marta olinadi,
+  // keyingi sahifalarda serverga qayta so'rov yuborilmaydi.
+  var categoriesCache = {};
+  function getCategories() {
+    var lang = state.lang || "";
+    if (categoriesCache[lang]) return Promise.resolve(categoriesCache[lang]);
+    return api("GET", "/api/categories").then(function (list) {
+      categoriesCache[lang] = list;
+      return list;
+    });
+  }
+
   function saveNavState() {
     try {
       var json = JSON.stringify(
@@ -2680,7 +2693,7 @@
   function renderHome() {
     navStack = [];
     Promise.all([
-      api("GET", "/api/categories"),
+      getCategories(),
       api("GET", "/api/stats"),
       api("GET", "/api/badges").catch(function () { return {}; }),
       api("GET", "/api/ads/top").catch(function () { return []; }),
@@ -2887,7 +2900,7 @@
   function renderDonorAdd() {
     var capturedPhotos = state.params && Array.isArray(state.params.capturedPhotos) ? state.params.capturedPhotos : [];
     var preselectedCategory = state.params && state.params.category ? state.params.category : null;
-    api("GET", "/api/categories").then(function (categories) {
+    getCategories().then(function (categories) {
       var selectedCategory = preselectedCategory && categories.some(function (c) { return c.key === preselectedCategory; })
         ? preselectedCategory
         : (categories[0] ? categories[0].key : null);
@@ -3061,13 +3074,13 @@
       mediaHtml =
         '<div class="card-media">' +
         '<div class="card-gallery">' + photos.map(function (url) {
-          return '<img src="' + url + '" alt="">';
+          return '<img src="' + url + '" alt="" loading="lazy" decoding="async">';
         }).join("") + "</div>" +
         counterHtml +
         "</div>" +
         dotsHtml;
     } else {
-      mediaHtml = '<img src="' + photos[0] + '" alt="">';
+      mediaHtml = '<img src="' + photos[0] + '" alt="" loading="lazy" decoding="async">';
     }
     var statusParts = d.status_label.split(" ");
     var statusEmoji = statusParts[0];
@@ -3343,7 +3356,7 @@
   }
 
   function renderNeedyCategories() {
-    api("GET", "/api/categories").then(function (categories) {
+    getCategories().then(function (categories) {
       app.innerHTML = '<div class="cat-grid">' + categories.map(function (c) {
         return '<button class="cat-card" data-cat="' + c.key + '">' + escapeHtml(c.label) + "</button>";
       }).join("") + "</div>";
@@ -3505,7 +3518,7 @@
         return (
           '<div class="card" data-donation-id="' + r.donation.id + '" data-reservation-id="' + r.reservation_id + '">' +
           headerHtml +
-          '<img class="receipt-card-img" src="' + r.receipt_photo_url + '" alt="" data-receipt-view>' +
+          '<img class="receipt-card-img" src="' + r.receipt_photo_url + '" alt="" loading="lazy" decoding="async" data-receipt-view>' +
           '<div class="card-body">' +
           '<span class="pill pill-' + r.donation.status + '">' + statusEmojiHtml(r.donation.status, statusEmoji) + " " + escapeHtml(statusText) + "</span>" +
           ' <span class="receipt-donation-name">' + escapeHtml(r.donation.description) + "</span>" +
@@ -3662,7 +3675,7 @@
             '<span class="card-header-avatar">' + escapeHtml(labelParts[0]) + "</span>" +
             '<span class="card-header-name">' + escapeHtml(labelParts.slice(1).join(" ")) + "</span>" +
             "</div>" +
-            (r.donation.photo_url ? '<img src="' + r.donation.photo_url + '" alt="">' : "") +
+            (r.donation.photo_url ? '<img src="' + r.donation.photo_url + '" alt="" loading="lazy" decoding="async">' : "") +
             '<div class="card-body">' +
             '<span class="pill pill-shipped"><span class="truck-road">🚚<span class="road-track"></span></span> ' +
             escapeHtml(courier) + "</span>" +

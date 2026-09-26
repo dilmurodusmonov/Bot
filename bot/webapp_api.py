@@ -8,6 +8,7 @@ import logging
 import re
 import time
 import uuid
+from collections import OrderedDict
 from html import escape, unescape
 from typing import Any, Optional
 from urllib.parse import quote, urljoin, urlparse
@@ -49,7 +50,6 @@ from bot.database import (
     create_donation,
     create_reservation,
     create_user_if_missing,
-    count_new_donations_last_24h,
     delete_donation,
     claim_ad_bids_for_description,
     fill_ad_bid_preview,
@@ -65,7 +65,10 @@ from bot.database import (
     set_ad_payment_receipt,
     increment_ad_views,
     increment_donation_share,
-    get_active_reservation_for_donation,
+    get_latest_reservations_for_donations,
+    get_donations_by_ids,
+    get_home_stats,
+    get_user_language,
     get_available_donations,
     get_donation,
     get_donations_by_donor,
@@ -73,8 +76,6 @@ from bot.database import (
     get_reservation,
     get_category_stats,
     get_reservations_by_needy,
-    get_stats,
-    get_user,
     set_donation_channel_messages,
     set_donation_status,
     set_donor_notify_message,
@@ -263,8 +264,7 @@ async def _require_user_id(request: web.Request) -> int:
 
 
 async def _lang_for(telegram_id: int) -> str:
-    user = await get_user(telegram_id)
-    return (user and user["language"]) or "uz"
+    return (await get_user_language(telegram_id)) or "uz"
 
 
 async def _read_multipart_photo(request: web.Request) -> tuple[dict, bytes, str]:
@@ -372,14 +372,13 @@ async def api_set_role(request: web.Request) -> web.Response:
 
 async def api_stats(request: web.Request) -> web.Response:
     await _require_user_id(request)
-    stats = await get_stats()
-    by_category = await get_category_stats()
-    new_last_24h = await count_new_donations_last_24h()
+    # Ikki so'rov parallel (avval 9 ta ketma-ket so'rov edi).
+    stats, by_category = await asyncio.gather(get_home_stats(), get_category_stats())
     return web.json_response(
         {
             "total_donations": stats["total_donations"],
-            "delivered_donations": stats["completed_donations"],
-            "new_last_24h": new_last_24h,
+            "delivered_donations": stats["delivered_donations"],
+            "new_last_24h": stats["new_last_24h"],
             "by_category": by_category,
         }
     )
@@ -432,14 +431,21 @@ async def api_my_donations(request: web.Request) -> web.Response:
     telegram_id = await _require_user_id(request)
     lang = await _lang_for(telegram_id)
     donations = await get_donations_by_donor(telegram_id)
-    likes = await get_like_info([d["id"] for d in donations], telegram_id)
+    ids = [d["id"] for d in donations]
+    # Layklar va bronlar — har ehson uchun alohida emas, bittadan so'rovda.
+    likes, reservations = await asyncio.gather(
+        get_like_info(ids, telegram_id),
+        get_latest_reservations_for_donations(
+            [d["id"] for d in donations if d["status"] in ("reserved", "shipped", "received")]
+        ),
+    )
 
     result = []
     for d in donations:
         like = likes.get(d["id"], {})
         item = _donation_json(d, lang, like_count=like.get("count", 0), liked_by_me=like.get("liked", False))
         if d["status"] in ("reserved", "shipped", "received"):
-            res = await get_active_reservation_for_donation(d["id"])
+            res = reservations.get(d["id"])
             if res:
                 item["reservation"] = {
                     "id": res["id"],
@@ -457,7 +463,8 @@ async def api_my_requests(request: web.Request) -> web.Response:
     telegram_id = await _require_user_id(request)
     lang = await _lang_for(telegram_id)
     reservations = await get_reservations_by_needy(telegram_id)
-    donations = [await get_donation(r["donation_id"]) for r in reservations]
+    by_id = await get_donations_by_ids(list({r["donation_id"] for r in reservations}))
+    donations = [by_id.get(r["donation_id"]) for r in reservations]
     likes = await get_like_info([d["id"] for d in donations if d], telegram_id)
 
     result = []
@@ -2525,15 +2532,56 @@ async def api_ship_reservation(request: web.Request) -> web.Response:
     return web.json_response({"ok": True})
 
 
+# Rasmlar keshi: Telegram file_id o'zgarmas, shuning uchun rasm bir marta
+# yuklab olinib xotirada saqlanadi (har ochilishda Telegram'dan qayta
+# yuklanmaydi) va brauzer ham uni uzoq muddat keshlaydi.
+_PHOTO_CACHE: "OrderedDict[str, bytes]" = OrderedDict()
+_PHOTO_CACHE_MAX_BYTES = 80 * 1024 * 1024
+_photo_cache_bytes = 0
+_photo_inflight: dict[str, "asyncio.Future[bytes]"] = {}
+_PHOTO_HEADERS = {"Cache-Control": "public, max-age=31536000, immutable"}
+
+
+def _photo_cache_put(file_id: str, body: bytes) -> None:
+    global _photo_cache_bytes
+    if file_id in _PHOTO_CACHE or len(body) > _PHOTO_CACHE_MAX_BYTES // 8:
+        return
+    _PHOTO_CACHE[file_id] = body
+    _photo_cache_bytes += len(body)
+    while _photo_cache_bytes > _PHOTO_CACHE_MAX_BYTES and _PHOTO_CACHE:
+        _, old = _PHOTO_CACHE.popitem(last=False)
+        _photo_cache_bytes -= len(old)
+
+
+async def _download_photo(bot: Bot, file_id: str) -> bytes:
+    file = await bot.get_file(file_id)
+    buf = await bot.download_file(file.file_path)
+    return buf.read()
+
+
 async def api_photo(request: web.Request) -> web.Response:
     file_id = request.match_info["file_id"]
-    bot: Bot = request.app["bot"]
-    try:
-        file = await bot.get_file(file_id)
-        buf = await bot.download_file(file.file_path)
-    except Exception:
-        raise web.HTTPNotFound()
-    return web.Response(body=buf.read(), content_type="image/jpeg")
+    if request.headers.get("If-None-Match") == f'"{file_id}"':
+        return web.Response(status=304, headers=_PHOTO_HEADERS)
+    body = _PHOTO_CACHE.get(file_id)
+    if body is not None:
+        _PHOTO_CACHE.move_to_end(file_id)
+    else:
+        # Bir vaqtda kelgan bir xil so'rovlar bitta yuklab olishni kutadi.
+        future = _photo_inflight.get(file_id)
+        if future is None:
+            future = asyncio.ensure_future(_download_photo(request.app["bot"], file_id))
+            _photo_inflight[file_id] = future
+            future.add_done_callback(lambda _f: _photo_inflight.pop(file_id, None))
+        try:
+            body = await asyncio.shield(future)
+        except Exception:
+            raise web.HTTPNotFound()
+        _photo_cache_put(file_id, body)
+    return web.Response(
+        body=body, content_type="image/jpeg",
+        headers={**_PHOTO_HEADERS, "ETag": f'"{file_id}"'},
+    )
 
 
 _UZ_MONTHS = [

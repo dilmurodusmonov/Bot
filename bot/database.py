@@ -88,7 +88,7 @@ def _get_pool() -> asyncpg.Pool:
 
 async def init_db() -> None:
     global _pool
-    _pool = await asyncpg.create_pool(DATABASE_URL, min_size=1, max_size=5)
+    _pool = await asyncpg.create_pool(DATABASE_URL, min_size=2, max_size=10)
     async with _pool.acquire() as conn:
         await conn.execute(SCHEMA)
         await _migrate_ad_stats(conn)
@@ -104,12 +104,26 @@ async def init_db() -> None:
         await _migrate_ad_payments(conn)
         await _migrate_ad_logo_cache(conn)
         await _migrate_app_presence(conn)
+        await _create_indexes(conn)
         # Instagram vaqtincha bloklagan paytda joylangan (tavsifsiz) takliflar
         # har ishga tushishda qayta tekshiriladi.
         await conn.execute(
             """UPDATE ad_bids SET description_checked = FALSE
                WHERE platform = 'instagram' AND description IS NULL AND description_checked"""
         )
+
+
+async def _create_indexes(conn: asyncpg.Connection) -> None:
+    """Tez-tez ishlatiladigan so'rovlar uchun indekslar (sahifalar tez ochilishi uchun)."""
+    for sql in (
+        "CREATE INDEX IF NOT EXISTS donations_cat_status_created ON donations (category, status, created_at DESC)",
+        "CREATE INDEX IF NOT EXISTS donations_donor ON donations (donor_id)",
+        "CREATE INDEX IF NOT EXISTS donations_created ON donations (created_at)",
+        "CREATE INDEX IF NOT EXISTS reservations_donation ON reservations (donation_id, created_at DESC)",
+        "CREATE INDEX IF NOT EXISTS reservations_needy ON reservations (needy_id)",
+        "CREATE INDEX IF NOT EXISTS reservations_status ON reservations (status)",
+    ):
+        await conn.execute(sql)
 
 
 async def _migrate_ad_stats(conn: asyncpg.Connection) -> None:
@@ -377,10 +391,28 @@ async def create_user_if_missing(telegram_id: int) -> dict[str, Any]:
     return await get_user(telegram_id)
 
 
+# Foydalanuvchi tili har bir API so'rovida kerak — bazaga qayta-qayta
+# murojaat qilmaslik uchun xotirada saqlanadi (faqat set_user_language
+# orqali o'zgaradi).
+_lang_cache: dict[int, str] = {}
+
+
+async def get_user_language(telegram_id: int) -> Optional[str]:
+    if telegram_id in _lang_cache:
+        return _lang_cache[telegram_id]
+    language = await _get_pool().fetchval(
+        "SELECT language FROM users WHERE telegram_id = $1", telegram_id
+    )
+    if language:
+        _lang_cache[telegram_id] = language
+    return language
+
+
 async def set_user_language(telegram_id: int, language: str) -> None:
     await _get_pool().execute(
         "UPDATE users SET language = $1 WHERE telegram_id = $2", language, telegram_id
     )
+    _lang_cache[telegram_id] = language
 
 
 async def set_user_role(telegram_id: int, role: str) -> None:
@@ -506,6 +538,31 @@ async def get_active_reservation_for_donation(
         donation_id,
     )
     return dict(row) if row else None
+
+
+async def get_latest_reservations_for_donations(
+    donation_ids: list[int],
+) -> dict[int, dict[str, Any]]:
+    """get_active_reservation_for_donation'ning bir nechta ehson uchun bitta
+    so'rovli varianti (har ehson uchun eng oxirgi bron)."""
+    if not donation_ids:
+        return {}
+    rows = await _get_pool().fetch(
+        """SELECT DISTINCT ON (donation_id) * FROM reservations
+           WHERE donation_id = ANY($1::int[])
+           ORDER BY donation_id, created_at DESC""",
+        donation_ids,
+    )
+    return {row["donation_id"]: dict(row) for row in rows}
+
+
+async def get_donations_by_ids(donation_ids: list[int]) -> dict[int, dict[str, Any]]:
+    if not donation_ids:
+        return {}
+    rows = await _get_pool().fetch(
+        "SELECT * FROM donations WHERE id = ANY($1::int[])", donation_ids
+    )
+    return {row["id"]: dict(row) for row in rows}
 
 
 async def get_reservations_by_needy(needy_id: int) -> list[dict[str, Any]]:
@@ -637,6 +694,18 @@ async def get_stats() -> dict[str, Any]:
     )
 
     return stats
+
+
+async def get_home_stats() -> dict[str, Any]:
+    """Bosh sahifa statistikasi — bitta so'rovda (api/stats uchun)."""
+    row = await _get_pool().fetchrow(
+        """SELECT
+             (SELECT COUNT(*) FROM donations) AS total_donations,
+             (SELECT COUNT(*) FROM reservations WHERE status = 'received') AS delivered_donations,
+             (SELECT COUNT(*) FROM donations
+                WHERE created_at > now() - interval '24 hours') AS new_last_24h"""
+    )
+    return dict(row)
 
 
 async def get_reminder_stats() -> dict[str, Any]:
