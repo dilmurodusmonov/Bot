@@ -258,6 +258,8 @@
   /* Oynalardagi jonli (animatsion) emoji: 😓 o'chirildi, ❌ bron bekor —
      Noto Animated Emoji (CC BY 4.0), oddiy emoji o'lchamida. */
   .toast-emoji-anim { display: block; width: 48px; height: 48px; margin: 0 auto 12px; }
+  /* ❌ kichikroq; umumiy balandlik (60px) saqlanadi — matn siljimaydi. */
+  .toast-emoji-anim[src$="cross.webp"] { width: 32px; height: 32px; margin: 8px auto 20px; }
   .toast-emoji.pop { position: relative; display: inline-block; animation: toastPopEmoji 1.1s ease-in-out infinite; }
   @keyframes toastPopEmoji {
     0%, 100% { transform: scale(1) rotate(0deg); }
