@@ -4196,8 +4196,12 @@
           '<button type="button" class="advertise-edit-save" data-adv-edit-save>' + escapeHtml(tr("advertise_edit_save")) + "</button>" +
           "</div></div>";
       }
+      // Topilmagan: nom yo'q, faqat "@username", yoki na tavsif, na rasm.
       function isPreviewIncomplete(p) {
-        return !p || !p.title || (/^@/.test(p.title) && !p.description);
+        return !p || !p.title || /^@/.test(p.title) || (!p.description && !p.photo_url);
+      }
+      function looksLikeLink(v) {
+        return /^[^\s]+\.[a-z\u0400-\u04ff]{2,}([\/?#].*)?$/i.test(v.replace(/^https?:\/\//i, ""));
       }
 
       function renderAdvertisePreview(preview, siteUrl) {
@@ -4268,7 +4272,7 @@
         }
         advertisePreviewTimer = setTimeout(function () {
           // Domen nomi va logotip darhol (logotip preview bilan parallel yuklanadi).
-          if (/^[^\s]+\.[a-z\u0400-\u04ff]{2,}([\/?#].*)?$/i.test(value.replace(/^https?:\/\//i, ""))) {
+          if (looksLikeLink(value)) {
             renderAdvertisePreview({ platform: guessAdvertisePlatform(value), title: deriveBrandFromUrl(value), description: "", photo_url: null, loading: true }, value);
           }
           api("GET", "/api/ads/preview?url=" + encodeURIComponent(value))
@@ -4281,7 +4285,18 @@
               lastAdvertisePreview = preview;
               lastAdvertisePreviewUrl = value;
             })
-            .catch(function () { if (urlInput.value.trim() === value) renderAdvertisePreview(null); });
+            .catch(function () {
+              if (urlInput.value.trim() !== value) return;
+              if (!looksLikeLink(value)) { renderAdvertisePreview(null); return; }
+              // Sayt topilmadi / javob bermadi — karta domen nomi bilan qoladi va
+              // reklama beruvchi nom, tavsif, logotipni o'zi kiritadi.
+              var fallback = { platform: guessAdvertisePlatform(value), title: "", description: "", photo_url: null };
+              advertiseEditIncomplete = true;
+              advertiseEditOpen = true;
+              renderAdvertisePreview(fallback, value);
+              lastAdvertisePreview = fallback;
+              lastAdvertisePreviewUrl = value;
+            });
         }, 350);
       });
 
