@@ -486,6 +486,12 @@ async def api_my_requests(request: web.Request) -> web.Response:
     return web.json_response(result)
 
 
+# Telegram'da inline tugma kengligi xabar pufagi kengligiga teng. Oxiridagi
+# ko'rinmas (U+2800) qator pufakni to'liq kenglikka yoyadi — "Pochta chekini
+# yuklash" tugmasi ham "Chekni ko'rish" kabi keng chiqadi.
+_WIDE_BUBBLE_PAD = "\n" + "⠀" * 36
+
+
 async def api_create_reservation(request: web.Request) -> web.Response:
     telegram_id = await _require_user_id(request)
     body = await request.json()
@@ -527,7 +533,7 @@ async def api_create_reservation(request: web.Request) -> web.Response:
             full_name=escape(full_name, quote=False),
             address=escape(address, quote=False),
             phone=escape(phone, quote=False),
-        ),
+        ) + _WIDE_BUBBLE_PAD,
         reply_markup=(
             InlineKeyboardMarkup(inline_keyboard=[[
                 InlineKeyboardButton(
