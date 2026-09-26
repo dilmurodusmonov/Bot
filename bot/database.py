@@ -105,12 +105,42 @@ async def init_db() -> None:
         await _migrate_ad_logo_cache(conn)
         await _migrate_app_presence(conn)
         await _create_indexes(conn)
+        await _migrate_support_messages(conn)
         # Instagram vaqtincha bloklagan paytda joylangan (tavsifsiz) takliflar
         # har ishga tushishda qayta tekshiriladi.
         await conn.execute(
             """UPDATE ad_bids SET description_checked = FALSE
                WHERE platform = 'instagram' AND description IS NULL AND description_checked"""
         )
+
+
+async def _migrate_support_messages(conn: asyncpg.Connection) -> None:
+    """Aloqa boti: admin chatidagi xabar qaysi foydalanuvchiniki ekani —
+    admin Reply qilganda javob shu foydalanuvchiga yuboriladi."""
+    await conn.execute(
+        """CREATE TABLE IF NOT EXISTS support_messages (
+               admin_chat_id BIGINT NOT NULL,
+               admin_message_id BIGINT NOT NULL,
+               user_id BIGINT NOT NULL,
+               created_at TIMESTAMPTZ NOT NULL DEFAULT now(),
+               PRIMARY KEY (admin_chat_id, admin_message_id)
+           )"""
+    )
+
+
+async def save_support_message(admin_chat_id: int, admin_message_id: int, user_id: int) -> None:
+    await _get_pool().execute(
+        """INSERT INTO support_messages (admin_chat_id, admin_message_id, user_id)
+           VALUES ($1, $2, $3) ON CONFLICT DO NOTHING""",
+        admin_chat_id, admin_message_id, user_id,
+    )
+
+
+async def get_support_message_user(admin_chat_id: int, admin_message_id: int) -> Optional[int]:
+    return await _get_pool().fetchval(
+        "SELECT user_id FROM support_messages WHERE admin_chat_id = $1 AND admin_message_id = $2",
+        admin_chat_id, admin_message_id,
+    )
 
 
 async def _create_indexes(conn: asyncpg.Connection) -> None:

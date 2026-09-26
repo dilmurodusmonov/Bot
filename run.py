@@ -7,8 +7,9 @@ from aiogram.enums import ParseMode
 from aiogram.fsm.storage.memory import MemoryStorage
 from aiogram.types import MenuButtonWebApp, WebAppInfo
 
-from bot.config import BOT_TOKEN, WEBAPP_URL
+from bot.config import BOT_TOKEN, SUPPORT_BOT_TOKEN, WEBAPP_URL
 from bot.database import init_db
+from bot import support
 from bot.handlers import ads, start
 from bot.keepalive import start_webserver
 from bot.reminders import run_reminder_loop
@@ -37,7 +38,20 @@ async def main() -> None:
 
     asyncio.create_task(run_reminder_loop(bot))
 
+    # Aloqa boti (ixtiyoriy): shu jarayonda, alohida dispatcher bilan.
+    support_task = None
+    if SUPPORT_BOT_TOKEN:
+        support_bot = Bot(token=SUPPORT_BOT_TOKEN, default=DefaultBotProperties(parse_mode=ParseMode.HTML))
+        support_dp = Dispatcher()
+        support_dp.include_router(support.router)
+        # Livegram kabi oldingi xizmat qo'ygan webhook olib tashlanadi —
+        # aks holda xabarlar bizga kelmaydi.
+        await support_bot.delete_webhook(drop_pending_updates=False)
+        support_task = asyncio.create_task(support_dp.start_polling(support_bot, handle_signals=False))
+
     await dp.start_polling(bot)
+    if support_task:
+        support_task.cancel()
 
 
 if __name__ == "__main__":

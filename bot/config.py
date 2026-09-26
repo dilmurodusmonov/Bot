@@ -31,6 +31,16 @@ CHANNEL_ID = os.getenv("CHANNEL_ID", "").strip()
 # "Aloqa" tugmasi shu botni ochadi. Bo'sh qoldirilsa tugma ko'rinmaydi.
 SUPPORT_BOT = os.getenv("SUPPORT_BOT", "ceo_ehson_bot").strip().lstrip("@")
 
+# O'zimizning aloqa botimiz (Livegram o'rniga, reklamasiz). @BotFather'dagi
+# aloqa botining tokeni; bo'sh bo'lsa aloqa boti ishga tushmaydi.
+# Foydalanuvchi xabarlari SUPPORT_ADMIN_IDS (bo'lmasa AD_ADMIN_IDS) dagi
+# adminlarga yuboriladi; admin xabarga Reply qilib javob beradi.
+SUPPORT_BOT_TOKEN = os.getenv("SUPPORT_BOT_TOKEN", "").strip()
+SUPPORT_ADMIN_IDS = [
+    int(part) for part in os.getenv("SUPPORT_ADMIN_IDS", "").replace(" ", "").split(",")
+    if part.lstrip("-").isdigit()
+] or AD_ADMIN_IDS
+
 # Render bepul tarifida server uxlab qolmasligi uchun o'ziga so'rov
 # yuboradi. Bepul soatlar (750 soat/oy) bitta xizmatga yetadi — test
 # xizmatida KEEP_AWAKE=0 qo'yib, soatlarni asosiy botga qoldiring.
