@@ -10,7 +10,7 @@ from aiogram.types import (
     WebAppInfo,
 )
 
-from bot.config import WEBAPP_URL
+from bot.config import SUPPORT_BOT, WEBAPP_URL
 from bot.database import create_user_if_missing, get_user, set_user_language, set_user_role
 from bot.keyboards import language_keyboard, role_keyboard
 from bot.texts import LANGUAGES, categories_list, t
@@ -58,14 +58,14 @@ async def cmd_start(message: Message, state: FSMContext) -> None:
     # boradi — shuning uchun pastda alohida "Ilovani ochish" xabari
     # kerak emas.
     url = f"{WEBAPP_URL}&d={donation_id}" if WEBAPP_URL and donation_id else WEBAPP_URL
+    rows = []
+    if WEBAPP_URL:
+        rows.append([InlineKeyboardButton(text="Ehson App", web_app=WebAppInfo(url=url))])
+    if SUPPORT_BOT:
+        rows.append([InlineKeyboardButton(text=t(lang, "contact_button"), url=f"https://t.me/{SUPPORT_BOT}")])
     await message.answer(
         t(lang, "welcome_intro", categories=categories_list(lang)),
-        reply_markup=(
-            InlineKeyboardMarkup(inline_keyboard=[[
-                InlineKeyboardButton(text="Ehson App", web_app=WebAppInfo(url=url))
-            ]])
-            if WEBAPP_URL else None
-        ),
+        reply_markup=InlineKeyboardMarkup(inline_keyboard=rows) if rows else None,
     )
 
     if not user["language"]:

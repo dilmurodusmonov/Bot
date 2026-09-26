@@ -64,6 +64,7 @@ Variables bo'limida saqlanadi — kodga yoki GitHub'ga yozilmaydi.
 | `DATABASE_URL` | ha | PostgreSQL ulanish manzili |
 | `WEBAPP_URL` | Render'da shart emas | Mini App manzili; Render'da `RENDER_EXTERNAL_URL` avtomatik olinadi |
 | `CHANNEL_ID` | yo'q | Ehsonlar e'lon qilinadigan kanal (bot admin bo'lishi kerak). Standart qiymat yo'q — bo'sh bo'lsa kanalga post qilinmaydi |
+| `SUPPORT_BOT` | yo'q | Aloqa boti username'i (standart `ceo_ehson_bot`); ilova sozlamalari va /start'dagi "Aloqa" tugmasi |
 | `KEEP_AWAKE` | yo'q | `1` (standart) — Render bepul tarifida server uxlamasligi uchun o'ziga so'rov yuboradi; test xizmatida `0` |
 | `MINI_APP_SHORT_NAME` | yo'q | @BotFather /newapp qisqa nomi (standart `app`) |
 | `ADMIN_USERNAME`, `ADMIN_PASSWORD` | /admin uchun | Statistika paneli logini va paroli |

@@ -37,6 +37,7 @@ from bot.config import (
     IG_GRAPH_TOKEN,
     INSTAGRAM_PROXIES,
     MINI_APP_SHORT_NAME,
+    SUPPORT_BOT,
     WEBAPP_URL,
 )
 from bot.database import (
@@ -433,7 +434,9 @@ def _donation_json(
 async def api_me(request: web.Request) -> web.Response:
     telegram_id = await _require_user_id(request)
     user = await create_user_if_missing(telegram_id)
-    return web.json_response({"language": user["language"], "role": user["role"]})
+    return web.json_response({
+        "language": user["language"], "role": user["role"], "support_bot": SUPPORT_BOT,
+    })
 
 
 async def api_set_language(request: web.Request) -> web.Response:
