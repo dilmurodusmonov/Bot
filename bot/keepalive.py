@@ -8,6 +8,8 @@ from bot.webapp_api import setup_api_routes
 from bot.webpanel import dashboard_handler
 
 WEBAPP_INDEX = Path(__file__).parent / "static" / "webapp" / "index.html"
+# Mini App uchun statik fayllar (masalan, animatsion emoji .webp).
+WEBAPP_ASSETS = Path(__file__).parent / "static" / "webapp" / "assets"
 
 
 async def _health(request: web.Request) -> web.Response:
@@ -27,6 +29,22 @@ async def _webapp_index(request: web.Request) -> web.Response:
     )
 
 
+async def _webapp_asset(request: web.Request) -> web.Response:
+    # Faqat assets/ papkasidagi fayl nomi (yo'l emas) qabul qilinadi.
+    name = request.match_info["name"]
+    path = WEBAPP_ASSETS / name
+    if "/" in name or name.startswith(".") or not path.is_file():
+        raise web.HTTPNotFound()
+    content_type = {".webp": "image/webp", ".png": "image/png", ".gif": "image/gif"}.get(
+        path.suffix.lower(), "application/octet-stream"
+    )
+    return web.Response(
+        body=path.read_bytes(),
+        content_type=content_type,
+        headers={"Cache-Control": "public, max-age=604800"},
+    )
+
+
 async def start_webserver(bot: Bot) -> None:
     """Bepul hosting (masalan Render) uchun engil HTTP server.
 
@@ -42,6 +60,7 @@ async def start_webserver(bot: Bot) -> None:
     app.router.add_get("/", _health)
     app.router.add_get("/admin", dashboard_handler)
     app.router.add_get("/webapp", _webapp_index)
+    app.router.add_get("/webapp-assets/{name}", _webapp_asset)
     setup_api_routes(app)
 
     runner = web.AppRunner(app)

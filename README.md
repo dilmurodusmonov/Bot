@@ -152,3 +152,7 @@ avtomatik aniqlanadi (`RENDER_EXTERNAL_URL` orqali). Faqat Render deploy
 qilingandan keyin "🏠 Kabinet" tugmasi paydo bo'ladi. Boshqa hostingda
 ishlatilsa, `WEBAPP_URL` environment variable'ni qo'lda kiriting (masalan
 `https://sizning-domeningiz.com`) — Telegram Mini App uchun HTTPS shart.
+
+## Mualliflik
+
+Animatsion emoji (`bot/static/webapp/assets/sweat.webp`): [Noto Animated Emoji](https://googlefonts.github.io/noto-emoji-animation/), Google, CC BY 4.0.
