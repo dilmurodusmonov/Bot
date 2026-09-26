@@ -27,8 +27,8 @@ def _check_auth(request: web.Request) -> bool:
     except Exception:
         return False
 
-    return hmac.compare_digest(username, ADMIN_USERNAME) and hmac.compare_digest(
-        password, ADMIN_PASSWORD
+    return hmac.compare_digest(username.encode(), ADMIN_USERNAME.encode()) and hmac.compare_digest(
+        password.encode(), ADMIN_PASSWORD.encode()
     )
 
 
@@ -72,7 +72,7 @@ def _recent_row(donation: dict) -> str:
     <tr>
       <td>#{donation['id']}</td>
       <td>{category_name(donation['category'], 'uz')}</td>
-      <td class="desc">{desc}</td>
+      <td class="desc">{escape(desc)}</td>
       <td><span class="pill pill-{donation['status']}">{status_label(donation['status'], 'uz')}</span></td>
       <td class="muted">{created}</td>
     </tr>

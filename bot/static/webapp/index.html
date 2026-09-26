@@ -3401,14 +3401,11 @@
         "&limit=" + NEEDY_PAGE_SIZE + (before ? "&before=" + before : ""));
     }
 
-    // BETA: bitta test akkaunt bilan ham saxiy, ham muhtoj rolini
-    // sinash uchun "d.is_mine" tekshiruvi vaqtincha o'chirilgan.
-    // Ilova ishga tushirilganda "canReserve && !d.is_mine" qaytarilishi
-    // kerak — hozircha o'z ehsonini ham band qilib ko'rish mumkin.
+    // O'z ehsonini band qilib bo'lmaydi (server ham rad etadi).
     function cardsHtml(items) {
       return items.map(function (d) {
         var body = donationCardHtml(d);
-        if (canReserve) {
+        if (canReserve && !d.is_mine) {
           body += '<button class="card-btn" data-take="' + d.id + '">' + tr("take_it") + "</button>";
         }
         return body + "</div></div>";

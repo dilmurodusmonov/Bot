@@ -7,6 +7,7 @@ from pathlib import Path
 from typing import Optional
 
 import aiohttp
+import asyncpg
 from aiogram import Bot
 from aiohttp import web
 
@@ -72,6 +73,25 @@ async def _webapp_asset(request: web.Request) -> web.Response:
 
 
 @web.middleware
+async def _error_middleware(request: web.Request, handler):
+    """Noto'g'ri so'rovlar (buzuq JSON, juda katta son va h.k.) 500 emas,
+    400 bilan qaytadi; kutilmagan xatolar jurnalga yoziladi."""
+    try:
+        return await handler(request)
+    except web.HTTPException:
+        raise
+    except (ValueError, asyncpg.exceptions.DataError):
+        raise web.HTTPBadRequest(text="bad request")
+    except asyncpg.exceptions.ForeignKeyViolationError:
+        raise web.HTTPNotFound()
+    except asyncio.CancelledError:
+        raise
+    except Exception:
+        logging.getLogger(__name__).exception("So'rovda xatolik: %s %s", request.method, request.path)
+        raise web.HTTPInternalServerError(text="internal error")
+
+
+@web.middleware
 async def _compress_middleware(request: web.Request, handler):
     """JSON/HTML javoblarni gzip bilan siqadi (rasmlar va oldindan
     siqilgan index.html bundan mustasno) — sekin internetda tezroq."""
@@ -112,7 +132,7 @@ async def start_webserver(bot: Bot) -> None:
     uxlab qoladi. Shu server ustiga /admin (statistika paneli) va
     /webapp + /api/* (Telegram Mini App) ham qo'shilgan.
     """
-    app = web.Application(client_max_size=10 * 1024 * 1024, middlewares=[_compress_middleware])
+    app = web.Application(client_max_size=10 * 1024 * 1024, middlewares=[_error_middleware, _compress_middleware])
     app["bot"] = bot
     me = await bot.get_me()
     app["bot_username"] = me.username

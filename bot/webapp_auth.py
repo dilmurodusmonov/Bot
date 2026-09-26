@@ -1,10 +1,17 @@
 import hashlib
 import hmac
 import json
+import time
 from typing import Any, Optional
 from urllib.parse import parse_qsl
 
 from bot.config import BOT_TOKEN
+
+# initData (imzolangan foydalanuvchi ma'lumoti) shuncha vaqtgacha amal
+# qiladi — tasodifan tarqalib ketgan eski initData bilan boshqa birov
+# nomidan so'rov yuborib bo'lmasligi uchun. Ilova qayta ochilganda
+# Telegram yangisini beradi.
+INIT_DATA_MAX_AGE_SECONDS = 7 * 24 * 3600
 
 
 def validate_init_data(init_data: str) -> Optional[dict[str, Any]]:
@@ -33,6 +40,13 @@ def validate_init_data(init_data: str) -> Optional[dict[str, Any]]:
     ).hexdigest()
 
     if not hmac.compare_digest(computed_hash, received_hash):
+        return None
+
+    try:
+        auth_date = int(pairs.get("auth_date", "0"))
+    except ValueError:
+        return None
+    if time.time() - auth_date > INIT_DATA_MAX_AGE_SECONDS:
         return None
 
     user_raw = pairs.get("user")
