@@ -3,7 +3,7 @@
 <head>
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
-<title>Ehson bot</title>
+<title>Ehson App</title>
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
 <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800&display=swap" rel="stylesheet" media="print" onload="this.media='all'">
@@ -2635,9 +2635,21 @@
     hideMainButton();
   }
 
+  // Til/rol tanlash sahifalari sarlavhasi: bosh sahifadagidek foydalanuvchining
+  // Telegram rasmi (bo'lmasa ism bosh harfi) va "Ehson App" nomi.
+  function brandHeaderHtml() {
+    var user = tg && tg.initDataUnsafe && tg.initDataUnsafe.user;
+    var photoUrl = user && user.photo_url;
+    var initial = ((user && user.first_name) || "E").charAt(0).toUpperCase();
+    var avatar = photoUrl
+      ? '<img class="avatar-img" src="' + escapeHtml(photoUrl) + '" alt="">'
+      : '<div class="avatar">' + escapeHtml(initial) + "</div>";
+    return '<div class="brand">' + avatar + "<h1>Ehson App</h1></div>";
+  }
+
   function renderLanguage() {
     app.innerHTML =
-      '<div class="brand"><div class="avatar">EB</div><h1>Ehson bot</h1></div>' +
+      brandHeaderHtml() +
       '<p class="hint">🌐 Tilni tanlang / Choose language / Выберите язык:</p>' +
       '<div class="option-list">' +
       '<button class="option" data-lang="uz">🇺🇿 O\'zbekcha</button>' +
@@ -2666,7 +2678,7 @@
 
   function renderRole() {
     app.innerHTML =
-      '<div class="brand"><div class="avatar">EB</div><h1>Ehson bot</h1></div>' +
+      brandHeaderHtml() +
       '<p class="hint">' + tr("choose_role") + "</p>" +
       '<div class="option-list">' +
       '<button class="option" data-role="donor">🫴 ' + tr("role_donor") + "</button>" +
