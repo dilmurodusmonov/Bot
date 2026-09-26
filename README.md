@@ -2,8 +2,9 @@
 
 "Saxiy" (xayr-ehson qiluvchi) va "Muhtoj" (ehsonga muhtoj) foydalanuvchilarni
 bog'lovchi Telegram bot. Python + [aiogram 3](https://docs.aiogram.dev/) va
-PostgreSQL (asyncpg) asosida qurilgan, 3 tilni qo'llab-quvvatlaydi: o'zbek,
-rus, ingliz.
+PostgreSQL (asyncpg) asosida qurilgan, Telegram Mini App (Ehson App) bilan
+ishlaydi va 7 tilni qo'llab-quvvatlaydi: o'zbek, rus, ingliz, qozoq, tojik,
+qirg'iz, turkman.
 
 ## Ishlash oqimi
 
@@ -51,6 +52,29 @@ cp .env.example .env
 # - BOT_TOKEN'ni @BotFather'dan olingan token bilan almashtiring
 # - DATABASE_URL'ni Neon'dan olgan ulanish manzili bilan almashtiring
 ```
+
+## Environment o'zgaruvchilari
+
+Maxfiy qiymatlar (token, parol, karta) faqat hosting'ning Environment
+Variables bo'limida saqlanadi — kodga yoki GitHub'ga yozilmaydi.
+
+| O'zgaruvchi | Majburiy | Tavsif |
+|---|---|---|
+| `BOT_TOKEN` | ha | @BotFather'dan olingan bot tokeni |
+| `DATABASE_URL` | ha | PostgreSQL ulanish manzili |
+| `WEBAPP_URL` | Render'da shart emas | Mini App manzili; Render'da `RENDER_EXTERNAL_URL` avtomatik olinadi |
+| `CHANNEL_ID` | yo'q | Ehsonlar e'lon qilinadigan kanal (bot admin bo'lishi kerak) |
+| `MINI_APP_SHORT_NAME` | yo'q | @BotFather /newapp qisqa nomi (standart `app`) |
+| `ADMIN_USERNAME`, `ADMIN_PASSWORD` | /admin uchun | Statistika paneli logini va paroli |
+| `AD_CARD_NUMBER`, `AD_CARD_HOLDER` | reklama to'lovi uchun | To'lov qabul qilinadigan karta |
+| `AD_ADMIN_IDS` | reklama to'lovi uchun | Cheklarni tasdiqlovchi adminlar Telegram ID'lari (vergul bilan) |
+| `IG_GRAPH_TOKEN`, `IG_BUSINESS_ID`, `INSTAGRAM_PROXY` | yo'q | Instagram profillarini topish (ixtiyoriy) |
+
+### Ishga tushirishdan oldin tekshiring
+- Bot kanalda admin (post yozish, tahrirlash, o'chirish huquqlari bilan).
+- `AD_ADMIN_IDS`dagi adminlar botga /start bosgan.
+- `ADMIN_PASSWORD` kuchli parol.
+- @BotFather'da Mini App (/newapp) sozlangan va `MINI_APP_SHORT_NAME` mos.
 
 ## Ishga tushirish
 

@@ -521,7 +521,7 @@ async def get_channel_out_of_sync(limit: int = 20) -> list[dict[str, Any]]:
     return [dict(row) for row in rows]
 
 
-async def delete_donation(donation_id: int) -> None:
+async def delete_donation(donation_id: int) -> bool:
     """Ehsonni o'chirish.
 
     donation_likes va reservations jadvallari donations(id) ga ON DELETE
@@ -535,7 +535,7 @@ async def delete_donation(donation_id: int) -> None:
                 "SELECT status FROM donations WHERE id = $1 FOR UPDATE", donation_id
             )
             if status != "available":
-                return
+                return False
             await conn.execute(
                 "DELETE FROM donation_likes WHERE donation_id = $1", donation_id
             )
@@ -543,9 +543,33 @@ async def delete_donation(donation_id: int) -> None:
                 "DELETE FROM reservations WHERE donation_id = $1", donation_id
             )
             await conn.execute("DELETE FROM donations WHERE id = $1", donation_id)
+            return True
 
 
 # --- reservations -------------------------------------------------------------
+
+async def reserve_donation(
+    donation_id: int, needy_id: int, full_name: str, address: str, phone: str
+) -> Optional[int]:
+    """Ehsonni atomar band qiladi: ikki kishi bir vaqtda bossa ham faqat
+    bittasi band qila oladi. Ehson allaqachon band bo'lsa None."""
+    pool = _get_pool()
+    async with pool.acquire() as conn:
+        async with conn.transaction():
+            updated = await conn.fetchval(
+                """UPDATE donations SET status = 'reserved'
+                   WHERE id = $1 AND status = 'available' RETURNING id""",
+                donation_id,
+            )
+            if updated is None:
+                return None
+            return await conn.fetchval(
+                """INSERT INTO reservations
+                   (donation_id, needy_id, full_name, address, phone, status)
+                   VALUES ($1, $2, $3, $4, $5, 'reserved') RETURNING id""",
+                donation_id, needy_id, full_name, address, phone,
+            )
+
 
 async def create_reservation(
     donation_id: int, needy_id: int, full_name: str, address: str, phone: str
@@ -647,7 +671,7 @@ async def get_due_receive_reminders(first, second, repeat) -> list[dict[str, Any
     return [dict(row) for row in rows]
 
 
-async def record_donor_reminder(reservation_id: int, message_id: int) -> None:
+async def record_donor_reminder(reservation_id: int, message_id: Optional[int]) -> None:
     await _get_pool().execute(
         """UPDATE reservations
            SET donor_notify_message_id = $1, donor_reminder_count = donor_reminder_count + 1,
@@ -657,7 +681,7 @@ async def record_donor_reminder(reservation_id: int, message_id: int) -> None:
     )
 
 
-async def record_needy_reminder(reservation_id: int, message_id: int) -> None:
+async def record_needy_reminder(reservation_id: int, message_id: Optional[int]) -> None:
     await _get_pool().execute(
         """UPDATE reservations
            SET needy_notify_message_id = $1, needy_reminder_count = needy_reminder_count + 1,
@@ -681,34 +705,40 @@ async def set_needy_notify_message(reservation_id: int, message_id: Optional[int
     )
 
 
+# Holat o'tishlari shartli: faqat kutilgan holatdan o'tadi (bir vaqtdagi
+# ikki so'rov — masalan bekor qilish va yuborish — bir-birini buzmaydi).
+# True — o'tish bajarildi.
 async def set_reservation_shipped(
     reservation_id: int, receipt_photo_file_id: str, receipt_note: Optional[str]
-) -> None:
-    await _get_pool().execute(
+) -> bool:
+    result = await _get_pool().execute(
         """UPDATE reservations
            SET status = 'shipped', receipt_photo_file_id = $1, receipt_note = $2,
                shipped_at = now()
-           WHERE id = $3""",
+           WHERE id = $3 AND status = 'reserved'""",
         receipt_photo_file_id,
         receipt_note,
         reservation_id,
     )
+    return result.endswith(" 1")
 
 
-async def set_reservation_received(reservation_id: int, dua_text: str) -> None:
-    await _get_pool().execute(
+async def set_reservation_received(reservation_id: int, dua_text: str) -> bool:
+    result = await _get_pool().execute(
         """UPDATE reservations
            SET status = 'received', dua_text = $1, received_at = now()
-           WHERE id = $2""",
+           WHERE id = $2 AND status = 'shipped'""",
         dua_text,
         reservation_id,
     )
+    return result.endswith(" 1")
 
 
-async def cancel_reservation(reservation_id: int) -> None:
-    await _get_pool().execute(
+async def cancel_reservation(reservation_id: int) -> bool:
+    result = await _get_pool().execute(
         "DELETE FROM reservations WHERE id = $1 AND status = 'reserved'", reservation_id
     )
+    return result.endswith(" 1")
 
 
 async def count_pending_ship(donor_id: int) -> int:

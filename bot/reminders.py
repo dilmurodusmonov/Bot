@@ -5,7 +5,7 @@ from html import escape
 from typing import Optional
 
 from aiogram import Bot
-from aiogram.exceptions import TelegramRetryAfter
+from aiogram.exceptions import TelegramForbiddenError, TelegramRetryAfter
 from aiogram.types import InlineKeyboardButton, InlineKeyboardMarkup, WebAppInfo
 
 from bot.config import WEBAPP_URL
@@ -78,6 +78,10 @@ async def _check_ship_reminders(bot: Bot) -> None:
                 reply_markup=_open_app_keyboard(donor_lang, "donor_cabinet"),
             ))
             await record_donor_reminder(reservation["id"], message_id)
+        except TelegramForbiddenError:
+            # Foydalanuvchi botni bloklagan — eslatma "yuborilgan" deb
+            # hisoblanadi, aks holda har 5 daqiqada qayta urinilaveradi.
+            await record_donor_reminder(reservation["id"], None)
         except Exception:
             logger.exception("Yo'lga chiqarish eslatmasini yuborib bo'lmadi (bron %s)", reservation["id"])
         await asyncio.sleep(SEND_PAUSE_SECONDS)
@@ -98,6 +102,10 @@ async def _check_receive_reminders(bot: Bot) -> None:
                 reply_markup=_open_app_keyboard(needy_lang, "needy_cabinet"),
             ))
             await record_needy_reminder(reservation["id"], message_id)
+        except TelegramForbiddenError:
+            # Foydalanuvchi botni bloklagan — eslatma "yuborilgan" deb
+            # hisoblanadi, aks holda har 5 daqiqada qayta urinilaveradi.
+            await record_needy_reminder(reservation["id"], None)
         except Exception:
             logger.exception("Qabul qilish eslatmasini yuborib bo'lmadi (bron %s)", reservation["id"])
         await asyncio.sleep(SEND_PAUSE_SECONDS)

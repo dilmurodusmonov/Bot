@@ -48,7 +48,7 @@ from bot.database import (
     count_pending_receive,
     count_pending_ship,
     create_donation,
-    create_reservation,
+    reserve_donation,
     create_user_if_missing,
     delete_donation,
     claim_ad_bids_for_description,
@@ -597,6 +597,68 @@ async def api_my_requests(request: web.Request) -> web.Response:
     return web.json_response(result)
 
 
+# Foydalanuvchi kiritadigan matnlar uchun chegaralar (bazani haddan tashqari
+# uzun matn bilan to'ldirib yuborishdan himoya).
+MAX_NAME_LEN = 120
+MAX_ADDRESS_LEN = 300
+MAX_PHONE_LEN = 32
+MAX_DESCRIPTION_LEN = 1000
+MAX_NOTE_LEN = 500
+MAX_DUA_LEN = 1000
+
+
+def _int_or_400(value: Any) -> int:
+    try:
+        return int(value)
+    except (TypeError, ValueError):
+        raise web.HTTPBadRequest(text="invalid id")
+
+
+async def _notify(bot: Bot, chat_id: int, old_message_id: Optional[int], text: str, reply_markup=None) -> Optional[int]:
+    """Bildirishnoma yuboradi. Foydalanuvchi botni bloklagan bo'lsa yoki
+    Telegram xato bersa, asosiy amal (band qilish, yuborish...) buzilmaydi —
+    faqat jurnalga yoziladi va None qaytadi."""
+    try:
+        return await _tg_retry(lambda: _send_tracked_message(bot, chat_id, old_message_id, text, reply_markup=reply_markup))
+    except Exception:
+        logger.warning("Bildirishnoma yuborilmadi (chat %s)", chat_id, exc_info=True)
+        return None
+
+
+async def _upload_photos(bot: Bot, telegram_id: int, photos: list[tuple[bytes, str]]) -> list[str]:
+    """Rasmlarni Telegram'ga yuklab file_id oladi: foydalanuvchining o'z bot
+    chatiga ovozsiz yuborib, darhol o'chiradi. Foydalanuvchi botni hali
+    ishga tushirmagan/bloklagan bo'lsa — adminlar chati orqali."""
+    for chat_id in [telegram_id, *AD_ADMIN_IDS]:
+        try:
+            if len(photos) == 1:
+                photo_bytes, filename = photos[0]
+                sent_messages = [await _tg_retry(lambda: bot.send_photo(
+                    chat_id=chat_id,
+                    photo=BufferedInputFile(photo_bytes, filename=filename),
+                    disable_notification=True,
+                ))]
+            else:
+                sent_messages = await _tg_retry(lambda: bot.send_media_group(
+                    chat_id=chat_id,
+                    media=[
+                        InputMediaPhoto(media=BufferedInputFile(photo_bytes, filename=filename))
+                        for photo_bytes, filename in photos
+                    ],
+                    disable_notification=True,
+                ))
+        except TelegramAPIError:
+            logger.warning("Rasm yuklanmadi (chat %s), keyingisi sinaladi", chat_id)
+            continue
+        for msg in sent_messages:
+            try:
+                await bot.delete_message(chat_id=chat_id, message_id=msg.message_id)
+            except TelegramAPIError:
+                pass
+        return [msg.photo[-1].file_id for msg in sent_messages]
+    raise web.HTTPBadGateway(text="upload_failed")
+
+
 # Telegram'da inline tugma kengligi xabar pufagi kengligiga teng. Oxiridagi
 # ko'rinmas (U+2800) qator pufakni to'liq kenglikka yoyadi — "Pochta chekini
 # yuklash", "Ehsonni ko'rish", "Chekni ko'rish" tugmalari bir xil keng chiqadi.
@@ -606,33 +668,33 @@ _WIDE_BUBBLE_PAD = "\n" + "⠀" * 36
 async def api_create_reservation(request: web.Request) -> web.Response:
     telegram_id = await _require_user_id(request)
     body = await request.json()
-    donation_id = body.get("donation_id")
-    full_name = (body.get("full_name") or "").strip()
-    address = (body.get("address") or "").strip()
-    phone = (body.get("phone") or "").strip()
-    if not (donation_id and full_name and address and phone):
+    donation_id = _int_or_400(body.get("donation_id"))
+    full_name = str(body.get("full_name") or "").strip()[:MAX_NAME_LEN]
+    address = str(body.get("address") or "").strip()[:MAX_ADDRESS_LEN]
+    phone = str(body.get("phone") or "").strip()[:MAX_PHONE_LEN]
+    if not (full_name and address and phone):
         raise web.HTTPBadRequest(text="missing fields")
 
     donation = await get_donation(donation_id)
     if not donation or donation["status"] != "available":
         raise web.HTTPConflict(text="already reserved")
-    # BETA: bitta test akkaunt bilan ham saxiy, ham muhtoj rolini sinash
-    # uchun o'z ehsonini band qilish vaqtincha ochiq qoldirildi. Ilova
-    # ishga tushirilganda quyidagi tekshiruv qaytarilishi kerak:
-    #   if donation["donor_id"] == telegram_id:
-    #       raise web.HTTPForbidden(text="own donation")
+    if donation["donor_id"] == telegram_id:
+        raise web.HTTPForbidden(text="own donation")
 
-    reservation_id = await create_reservation(
+    await create_user_if_missing(telegram_id)
+    # Atomar: ikki kishi bir vaqtda bossa, faqat bittasi band qiladi.
+    reservation_id = await reserve_donation(
         donation_id, telegram_id, full_name, address, phone
     )
-    await set_donation_status(donation_id, "reserved")
+    if reservation_id is None:
+        raise web.HTTPConflict(text="already reserved")
     await _refresh_channel_post(
         request.app["bot"], request.app.get("bot_username"), donation_id, "reserved"
     )
 
     donor_lang = await _lang_for(donation["donor_id"])
     bot: Bot = request.app["bot"]
-    message_id = await _send_tracked_message(
+    message_id = await _notify(
         bot,
         donation["donor_id"],
         None,
@@ -655,7 +717,8 @@ async def api_create_reservation(request: web.Request) -> web.Response:
             if WEBAPP_URL else None
         ),
     )
-    await set_donor_notify_message(reservation_id, message_id)
+    if message_id:
+        await set_donor_notify_message(reservation_id, message_id)
     return web.json_response({"ok": True, "reservation_id": reservation_id})
 
 
@@ -663,7 +726,7 @@ async def api_confirm_received(request: web.Request) -> web.Response:
     telegram_id = await _require_user_id(request)
     reservation_id = int(request.match_info["id"])
     body = await request.json()
-    dua_text = (body.get("dua_text") or "").strip()
+    dua_text = str(body.get("dua_text") or "").strip()[:MAX_DUA_LEN]
     if not dua_text:
         raise web.HTTPBadRequest(text="dua_text required")
 
@@ -674,7 +737,8 @@ async def api_confirm_received(request: web.Request) -> web.Response:
         raise web.HTTPConflict()
 
     bot: Bot = request.app["bot"]
-    await set_reservation_received(reservation_id, dua_text)
+    if not await set_reservation_received(reservation_id, dua_text):
+        raise web.HTTPConflict()
     donation = await get_donation(reservation["donation_id"])
     await set_donation_status(donation["id"], "received")
     await _refresh_channel_post(
@@ -682,7 +746,7 @@ async def api_confirm_received(request: web.Request) -> web.Response:
     )
 
     donor_lang = await _lang_for(donation["donor_id"])
-    donor_message_id = await _send_tracked_message(
+    donor_message_id = await _notify(
         bot,
         donation["donor_id"],
         reservation["donor_notify_message_id"],
@@ -743,6 +807,31 @@ _AD_PLATFORM_HOSTS = {
 }
 
 _AD_CATEGORY_KEYS = {"tech", "fintech", "ai", "trade", "people", "education", "marketing", "lifestyle", "other"}
+
+
+def _ip_is_public(address: str) -> bool:
+    try:
+        ip = ipaddress.ip_address(address)
+    except ValueError:
+        return False
+    return not (ip.is_private or ip.is_loopback or ip.is_link_local or ip.is_reserved
+                or ip.is_multicast or ip.is_unspecified)
+
+
+class _PublicOnlyConnector(aiohttp.TCPConnector):
+    """SSRF himoyasi har bir ulanishda: yo'naltirishlar (redirect) va
+    sahifadan olingan rasm manzillari ham ichki/lokal IP'ga (localhost,
+    169.254.x.x, 10.x va h.k.) ulana olmaydi."""
+
+    async def _resolve_host(self, host, port, traces=None):
+        infos = await super()._resolve_host(host, port, traces=traces)
+        if not infos or not all(_ip_is_public(info["host"]) for info in infos):
+            raise OSError(f"blocked non-public address for {host}")
+        return infos
+
+
+def _public_session() -> aiohttp.ClientSession:
+    return aiohttp.ClientSession(connector=_PublicOnlyConnector())
 
 
 async def _resolve_is_public_host(hostname: str) -> bool:
@@ -912,7 +1001,7 @@ async def _fetch_site_html(
         if INSTAGRAM_PROXIES:
             agent += f" via {_mask_proxy(route)}"
     try:
-        async with aiohttp.ClientSession() as session:
+        async with _public_session() as session:
             async with session.get(
                 url, timeout=aiohttp.ClientTimeout(total=8 if proxy else 6), max_redirects=5, headers=headers,
                 proxy=proxy,
@@ -1050,7 +1139,7 @@ def _wb_base_url(basket: int, nm_id: int) -> str:
 
 async def _fetch_json(url: str, headers: Optional[dict] = None, timeout: float = 5) -> Optional[Any]:
     try:
-        async with aiohttp.ClientSession() as session:
+        async with _public_session() as session:
             async with session.get(
                 url, timeout=aiohttp.ClientTimeout(total=timeout), headers={**_BROWSER_HEADERS, **(headers or {})},
             ) as resp:
@@ -1300,7 +1389,7 @@ async def _instagram_via_graph(username: str) -> Optional[dict]:
     status: Any = None
     payload: Any = None
     try:
-        async with aiohttp.ClientSession() as session:
+        async with _public_session() as session:
             async with session.get(url, timeout=aiohttp.ClientTimeout(total=6)) as resp:
                 status = resp.status
                 payload = json.loads(await resp.text(errors="ignore"))
@@ -1386,7 +1475,7 @@ async def _fetch_instagram_profile(username: str) -> Optional[dict]:
         if route is None:
             break
         try:
-            async with aiohttp.ClientSession() as session:
+            async with _public_session() as session:
                 async with session.get(
                     f"{base}/api/v1/users/web_profile_info/?username={quote(username)}",
                     timeout=aiohttp.ClientTimeout(total=8), headers={**_BROWSER_HEADERS, **headers},
@@ -1519,7 +1608,7 @@ async def _fetch_image(url: str) -> Optional[tuple[bytes, str]]:
             return None
         return (body, m.group(1)) if len(body) >= 100 else None
     try:
-        async with aiohttp.ClientSession() as session:
+        async with _public_session() as session:
             async with session.get(
                 url, timeout=aiohttp.ClientTimeout(total=5), max_redirects=3,
                 headers={**_BROWSER_HEADERS, "Accept": "image/avif,image/webp,image/png,image/svg+xml,image/*,*/*;q=0.8"},
@@ -1598,7 +1687,7 @@ async def _manifest_icons(html_text: str, base_url: str) -> list[str]:
         return []
     manifest_url = urljoin(base_url, unescape(href.group(1)))
     try:
-        async with aiohttp.ClientSession() as session:
+        async with _public_session() as session:
             async with session.get(
                 manifest_url, timeout=aiohttp.ClientTimeout(total=5), headers=_BROWSER_HEADERS,
             ) as resp:
@@ -2338,6 +2427,10 @@ async def api_ads_payment(request: web.Request) -> web.Response:
             raise web.HTTPBadRequest(text="invalid bid_amount")
         if bid_amount < AD_MIN_STARTING_BID:
             raise web.HTTPConflict(text="bid_too_low")
+        if bid_amount > 100_000_000_000:
+            raise web.HTTPBadRequest(text="amount_out_of_range")
+        if len(url) > 500:
+            raise web.HTTPBadRequest(text="url_too_long")
         # Platforma URL manzilidan serverda aniqlanadi (klientga ishonilmaydi).
         category = fields.get("category")
         bid_id, payment_id = await create_ad_payment_new(
@@ -2461,7 +2554,9 @@ async def api_cancel_reservation(request: web.Request) -> web.Response:
 
     bot: Bot = request.app["bot"]
     donation = await get_donation(reservation["donation_id"])
-    await cancel_reservation(reservation_id)
+    # Shartli: shu orada saxiy yuborib qo'ygan bo'lsa, bekor qilinmaydi.
+    if not await cancel_reservation(reservation_id):
+        raise web.HTTPConflict()
     await set_donation_status(reservation["donation_id"], "available")
     await _refresh_channel_post(
         bot, request.app.get("bot_username"), reservation["donation_id"], "available"
@@ -2491,8 +2586,10 @@ async def api_delete_donation(request: web.Request) -> web.Response:
     if donation["status"] != "available":
         raise web.HTTPConflict()
 
+    # Shu orada kimdir band qilgan bo'lsa, o'chirilmaydi.
+    if not await delete_donation(donation_id):
+        raise web.HTTPConflict()
     await _remove_channel_post(request.app["bot"], donation)
-    await delete_donation(donation_id)
     return web.json_response({"ok": True})
 
 
@@ -2524,7 +2621,7 @@ async def api_create_donation(request: web.Request) -> web.Response:
     telegram_id = await _require_user_id(request)
     fields, photos = await _read_multipart_photos(request)
     category = fields.get("category")
-    description = (fields.get("description") or "").strip()
+    description = (fields.get("description") or "").strip()[:MAX_DESCRIPTION_LEN]
     if category not in CATEGORIES or not description:
         raise web.HTTPBadRequest(text="missing fields")
     # Ehson aniq 3 ta rasm bilan joylanadi.
@@ -2535,33 +2632,9 @@ async def api_create_donation(request: web.Request) -> web.Response:
     bot: Bot = request.app["bot"]
 
     # Rasmlar Telegram serverida file_id sifatida saqlanadi, uni olishning
-    # yagona yo'li — suratni yuborish. Foydalanuvchi bu xabarni bot
-    # sahifasida ko'rmasligi uchun file_id olingach darhol o'chiramiz
-    # (o'chirilgan xabarning file_id'si amal qilishda davom etadi).
-    if len(photos) == 1:
-        photo_bytes, filename = photos[0]
-        sent = await bot.send_photo(
-            chat_id=telegram_id,
-            photo=BufferedInputFile(photo_bytes, filename=filename),
-            disable_notification=True,
-        )
-        photo_file_ids = [sent.photo[-1].file_id]
-        sent_messages = [sent]
-    else:
-        media = [
-            InputMediaPhoto(media=BufferedInputFile(photo_bytes, filename=filename))
-            for photo_bytes, filename in photos
-        ]
-        sent_messages = await bot.send_media_group(
-            chat_id=telegram_id, media=media, disable_notification=True
-        )
-        photo_file_ids = [msg.photo[-1].file_id for msg in sent_messages]
-
-    for msg in sent_messages:
-        try:
-            await bot.delete_message(chat_id=telegram_id, message_id=msg.message_id)
-        except TelegramAPIError:
-            pass
+    # yagona yo'li — suratni yuborish (foydalanuvchi ko'rmasligi uchun
+    # file_id olingach darhol o'chiriladi).
+    photo_file_ids = await _upload_photos(bot, telegram_id, photos)
 
     donation_id = await create_donation(
         donor_id=telegram_id,
@@ -2577,7 +2650,7 @@ async def api_ship_reservation(request: web.Request) -> web.Response:
     telegram_id = await _require_user_id(request)
     reservation_id = int(request.match_info["id"])
     fields, photo_bytes, filename = await _read_multipart_photo(request)
-    receipt_note = (fields.get("receipt_note") or "").strip() or None
+    receipt_note = (fields.get("receipt_note") or "").strip()[:MAX_NOTE_LEN] or None
 
     reservation = await get_reservation(reservation_id)
     if not reservation or reservation["status"] != "reserved":
@@ -2594,24 +2667,16 @@ async def api_ship_reservation(request: web.Request) -> web.Response:
     # katta rasm bilan band qilmaslik uchun xabar darhol o'chiriladi
     # (o'chirilgan xabarning file_id'si amal qilishda davom etadi),
     # o'rniga qisqa matnli xabar + "Chekni ko'rish" tugmasi yuboriladi.
-    sent = await bot.send_photo(
-        chat_id=telegram_id,
-        photo=BufferedInputFile(photo_bytes, filename=filename),
-        disable_notification=True,
-    )
-    photo_file_id = sent.photo[-1].file_id
-    try:
-        await bot.delete_message(chat_id=telegram_id, message_id=sent.message_id)
-    except TelegramAPIError:
-        pass
+    photo_file_id = (await _upload_photos(bot, telegram_id, [(photo_bytes, filename)]))[0]
 
-    await set_reservation_shipped(reservation_id, photo_file_id, receipt_note)
+    if not await set_reservation_shipped(reservation_id, photo_file_id, receipt_note):
+        raise web.HTTPConflict()
     await set_donation_status(donation["id"], "shipped")
     await _refresh_channel_post(
         bot, request.app.get("bot_username"), donation["id"], "shipped"
     )
 
-    donor_message_id = await _send_tracked_message(
+    donor_message_id = await _notify(
         bot,
         telegram_id,
         reservation["donor_notify_message_id"],
@@ -2623,7 +2688,7 @@ async def api_ship_reservation(request: web.Request) -> web.Response:
     await set_donor_notify_message(reservation_id, donor_message_id)
 
     needy_lang = await _lang_for(reservation["needy_id"])
-    needy_message_id = await _send_tracked_message(
+    needy_message_id = await _notify(
         bot,
         reservation["needy_id"],
         reservation["needy_notify_message_id"],
@@ -2935,16 +3000,16 @@ def setup_api_routes(app: web.Application) -> None:
     app.router.add_post("/api/ads/{id:\\d+}/click", api_ads_click)
     app.router.add_get("/api/categories", api_categories)
     app.router.add_get("/api/donations", api_donations)
-    app.router.add_get("/api/donation/{id}", api_donation)
+    app.router.add_get("/api/donation/{id:\\d+}", api_donation)
     app.router.add_get("/api/my-donations", api_my_donations)
     app.router.add_get("/api/my-requests", api_my_requests)
     app.router.add_post("/api/reservations", api_create_reservation)
-    app.router.add_post("/api/reservations/{id}/receive", api_confirm_received)
-    app.router.add_post("/api/reservations/{id}/ship", api_ship_reservation)
-    app.router.add_post("/api/reservations/{id}/cancel", api_cancel_reservation)
+    app.router.add_post("/api/reservations/{id:\\d+}/receive", api_confirm_received)
+    app.router.add_post("/api/reservations/{id:\\d+}/ship", api_ship_reservation)
+    app.router.add_post("/api/reservations/{id:\\d+}/cancel", api_cancel_reservation)
     app.router.add_post("/api/donations", api_create_donation)
-    app.router.add_post("/api/donations/{id}/delete", api_delete_donation)
-    app.router.add_post("/api/donations/{id}/like", api_toggle_donation_like)
-    app.router.add_post("/api/donations/{id}/share", api_share_donation)
+    app.router.add_post("/api/donations/{id:\\d+}/delete", api_delete_donation)
+    app.router.add_post("/api/donations/{id:\\d+}/like", api_toggle_donation_like)
+    app.router.add_post("/api/donations/{id:\\d+}/share", api_share_donation)
     app.router.add_get("/api/photo/{file_id}", api_photo)
-    app.router.add_get("/d/{id}", donation_share_page)
+    app.router.add_get("/d/{id:\\d+}", donation_share_page)
