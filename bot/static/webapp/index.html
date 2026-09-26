@@ -255,7 +255,7 @@
     60% { transform: translateX(7px); }
     80% { transform: translateX(-4px); }
   }
-  /* O'chirilgan ehson: 😓 Telegram'dagidek jonli (animatsion) emoji —
+  /* Oynalardagi jonli (animatsion) emoji: 😓 o'chirildi, ❌ bron bekor —
      Noto Animated Emoji (CC BY 4.0), oddiy emoji o'lchamida. */
   .toast-emoji-anim { display: block; width: 48px; height: 48px; margin: 0 auto 12px; }
   .toast-emoji.pop { position: relative; display: inline-block; animation: toastPopEmoji 1.1s ease-in-out infinite; }
@@ -1118,6 +1118,7 @@
       receipt_tab: "Chek", download_receipt: "Chekni yuklab olish",
       donation_saved: "Ehsoningiz muvaffaqiyatli joylandi!",
       donation_deleted: "Joylangan ehsoningiz o'chirildi",
+      reservation_cancelled: "Band qilingan ehson bekor qilindi",
       shipment_saved: "Chek yuklandi, Muhtojga xabar berildi!",
       stats_label: "Ehsonlar", delivered_suffix: "dona ehsonlar o'z egalariga yetkazildi",
       month_names: ["Yanvar", "Fevral", "Mart", "Aprel", "May", "Iyun", "Iyul", "Avgust", "Sentyabr", "Oktyabr", "Noyabr", "Dekabr"],
@@ -1228,6 +1229,7 @@
       receipt_tab: "Чек", download_receipt: "Скачать чек",
       donation_saved: "Ваше пожертвование добавлено!",
       donation_deleted: "Ваше пожертвование удалено",
+      reservation_cancelled: "Бронь пожертвования отменена",
       shipment_saved: "Чек загружен, нуждающийся уведомлён!",
       stats_label: "Всего пожертвований", delivered_suffix: "доставлено",
       month_names: ["Января", "Февраля", "Марта", "Апреля", "Мая", "Июня", "Июля", "Августа", "Сентября", "Октября", "Ноября", "Декабря"],
@@ -1338,6 +1340,7 @@
       receipt_tab: "Receipt", download_receipt: "Download receipt",
       donation_saved: "Your donation has been posted!",
       donation_deleted: "Your donation has been deleted",
+      reservation_cancelled: "Your reservation has been cancelled",
       shipment_saved: "Receipt uploaded, the recipient was notified!",
       stats_label: "Total donations", delivered_suffix: "delivered",
       month_names: ["January", "February", "March", "April", "May", "June", "July", "August", "September", "October", "November", "December"],
@@ -1448,6 +1451,7 @@
       receipt_tab: "Чек", download_receipt: "Чекті жүктеп алу",
       donation_saved: "Қайырыңыз жарияланды!",
       donation_deleted: "Қайырыңыз жойылды",
+      reservation_cancelled: "Брондалған қайыр болдырылмады",
       shipment_saved: "Чек жүктелді, мұқтажға хабарланды!",
       stats_label: "Қайырлар", delivered_suffix: "қайыр жеткізілді",
       month_names: ["Қаңтар", "Ақпан", "Наурыз", "Сәуір", "Мамыр", "Маусым", "Шілде", "Тамыз", "Қыркүйек", "Қазан", "Қараша", "Желтоқсан"],
@@ -1550,6 +1554,7 @@
       receipt_tab: "Чек", download_receipt: "Боргирии чек",
       donation_saved: "Хайрияи шумо ҷойгир карда шуд!",
       donation_deleted: "Хайрияи шумо нест карда шуд",
+      reservation_cancelled: "Хайрияи бандшуда бекор карда шуд",
       shipment_saved: "Чек боркунӣ шуд, ба ниёзманд хабар дода шуд!",
       stats_label: "Хайрияҳо", delivered_suffix: "адад хайрия расонида шуд",
       month_names: ["Январ", "Феврал", "Март", "Апрел", "Май", "Июн", "Июл", "Август", "Сентябр", "Октябр", "Ноябр", "Декабр"],
@@ -1652,6 +1657,7 @@
       receipt_tab: "Чек", download_receipt: "Чекти жүктөп алуу",
       donation_saved: "Садагаңыз жайгаштырылды!",
       donation_deleted: "Садагаңыз өчүрүлдү",
+      reservation_cancelled: "Брондолгон садага жокко чыгарылды",
       shipment_saved: "Чек жүктөлдү, мукташка билдирилди!",
       stats_label: "Садагалар", delivered_suffix: "садага жеткирилди",
       month_names: ["Январь", "Февраль", "Март", "Апрель", "Май", "Июнь", "Июль", "Август", "Сентябрь", "Октябрь", "Ноябрь", "Декабрь"],
@@ -1754,6 +1760,7 @@
       receipt_tab: "Çek", download_receipt: "Çeki ýükläp almak",
       donation_saved: "Sadakaňyz ýerleşdirildi!",
       donation_deleted: "Sadakaňyz pozuldy",
+      reservation_cancelled: "Bronlanan sadaka ýatyryldy",
       shipment_saved: "Çek ýüklendi, mätäje habar berildi!",
       stats_label: "Sadakalar", delivered_suffix: "sadaka gowşuryldy",
       month_names: ["Ýanwar", "Fewral", "Mart", "Aprel", "Maý", "Iýun", "Iýul", "Awgust", "Sentýabr", "Oktýabr", "Noýabr", "Dekabr"],
@@ -2002,13 +2009,14 @@
       '<div class="toast-text"></div></div>';
     var emojiEl = overlay.querySelector(".toast-emoji");
     emojiEl.textContent = emoji || "\uD83C\uDF89";
-    if (emojiClass === "anim-sweat") {
-      // Jonli emoji rasm; yuklanmasa oddiy emoji qoladi.
+    if (emojiClass && emojiClass.indexOf("anim:") === 0) {
+      // "anim:<fayl>" — jonli emoji rasm (/webapp-assets/); yuklanmasa
+      // oddiy emoji qoladi.
       var animImg = document.createElement("img");
       animImg.className = "toast-emoji-anim";
       animImg.alt = emojiEl.textContent;
       animImg.onload = function () { if (emojiEl.parentNode) emojiEl.parentNode.replaceChild(animImg, emojiEl); };
-      animImg.src = "/webapp-assets/sweat.webp";
+      animImg.src = "/webapp-assets/" + emojiClass.slice(5);
     } else if (emojiClass) {
       emojiEl.classList.add(emojiClass);
       // "drive" \u2014 kartochkadagi .truck-road bilan bir xil: emoji ostida
@@ -3228,7 +3236,7 @@
             api("POST", "/api/donations/" + donationId + "/delete", {})
               .then(function () {
                 if (tg && tg.HapticFeedback) tg.HapticFeedback.notificationOccurred("success");
-                var deletedOverlay = showSuccess(tr("donation_deleted"), "\uD83D\uDE13", "anim-sweat");
+                var deletedOverlay = showSuccess(tr("donation_deleted"), "\uD83D\uDE13", "anim:sweat.webp");
                 setTimeout(function () {
                   if (deletedOverlay.parentNode) deletedOverlay.parentNode.removeChild(deletedOverlay);
                   renderDonorCabinet();
@@ -3574,12 +3582,18 @@
         });
         app.querySelectorAll("[data-cancel]").forEach(function (btn) {
           btn.addEventListener("click", function () {
+            // Jonli ❌ rasm oldindan yuklanadi — oyna ochilganda darhol ko'rinsin.
+            (new Image()).src = "/webapp-assets/cross.webp";
             if (!window.confirm(tr("confirm_cancel_reservation"))) return;
             var reservationId = btn.getAttribute("data-cancel");
             api("POST", "/api/reservations/" + reservationId + "/cancel", {})
               .then(function () {
                 if (tg && tg.HapticFeedback) tg.HapticFeedback.notificationOccurred("success");
-                renderNeedyCabinet();
+                var cancelOverlay = showSuccess(tr("reservation_cancelled"), "\u274C", "anim:cross.webp");
+                setTimeout(function () {
+                  if (cancelOverlay.parentNode) cancelOverlay.parentNode.removeChild(cancelOverlay);
+                  renderNeedyCabinet();
+                }, 4000);
               })
               .catch(function () { showError(); });
           });

@@ -155,4 +155,4 @@ ishlatilsa, `WEBAPP_URL` environment variable'ni qo'lda kiriting (masalan
 
 ## Mualliflik
 
-Animatsion emoji (`bot/static/webapp/assets/sweat.webp`): [Noto Animated Emoji](https://googlefonts.github.io/noto-emoji-animation/), Google, CC BY 4.0.
+Animatsion emojilar (`bot/static/webapp/assets/*.webp`): [Noto Animated Emoji](https://googlefonts.github.io/noto-emoji-animation/), Google, CC BY 4.0.
