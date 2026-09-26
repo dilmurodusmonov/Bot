@@ -15,7 +15,7 @@ from urllib.parse import quote, urljoin, urlparse
 
 import aiohttp
 from aiogram import Bot
-from aiogram.exceptions import TelegramAPIError
+from aiogram.exceptions import TelegramAPIError, TelegramRetryAfter
 from aiogram.types import (
     BufferedInputFile,
     InlineKeyboardButton,
@@ -70,6 +70,7 @@ from bot.database import (
     get_home_stats,
     get_user_language,
     get_available_donations,
+    get_available_donations_page,
     get_donation,
     get_donations_by_donor,
     get_like_info,
@@ -173,10 +174,39 @@ def _channel_keyboard(
     )
 
 
-async def _download_photo(bot: Bot, file_id: str) -> bytes:
-    file = await bot.get_file(file_id)
-    buf = await bot.download_file(file.file_path)
-    return buf.read()
+# --- kanal navbati ------------------------------------------------------------
+# Telegram bitta kanalga daqiqasiga ~20 tadan ko'p xabar/tahrirga ruxsat
+# bermaydi. Barcha kanal amallari (post, holat tahriri, o'chirish) bitta
+# navbatdan, orasida kamida _CHANNEL_MIN_INTERVAL soniya bilan o'tadi;
+# limitga urilsa (429) Telegram aytgan vaqtcha kutib qayta uriniladi.
+# Amallar fonda bajariladi — foydalanuvchi javobni kutib qolmaydi.
+_channel_lock = asyncio.Lock()
+_CHANNEL_MIN_INTERVAL = 3.2
+_channel_last_call = 0.0
+
+
+async def _tg_retry(factory, attempts: int = 5):
+    """Telegram so'rovini 429 (RetryAfter) bo'lsa kutib qayta yuboradi."""
+    for attempt in range(attempts):
+        try:
+            return await factory()
+        except TelegramRetryAfter as e:
+            if attempt == attempts - 1:
+                raise
+            logger.warning("Telegram limiti: %s s kutilmoqda", e.retry_after)
+            await asyncio.sleep(e.retry_after + 1)
+
+
+async def _channel_call(factory):
+    global _channel_last_call
+    async with _channel_lock:
+        wait = _channel_last_call + _CHANNEL_MIN_INTERVAL - time.monotonic()
+        if wait > 0:
+            await asyncio.sleep(wait)
+        try:
+            return await _tg_retry(factory)
+        finally:
+            _channel_last_call = time.monotonic()
 
 
 async def _channel_photo(bot: Bot, photo_ids: list[str]):
@@ -185,8 +215,11 @@ async def _channel_photo(bot: Bot, photo_ids: list[str]):
     tugma aynan surat kengligida turadi."""
     if len(photo_ids) == 1:
         return photo_ids[0]
-    photos = [await _download_photo(bot, pid) for pid in photo_ids]
-    return BufferedInputFile(build_collage(photos), filename="ehson.jpg")
+    photos = [await _get_photo_bytes(bot, pid) for pid in photo_ids]
+    # Kollaj (Pillow) protsessorni band qiladi — alohida oqimda yasaladi,
+    # shunda server shu paytda boshqa so'rovlarga javob berishda davom etadi.
+    collage = await asyncio.to_thread(build_collage, photos)
+    return BufferedInputFile(collage, filename="ehson.jpg")
 
 
 async def _publish_to_channel(
@@ -206,18 +239,26 @@ async def _publish_to_channel(
         photo_ids = _donation_photo_ids(donation)
         if not photo_ids:
             return
-        msg = await bot.send_photo(
+        photo = await _channel_photo(bot, photo_ids)
+        msg = await _channel_call(lambda: bot.send_photo(
             chat_id=CHANNEL_ID,
-            photo=await _channel_photo(bot, photo_ids),
+            photo=photo,
             caption=_channel_caption(bot_username, donation_id, "available"),
             reply_markup=_channel_keyboard(bot_username, donation_id, "available"),
-        )
+        ))
         await set_donation_channel_messages(donation_id, [msg.message_id])
+        # Post chiqquncha ehson band qilingan/o'chirilgan bo'lishi mumkin —
+        # oxirgi holat postga qo'llanadi.
+        current = await get_donation(donation_id)
+        if not current:
+            await _channel_call(lambda: bot.delete_message(chat_id=CHANNEL_ID, message_id=msg.message_id))
+        elif current["status"] != "available":
+            await _refresh_channel_post_now(bot, bot_username, donation_id, current["status"])
     except Exception:
         logger.exception("Kanalga e'lon qilib bo'lmadi (ehson %s)", donation_id)
 
 
-async def _refresh_channel_post(
+async def _refresh_channel_post_now(
     bot: Bot, bot_username: Optional[str], donation_id: int, status: str
 ) -> None:
     """Post sarlavhasidagi holatni yangilaydi va ehson band qilinganda
@@ -229,25 +270,36 @@ async def _refresh_channel_post(
     if not message_ids:
         return
     try:
-        await bot.edit_message_caption(
+        await _channel_call(lambda: bot.edit_message_caption(
             chat_id=CHANNEL_ID,
             message_id=message_ids[0],
             caption=_channel_caption(bot_username, donation_id, status),
             reply_markup=_channel_keyboard(bot_username, donation_id, status),
-        )
+        ))
     except Exception:
         logger.exception("Kanal postini yangilab bo'lmadi (ehson %s)", donation_id)
+
+
+async def _refresh_channel_post(
+    bot: Bot, bot_username: Optional[str], donation_id: int, status: str
+) -> None:
+    """Kanal postini fonda (navbat orqali) yangilaydi — API javobi kutmaydi."""
+    _spawn(_refresh_channel_post_now(bot, bot_username, donation_id, status))
+
+
+async def _remove_channel_post_now(bot: Bot, message_ids: list[int]) -> None:
+    for message_id in message_ids:
+        try:
+            await _channel_call(lambda mid=message_id: bot.delete_message(chat_id=CHANNEL_ID, message_id=mid))
+        except Exception:
+            logger.exception("Kanal postini o'chirib bo'lmadi (xabar %s)", message_id)
 
 
 async def _remove_channel_post(bot: Bot, donation: dict) -> None:
     message_ids = _channel_message_ids(donation)
     if not CHANNEL_ID or not message_ids:
         return
-    for message_id in message_ids:
-        try:
-            await bot.delete_message(chat_id=CHANNEL_ID, message_id=message_id)
-        except Exception:
-            logger.exception("Kanal postini o'chirib bo'lmadi (xabar %s)", message_id)
+    _spawn(_remove_channel_post_now(bot, message_ids))
 
 
 def _auth_telegram_id(request: web.Request) -> Optional[int]:
@@ -398,19 +450,35 @@ async def api_donations(request: web.Request) -> web.Response:
     if category not in CATEGORIES:
         raise web.HTTPBadRequest(text="invalid category")
     lang = await _lang_for(telegram_id)
-    donations = await get_available_donations(category)
+    # ?limit=N[&before=<id>] — sahifalab yuklash: {"items": [...], "next": id|null}.
+    # limit berilmasa (eski ilova versiyasi) avvalgidek butun ro'yxat qaytadi.
+    paged = "limit" in request.query
+    if paged:
+        try:
+            limit = max(1, min(int(request.query["limit"]), 50))
+            before = int(request.query["before"]) if request.query.get("before") else None
+        except ValueError:
+            raise web.HTTPBadRequest(text="invalid paging")
+        donations = await get_available_donations_page(category, limit + 1, before)
+        has_more = len(donations) > limit
+        donations = donations[:limit]
+    else:
+        donations = await get_available_donations(category)
     likes = await get_like_info([d["id"] for d in donations], telegram_id)
-    return web.json_response(
-        [
-            _donation_json(
-                d, lang,
-                like_count=likes.get(d["id"], {}).get("count", 0),
-                liked_by_me=likes.get(d["id"], {}).get("liked", False),
-                viewer_id=telegram_id,
-            )
-            for d in donations
-        ]
-    )
+    items = [
+        _donation_json(
+            d, lang,
+            like_count=likes.get(d["id"], {}).get("count", 0),
+            liked_by_me=likes.get(d["id"], {}).get("liked", False),
+            viewer_id=telegram_id,
+        )
+        for d in donations
+    ]
+    if paged:
+        return web.json_response(
+            {"items": items, "next": donations[-1]["id"] if has_more and donations else None}
+        )
+    return web.json_response(items)
 
 
 async def api_donation(request: web.Request) -> web.Response:
@@ -2465,9 +2533,7 @@ async def api_create_donation(request: web.Request) -> web.Response:
         photo_file_ids=photo_file_ids,
         description=description,
     )
-    asyncio.create_task(
-        _publish_to_channel(bot, request.app.get("bot_username"), donation_id)
-    )
+    _spawn(_publish_to_channel(bot, request.app.get("bot_username"), donation_id))
     return web.json_response({"ok": True, "donation_id": donation_id})
 
 
@@ -2554,30 +2620,36 @@ def _photo_cache_put(file_id: str, body: bytes) -> None:
 
 
 async def _download_photo(bot: Bot, file_id: str) -> bytes:
-    file = await bot.get_file(file_id)
+    file = await _tg_retry(lambda: bot.get_file(file_id))
     buf = await bot.download_file(file.file_path)
     return buf.read()
+
+
+async def _get_photo_bytes(bot: Bot, file_id: str) -> bytes:
+    """Rasm baytlari: avval keshdan, bo'lmasa Telegram'dan (bir vaqtdagi
+    bir xil so'rovlar bitta yuklab olishni kutadi)."""
+    body = _PHOTO_CACHE.get(file_id)
+    if body is not None:
+        _PHOTO_CACHE.move_to_end(file_id)
+        return body
+    future = _photo_inflight.get(file_id)
+    if future is None:
+        future = asyncio.ensure_future(_download_photo(bot, file_id))
+        _photo_inflight[file_id] = future
+        future.add_done_callback(lambda _f: _photo_inflight.pop(file_id, None))
+    body = await asyncio.shield(future)
+    _photo_cache_put(file_id, body)
+    return body
 
 
 async def api_photo(request: web.Request) -> web.Response:
     file_id = request.match_info["file_id"]
     if request.headers.get("If-None-Match") == f'"{file_id}"':
         return web.Response(status=304, headers=_PHOTO_HEADERS)
-    body = _PHOTO_CACHE.get(file_id)
-    if body is not None:
-        _PHOTO_CACHE.move_to_end(file_id)
-    else:
-        # Bir vaqtda kelgan bir xil so'rovlar bitta yuklab olishni kutadi.
-        future = _photo_inflight.get(file_id)
-        if future is None:
-            future = asyncio.ensure_future(_download_photo(request.app["bot"], file_id))
-            _photo_inflight[file_id] = future
-            future.add_done_callback(lambda _f: _photo_inflight.pop(file_id, None))
-        try:
-            body = await asyncio.shield(future)
-        except Exception:
-            raise web.HTTPNotFound()
-        _photo_cache_put(file_id, body)
+    try:
+        body = await _get_photo_bytes(request.app["bot"], file_id)
+    except Exception:
+        raise web.HTTPNotFound()
     return web.Response(
         body=body, content_type="image/jpeg",
         headers={**_PHOTO_HEADERS, "ETag": f'"{file_id}"'},

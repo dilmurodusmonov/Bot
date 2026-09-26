@@ -117,6 +117,7 @@ async def _create_indexes(conn: asyncpg.Connection) -> None:
     """Tez-tez ishlatiladigan so'rovlar uchun indekslar (sahifalar tez ochilishi uchun)."""
     for sql in (
         "CREATE INDEX IF NOT EXISTS donations_cat_status_created ON donations (category, status, created_at DESC)",
+        "CREATE INDEX IF NOT EXISTS donations_cat_status_id ON donations (category, status, id DESC)",
         "CREATE INDEX IF NOT EXISTS donations_donor ON donations (donor_id)",
         "CREATE INDEX IF NOT EXISTS donations_created ON donations (created_at)",
         "CREATE INDEX IF NOT EXISTS reservations_donation ON reservations (donation_id, created_at DESC)",
@@ -456,6 +457,21 @@ async def get_available_donations(category: str) -> list[dict[str, Any]]:
     return [dict(row) for row in rows]
 
 
+async def get_available_donations_page(
+    category: str, limit: int, before_id: Optional[int] = None
+) -> list[dict[str, Any]]:
+    """Bo'limdagi mavjud ehsonlar sahifalab (eng yangisidan): keyingi
+    sahifa uchun oldingi sahifaning oxirgi id'si (before_id) beriladi."""
+    rows = await _get_pool().fetch(
+        """SELECT * FROM donations
+           WHERE category = $1 AND status = 'available'
+             AND ($2::int IS NULL OR id < $2)
+           ORDER BY id DESC LIMIT $3""",
+        category, before_id, limit,
+    )
+    return [dict(row) for row in rows]
+
+
 async def get_donations_by_donor(donor_id: int) -> list[dict[str, Any]]:
     rows = await _get_pool().fetch(
         """SELECT * FROM donations WHERE donor_id = $1
@@ -574,15 +590,36 @@ async def get_reservations_by_needy(needy_id: int) -> list[dict[str, Any]]:
     return [dict(row) for row in rows]
 
 
-async def get_reservations_pending_ship() -> list[dict[str, Any]]:
-    """Saxiy hali yo'lga chiqarmagan bronlar — eslatma yuborish uchun."""
-    rows = await _get_pool().fetch("SELECT * FROM reservations WHERE status = 'reserved'")
+async def get_due_ship_reminders(first, second, repeat) -> list[dict[str, Any]]:
+    """Saxiy hali yo'lga chiqarmagan va eslatma vaqti kelgan bronlar —
+    ehson (donor_id, tavsif) va saxiy tili bilan birga, bitta so'rovda."""
+    rows = await _get_pool().fetch(
+        """SELECT r.*, d.donor_id, d.description, u.language AS donor_language
+           FROM reservations r
+           JOIN donations d ON d.id = r.donation_id
+           LEFT JOIN users u ON u.telegram_id = d.donor_id
+           WHERE r.status = 'reserved' AND (
+                 (r.donor_reminder_count = 0 AND r.created_at + $1::interval <= now())
+              OR (r.donor_reminder_count = 1 AND r.donor_last_reminder_at + $2::interval <= now())
+              OR (r.donor_reminder_count >= 2 AND r.donor_last_reminder_at + $3::interval <= now()))""",
+        first, second, repeat,
+    )
     return [dict(row) for row in rows]
 
 
-async def get_reservations_pending_receive() -> list[dict[str, Any]]:
-    """Muhtoj hali qabul qilganini tasdiqlamagan bronlar — eslatma yuborish uchun."""
-    rows = await _get_pool().fetch("SELECT * FROM reservations WHERE status = 'shipped'")
+async def get_due_receive_reminders(first, second, repeat) -> list[dict[str, Any]]:
+    """Muhtoj hali qabul qilganini tasdiqlamagan va eslatma vaqti kelgan
+    bronlar — muhtoj tili bilan birga, bitta so'rovda."""
+    rows = await _get_pool().fetch(
+        """SELECT r.*, u.language AS needy_language
+           FROM reservations r
+           LEFT JOIN users u ON u.telegram_id = r.needy_id
+           WHERE r.status = 'shipped' AND (
+                 (r.needy_reminder_count = 0 AND r.shipped_at + $1::interval <= now())
+              OR (r.needy_reminder_count = 1 AND r.needy_last_reminder_at + $2::interval <= now())
+              OR (r.needy_reminder_count >= 2 AND r.needy_last_reminder_at + $3::interval <= now()))""",
+        first, second, repeat,
+    )
     return [dict(row) for row in rows]
 
 
