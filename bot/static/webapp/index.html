@@ -255,14 +255,12 @@
     60% { transform: translateX(7px); }
     80% { transform: translateX(-4px); }
   }
-  /* O'chirilgan ehson: 😓 og'maydi — turgan joyida boshini yengil
-     chapga-o'ngga buradi ("yo'q" ishorasi, vertikal o'q atrofida). */
-  .toast-emoji.head-shake { display: inline-block; animation: toastHeadTurn 2.8s ease-in-out infinite; }
-  @keyframes toastHeadTurn {
-    0%, 72%, 100% { transform: perspective(160px) rotateY(0deg); }
-    16% { transform: perspective(160px) rotateY(-28deg); }
-    36% { transform: perspective(160px) rotateY(28deg); }
-    56% { transform: perspective(160px) rotateY(-16deg); }
+  /* O'chirilgan ehson: 😓 turgan joyida globusdek vertikal o'q atrofida
+     sekin, to'liq (360°) aylanib turadi. */
+  .toast-emoji.head-shake { display: inline-block; animation: toastGlobeSpin 3s linear infinite; }
+  @keyframes toastGlobeSpin {
+    from { transform: perspective(200px) rotateY(0deg); }
+    to { transform: perspective(200px) rotateY(360deg); }
   }
   .toast-emoji.pop { position: relative; display: inline-block; animation: toastPopEmoji 1.1s ease-in-out infinite; }
   @keyframes toastPopEmoji {
