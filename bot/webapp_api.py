@@ -488,7 +488,7 @@ async def api_my_requests(request: web.Request) -> web.Response:
 
 # Telegram'da inline tugma kengligi xabar pufagi kengligiga teng. Oxiridagi
 # ko'rinmas (U+2800) qator pufakni to'liq kenglikka yoyadi — "Pochta chekini
-# yuklash" tugmasi ham "Chekni ko'rish" kabi keng chiqadi.
+# yuklash", "Ehsonni ko'rish", "Chekni ko'rish" tugmalari bir xil keng chiqadi.
 _WIDE_BUBBLE_PAD = "\n" + "⠀" * 36
 
 
@@ -2506,7 +2506,7 @@ async def api_ship_reservation(request: web.Request) -> web.Response:
         bot,
         telegram_id,
         reservation["donor_notify_message_id"],
-        t(lang, "shipped_saved_donor"),
+        t(lang, "shipped_saved_donor") + _WIDE_BUBBLE_PAD,
         reply_markup=_receipt_keyboard(
             lang, reservation_id, "donor_cabinet", button_text_key="view_donation_button"
         ),
@@ -2518,7 +2518,7 @@ async def api_ship_reservation(request: web.Request) -> web.Response:
         bot,
         reservation["needy_id"],
         reservation["needy_notify_message_id"],
-        t(needy_lang, "shipped_notify_needy"),
+        t(needy_lang, "shipped_notify_needy") + _WIDE_BUBBLE_PAD,
         reply_markup=_receipt_keyboard(needy_lang, reservation_id, "needy_cabinet", "receipt"),
     )
     await set_needy_notify_message(reservation_id, needy_message_id)
