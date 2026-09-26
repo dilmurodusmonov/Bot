@@ -1080,7 +1080,8 @@
       shipment_sent: "Ehson yo'lga chiqdi!",
       fill_all: "Iltimos, barcha maydonlarni to'ldiring.",
       photo_label: "Rasm",
-      photo_note: "Ehson rasmini albatta biriktiring (eng ko'pi 3 ta).",
+      photo_note: "Ehsonning 3 ta rasmini albatta biriktiring.",
+      photo_three_required: "Iltimos, ehsonning 3 ta rasmini biriktiring (hozir {n} ta).",
       photo_required: "Iltimos, rasm tanlang.",
       receipt_photo_label: "Chekni yuklang",
       receipt_note_label: "Pochta nomini kiriting",
@@ -1186,7 +1187,8 @@
       shipment_sent: "Пожертвование в пути!",
       fill_all: "Пожалуйста, заполните все поля.",
       photo_label: "Фото",
-      photo_note: "Обязательно прикрепите фото пожертвования (максимум 3).",
+      photo_note: "Обязательно прикрепите 3 фото пожертвования.",
+      photo_three_required: "Пожалуйста, прикрепите 3 фото пожертвования (сейчас {n}).",
       photo_required: "Пожалуйста, выберите фото.",
       receipt_photo_label: "Загрузите чек",
       receipt_note_label: "Введите название почты",
@@ -1292,7 +1294,8 @@
       shipment_sent: "Your donation is on the way!",
       fill_all: "Please fill in all fields.",
       photo_label: "Photo",
-      photo_note: "Please attach a photo of the donation (up to 3).",
+      photo_note: "Please attach 3 photos of the donation.",
+      photo_three_required: "Please attach 3 photos of the donation (now {n}).",
       photo_required: "Please choose a photo.",
       receipt_photo_label: "Upload the receipt",
       receipt_note_label: "Enter the courier name",
@@ -1398,7 +1401,8 @@
       shipment_sent: "Қайыр жолда!",
       fill_all: "Барлық өрістерді толтырыңыз.",
       photo_label: "Сурет",
-      photo_note: "Қайыр суретін міндетті түрде тіркеңіз (ең көбі 3).",
+      photo_note: "Қайырдың 3 суретін міндетті түрде тіркеңіз.",
+      photo_three_required: "Қайырдың 3 суретін тіркеңіз (қазір {n}).",
       photo_required: "Сурет таңдаңыз.",
       receipt_photo_label: "Чекті жүктеңіз",
       receipt_note_label: "Пошта атауын енгізіңіз",
@@ -1496,7 +1500,8 @@
       shipment_sent: "Хайрия дар роҳ аст!",
       fill_all: "Лутфан, ҳамаи майдонҳоро пур кунед.",
       photo_label: "Расм",
-      photo_note: "Ҳатман расми хайрияро замима кунед (ҳадди аксар 3 адад).",
+      photo_note: "Ҳатман 3 расми хайрияро замима кунед.",
+      photo_three_required: "Лутфан, 3 расми хайрияро замима кунед (ҳозир {n} адад).",
       photo_required: "Лутфан, расм интихоб кунед.",
       receipt_photo_label: "Чекро бор кунед",
       receipt_note_label: "Номи почтаро ворид кунед",
@@ -1594,7 +1599,8 @@
       shipment_sent: "Кайрымдуулук жолдо!",
       fill_all: "Бардык талааларды толтуруңуз.",
       photo_label: "Сүрөт",
-      photo_note: "Садага сүрөтүн милдеттүү түрдө тиркеңиз (эң көбү 3).",
+      photo_note: "Садаганын 3 сүрөтүн милдеттүү түрдө тиркеңиз.",
+      photo_three_required: "Садаганын 3 сүрөтүн тиркеңиз (азыр {n}).",
       photo_required: "Сүрөт тандаңыз.",
       receipt_photo_label: "Чекти жүктөңүз",
       receipt_note_label: "Почтанын атын киргизиңиз",
@@ -1692,7 +1698,8 @@
       shipment_sent: "Sadaka ýolda!",
       fill_all: "Ähli meýdanlary dolduryň.",
       photo_label: "Surat",
-      photo_note: "Sadakanyň suratyny hökman goşuň (iň köp 3 sanysy).",
+      photo_note: "Sadakanyň 3 suratyny hökman goşuň.",
+      photo_three_required: "Sadakanyň 3 suratyny goşuň (häzir {n}).",
       photo_required: "Surat saýlaň.",
       receipt_photo_label: "Çeki ýükläň",
       receipt_note_label: "Poçtanyň adyny giriziň",
@@ -2906,7 +2913,11 @@
         var category = selectedCategory;
         var description = document.getElementById("desc-input").value.trim();
         if (!description) { showError(tr("fill_all")); return; }
-        if (!selectedPhotoFiles.length) { showError(tr("photo_required")); return; }
+        // Ehson aniq 3 ta rasm bilan joylanadi.
+        if (selectedPhotoFiles.length < 3) {
+          showError(trf("photo_three_required", { n: String(selectedPhotoFiles.length) }));
+          return;
+        }
 
         if (tg) tg.MainButton.showProgress();
         Promise.all(selectedPhotoFiles.map(function (file) { return compressImage(file); }))
