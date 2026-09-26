@@ -165,6 +165,12 @@ async def _migrate_donation_channel_message(conn: asyncpg.Connection) -> None:
     await conn.execute(
         "ALTER TABLE donations ADD COLUMN IF NOT EXISTS channel_message_ids TEXT"
     )
+    # Kanal postida hozir ko'rsatilayotgan holat. status bilan mos kelmasa
+    # (tahrir limitga urilgan, server qayta ishga tushgan va h.k.), post
+    # fon tekshiruvida qayta tahrirlanadi.
+    await conn.execute(
+        "ALTER TABLE donations ADD COLUMN IF NOT EXISTS channel_status TEXT"
+    )
 
 
 async def _migrate_reservation_notify_messages(conn: asyncpg.Connection) -> None:
@@ -495,6 +501,24 @@ async def set_donation_channel_messages(
         donation_id,
         ",".join(str(mid) for mid in message_ids) if message_ids else None,
     )
+
+
+async def set_donation_channel_status(donation_id: int, status: Optional[str]) -> None:
+    await _get_pool().execute(
+        "UPDATE donations SET channel_status = $2 WHERE id = $1", donation_id, status
+    )
+
+
+async def get_channel_out_of_sync(limit: int = 20) -> list[dict[str, Any]]:
+    """Kanal posti ehsonning hozirgi holatini ko'rsatmayotgan ehsonlar."""
+    rows = await _get_pool().fetch(
+        """SELECT id, status FROM donations
+           WHERE channel_message_ids IS NOT NULL AND channel_message_ids <> ''
+             AND channel_status IS DISTINCT FROM status
+           ORDER BY id DESC LIMIT $1""",
+        limit,
+    )
+    return [dict(row) for row in rows]
 
 
 async def delete_donation(donation_id: int) -> None:

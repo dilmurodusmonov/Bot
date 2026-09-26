@@ -15,7 +15,7 @@ from urllib.parse import quote, urljoin, urlparse
 
 import aiohttp
 from aiogram import Bot
-from aiogram.exceptions import TelegramAPIError, TelegramRetryAfter
+from aiogram.exceptions import TelegramAPIError, TelegramBadRequest, TelegramRetryAfter
 from aiogram.types import (
     BufferedInputFile,
     InlineKeyboardButton,
@@ -78,6 +78,8 @@ from bot.database import (
     get_category_stats,
     get_reservations_by_needy,
     set_donation_channel_messages,
+    set_donation_channel_status,
+    get_channel_out_of_sync,
     set_donation_status,
     set_donor_notify_message,
     set_needy_notify_message,
@@ -168,7 +170,9 @@ def _channel_keyboard(
     tashlanadi."""
     url = _app_url(bot_username, donation_id)
     if not url or status != "available":
-        return None
+        # Bo'sh klaviatura aniq yuboriladi — aks holda tahrirda eski
+        # "Ehsonni ko'rish" tugmasi band qilingan postda qolib ketadi.
+        return InlineKeyboardMarkup(inline_keyboard=[])
     return InlineKeyboardMarkup(
         inline_keyboard=[[InlineKeyboardButton(text=CHANNEL_OPEN_BUTTON, url=url)]]
     )
@@ -247,6 +251,7 @@ async def _publish_to_channel(
             reply_markup=_channel_keyboard(bot_username, donation_id, "available"),
         ))
         await set_donation_channel_messages(donation_id, [msg.message_id])
+        await set_donation_channel_status(donation_id, "available")
         # Post chiqquncha ehson band qilingan/o'chirilgan bo'lishi mumkin —
         # oxirgi holat postga qo'llanadi.
         current = await get_donation(donation_id)
@@ -259,16 +264,18 @@ async def _publish_to_channel(
 
 
 async def _refresh_channel_post_now(
-    bot: Bot, bot_username: Optional[str], donation_id: int, status: str
+    bot: Bot, bot_username: Optional[str], donation_id: int, status: Optional[str] = None
 ) -> None:
     """Post sarlavhasidagi holatni yangilaydi va ehson band qilinganda
-    tugmani olib tashlaydi."""
+    tugmani olib tashlaydi. Navbat kelganda bazadagi eng oxirgi holat
+    qo'llanadi (tez-tez o'zgarsa ham post oxirgi holatda qoladi)."""
     if not CHANNEL_ID:
         return
     donation = await get_donation(donation_id)
     message_ids = _channel_message_ids(donation)
     if not message_ids:
         return
+    status = donation["status"]
     try:
         await _channel_call(lambda: bot.edit_message_caption(
             chat_id=CHANNEL_ID,
@@ -276,8 +283,17 @@ async def _refresh_channel_post_now(
             caption=_channel_caption(bot_username, donation_id, status),
             reply_markup=_channel_keyboard(bot_username, donation_id, status),
         ))
+    except TelegramBadRequest as e:
+        text = str(e).lower()
+        # "not modified" — post allaqachon shu holatda; "not found" — post
+        # kanaldan qo'lda o'chirilgan. Ikkalasida ham qayta urinish shart emas.
+        if "not modified" not in text and "not found" not in text and "message_id_invalid" not in text:
+            logger.exception("Kanal postini yangilab bo'lmadi (ehson %s)", donation_id)
+            return
     except Exception:
         logger.exception("Kanal postini yangilab bo'lmadi (ehson %s)", donation_id)
+        return
+    await set_donation_channel_status(donation_id, status)
 
 
 async def _refresh_channel_post(
@@ -285,6 +301,26 @@ async def _refresh_channel_post(
 ) -> None:
     """Kanal postini fonda (navbat orqali) yangilaydi — API javobi kutmaydi."""
     _spawn(_refresh_channel_post_now(bot, bot_username, donation_id, status))
+
+
+CHANNEL_SYNC_INTERVAL_SECONDS = 60
+
+
+async def _channel_sync_loop(bot: Bot, bot_username: Optional[str]) -> None:
+    """Har daqiqada kanal postlari ehson holatiga mosligini tekshiradi va
+    mos kelmaganlarini (tahrir yo'qolgan bo'lsa) qayta tahrirlaydi."""
+    while True:
+        try:
+            if CHANNEL_ID:
+                for row in await get_channel_out_of_sync():
+                    await _refresh_channel_post_now(bot, bot_username, row["id"])
+        except Exception:
+            logger.exception("Kanal holatlarini tekshirishda xatolik")
+        await asyncio.sleep(CHANNEL_SYNC_INTERVAL_SECONDS)
+
+
+def start_channel_sync(bot: Bot, bot_username: Optional[str]) -> None:
+    _spawn(_channel_sync_loop(bot, bot_username))
 
 
 async def _remove_channel_post_now(bot: Bot, message_ids: list[int]) -> None:

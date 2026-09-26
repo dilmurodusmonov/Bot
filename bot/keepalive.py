@@ -10,7 +10,7 @@ import aiohttp
 from aiogram import Bot
 from aiohttp import web
 
-from bot.webapp_api import setup_api_routes
+from bot.webapp_api import setup_api_routes, start_channel_sync
 from bot.webpanel import dashboard_handler
 
 WEBAPP_INDEX = Path(__file__).parent / "static" / "webapp" / "index.html"
@@ -127,6 +127,8 @@ async def start_webserver(bot: Bot) -> None:
     port = int(os.getenv("PORT", 8080))
     site = web.TCPSite(runner, "0.0.0.0", port)
     await site.start()
+
+    start_channel_sync(bot, me.username)
 
     external: Optional[str] = os.getenv("RENDER_EXTERNAL_URL")
     if external:
