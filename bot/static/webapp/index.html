@@ -308,7 +308,11 @@
     display: flex; flex-direction: column; align-items: center; justify-content: center; gap: 3px;
     padding: 4px; text-align: center; font-size: 9.5px; font-weight: 500; line-height: 1.15;
   }
-  .photo-slot svg { width: 27px; height: 27px; opacity: 0.9; flex-shrink: 0; }
+  .photo-slot svg { width: 40px; height: 40px; opacity: 0.9; flex-shrink: 0; }
+  /* 3-namuna: o'sha quti yaqindan — kattalashib uyacha chetidan chiqib ketadi. */
+  .photo-slot { overflow: hidden; }
+  .photo-slot svg.slot-zoom { position: absolute; width: 110px; height: 110px; left: 6px; top: -14px; stroke-width: 1.3; }
+  .photo-slot-num { z-index: 1; }
   .photo-slot-num {
     position: absolute; top: 4px; left: 4px; width: 15px; height: 15px; border-radius: 50%;
     background: rgba(28,147,243,0.12); font-size: 9.5px; font-weight: 700; line-height: 15px;
@@ -1052,10 +1056,11 @@
     verifiedBadge: '<svg viewBox="0 0 24 24" width="16" height="16" fill="#4EA4F5"><path fill-rule="evenodd" clip-rule="evenodd" d="M8.603 3.799A4.49 4.49 0 0112 2.25c1.357 0 2.573.6 3.397 1.549a4.49 4.49 0 013.498 1.307 4.491 4.491 0 011.307 3.497A4.49 4.49 0 0121.75 12a4.49 4.49 0 01-1.549 3.397 4.491 4.491 0 01-1.307 3.497 4.491 4.491 0 01-3.497 1.307A4.49 4.49 0 0112 21.75a4.49 4.49 0 01-3.397-1.549 4.49 4.49 0 01-3.498-1.306 4.491 4.491 0 01-1.307-3.498A4.49 4.49 0 012.25 12c0-1.357.6-2.573 1.549-3.397a4.49 4.49 0 011.307-3.497 4.49 4.49 0 013.497-1.307zm7.007 6.387a.75.75 0 10-1.22-.872l-3.236 4.53L9.53 12.22a.75.75 0 00-1.06 1.06l2.25 2.25a.75.75 0 001.14-.094l3.75-5.25z"></path></svg>',
     closeX: '<svg viewBox="0 0 24 24" width="10" height="10" fill="none" stroke="currentColor" stroke-width="3.4" stroke-linecap="round"><path d="M6 6 18 18M18 6 6 18"></path></svg>',
     // Ehson rasmlari namunasi: umumiy ko'rinish, boshqa tomondan, yaqindan.
-    // Ehson rasmlari namunasi — quti 3 holatda: butun, aylantirilgan, yaqindan.
-    slotWhole: '<svg ' + SVG_ATTRS + '><path d="M21 16V8a2 2 0 0 0-1-1.73l-7-4a2 2 0 0 0-2 0l-7 4A2 2 0 0 0 3 8v8a2 2 0 0 0 1 1.73l7 4a2 2 0 0 0 2 0l7-4A2 2 0 0 0 21 16z"></path><polyline points="3.27 6.96 12 12.01 20.73 6.96"></polyline><line x1="12" y1="22.08" x2="12" y2="12"></line></svg>',
-    slotTurn: '<svg ' + SVG_ATTRS + '><g transform="translate(4.8 1.4) scale(0.6)" stroke-width="3.33"><path d="M21 16V8a2 2 0 0 0-1-1.73l-7-4a2 2 0 0 0-2 0l-7 4A2 2 0 0 0 3 8v8a2 2 0 0 0 1 1.73l7 4a2 2 0 0 0 2 0l7-4A2 2 0 0 0 21 16z"></path><polyline points="3.27 6.96 12 12.01 20.73 6.96"></polyline><line x1="12" y1="22.08" x2="12" y2="12"></line></g><path d="M3 14.5a9 5 0 0 0 18 0"></path><polyline points="18.6 16 21 13.8 23.2 16"></polyline></svg>',
-    slotZoom: '<svg ' + SVG_ATTRS + '><g transform="translate(0.4 0.4) scale(0.66)" stroke-width="3.03"><path d="M21 16V8a2 2 0 0 0-1-1.73l-7-4a2 2 0 0 0-2 0l-7 4A2 2 0 0 0 3 8v8a2 2 0 0 0 1 1.73l7 4a2 2 0 0 0 2 0l7-4A2 2 0 0 0 21 16z"></path><polyline points="3.27 6.96 12 12.01 20.73 6.96"></polyline><line x1="12" y1="22.08" x2="12" y2="12"></line></g><circle cx="16" cy="16" r="4.8" fill="#fff"></circle><line x1="19.5" y1="19.5" x2="22.6" y2="22.6"></line><line x1="16" y1="14" x2="16" y2="18"></line><line x1="14" y1="16" x2="18" y2="16"></line></svg>',
+    // Ehson rasmlari namunasi — bitta quti 3 xil ko'rinishda: old tomoni (yorliq
+    // chapda), aylantirilgan (yorliq o'ngda, lenta boshqa yo'nalishda), yaqindan.
+    slotWhole: '<svg ' + SVG_ATTRS + '><path d="M21 16V8a2 2 0 0 0-1-1.73l-7-4a2 2 0 0 0-2 0l-7 4A2 2 0 0 0 3 8v8a2 2 0 0 0 1 1.73l7 4a2 2 0 0 0 2 0l7-4A2 2 0 0 0 21 16z"></path><polyline points="3.27 6.96 12 12.01 20.73 6.96"></polyline><line x1="12" y1="22.08" x2="12" y2="12"></line><polygon points="5.2 10.6 9.6 13.1 9.6 16.4 5.2 13.9"></polygon><line x1="7.4" y1="4.6" x2="16.4" y2="9.6"></line></svg>',
+    slotTurn: '<svg ' + SVG_ATTRS + '><path d="M21 16V8a2 2 0 0 0-1-1.73l-7-4a2 2 0 0 0-2 0l-7 4A2 2 0 0 0 3 8v8a2 2 0 0 0 1 1.73l7 4a2 2 0 0 0 2 0l7-4A2 2 0 0 0 21 16z"></path><polyline points="3.27 6.96 12 12.01 20.73 6.96"></polyline><line x1="12" y1="22.08" x2="12" y2="12"></line><polygon points="14.4 13.1 18.8 10.6 18.8 13.9 14.4 16.4"></polygon><line x1="16.6" y1="4.6" x2="7.6" y2="9.6"></line></svg>',
+    slotZoom: '<svg ' + SVG_ATTRS + ' class="slot-zoom" style="overflow:visible"><path d="M21 16V8a2 2 0 0 0-1-1.73l-7-4a2 2 0 0 0-2 0l-7 4A2 2 0 0 0 3 8v8a2 2 0 0 0 1 1.73l7 4a2 2 0 0 0 2 0l7-4A2 2 0 0 0 21 16z"></path><polyline points="3.27 6.96 12 12.01 20.73 6.96"></polyline><line x1="12" y1="22.08" x2="12" y2="12"></line><polygon points="5.2 10.6 9.6 13.1 9.6 16.4 5.2 13.9"></polygon><line x1="7.4" y1="4.6" x2="16.4" y2="9.6"></line></svg>',
     camera: '<svg ' + SVG_ATTRS + '><path d="M23 19a2 2 0 0 1-2 2H3a2 2 0 0 1-2-2V8a2 2 0 0 1 2-2h4l2-3h6l2 3h4a2 2 0 0 1 2 2z"></path><circle cx="12" cy="13" r="4"></circle></svg>',
     catTech: '<svg ' + SVG_ATTRS + '><rect x="6" y="6" width="12" height="12" rx="1.5"></rect><line x1="9" y1="1" x2="9" y2="6"></line><line x1="15" y1="1" x2="15" y2="6"></line><line x1="9" y1="18" x2="9" y2="23"></line><line x1="15" y1="18" x2="15" y2="23"></line><line x1="1" y1="9" x2="6" y2="9"></line><line x1="1" y1="15" x2="6" y2="15"></line><line x1="18" y1="9" x2="23" y2="9"></line><line x1="18" y1="15" x2="23" y2="15"></line></svg>',
     catFintech: '<svg ' + SVG_ATTRS + '><rect x="2" y="5" width="20" height="14" rx="2.5"></rect><line x1="2" y1="10" x2="22" y2="10"></line><line x1="6" y1="15" x2="10" y2="15"></line></svg>',
@@ -2951,8 +2956,8 @@
             item = document.createElement("label");
             item.className = "photo-slot";
             item.setAttribute("for", "donation-photo-input");
-            item.innerHTML = '<span class="photo-slot-num">' + (idx + 1) + "</span>" + slot.icon +
-              "<span>" + escapeHtml(slot.label) + "</span>";
+            item.setAttribute("aria-label", slot.label);
+            item.innerHTML = '<span class="photo-slot-num">' + (idx + 1) + "</span>" + slot.icon;
           }
           row.appendChild(item);
         });
