@@ -65,6 +65,7 @@ TEXTS = {
         "role_needy": "🤲 Muhtoj",
         "open_app_hint": "📱 Barcha amallar (ehson qo'shish, ko'rish, kabinet) pastdagi menyu tugmasi — Ehson App orqali ochiladigan ilova ichida bajariladi.\n\nBu yerda esa faqat muhim yangiliklar va bildirishnomalar yuboriladi.",
         "open_app_button": "Ehson App",
+        "contact_button": "✉️ Aloqa",
         "upload_receipt_button": "🧾 Pochta chekini yuklash",
         "new_reservation_for_donor": (
             "🔔 Ehsoningizga yangi so'rov!\n\n"
@@ -115,6 +116,7 @@ TEXTS = {
         "role_needy": "🤲 Нуждающийся",
         "open_app_hint": "📱 Все действия (добавление, просмотр, кабинет) выполняются внутри приложения, которое открывается кнопкой меню — Ehson App.\n\nЗдесь же вы будете получать только важные уведомления.",
         "open_app_button": "Ehson App",
+        "contact_button": "✉️ Связь",
         "upload_receipt_button": "🧾 Загрузить чек",
         "new_reservation_for_donor": (
             "🔔 Новая заявка на ваше пожертвование!\n\n"
@@ -165,6 +167,7 @@ TEXTS = {
         "role_needy": "🤲 In need",
         "open_app_hint": "📱 All actions (adding, browsing, your cabinet) happen inside the app opened via the Ehson App menu button.\n\nHere in chat you'll only receive important notifications.",
         "open_app_button": "Ehson App",
+        "contact_button": "✉️ Contact us",
         "upload_receipt_button": "🧾 Upload receipt",
         "new_reservation_for_donor": (
             "🔔 New request for your donation!\n\n"
@@ -215,6 +218,7 @@ TEXTS = {
         "role_needy": "🤲 Мұқтаж",
         "open_app_hint": "📱 Барлық әрекеттер (қайыр қосу, көру, кабинет) төмендегі мәзір түймесі — Ehson App арқылы ашылатын қосымша ішінде орындалады.\n\nМұнда тек маңызды жаңалықтар мен хабарландырулар жіберіледі.",
         "open_app_button": "Ehson App",
+        "contact_button": "✉️ Байланыс",
         "upload_receipt_button": "🧾 Чекті жүктеңіз",
         "new_reservation_for_donor": (
             "🔔 Қайырыңызға жаңа сұрау!\n\n"
@@ -265,6 +269,7 @@ TEXTS = {
         "role_needy": "🤲 Ниёзманд",
         "open_app_hint": "📱 Ҳамаи амалҳо (илова кардани хайрия, дидан, кабинет) дар дохили барномае, ки бо тугмаи меню — Ehson App кушода мешавад, иҷро мешаванд.\n\nДар ин ҷо бошад, танҳо огоҳиномаҳои муҳим фиристода мешаванд.",
         "open_app_button": "Ehson App",
+        "contact_button": "✉️ Тамос",
         "upload_receipt_button": "🧾 Чекро бор кунед",
         "new_reservation_for_donor": (
             "🔔 Дархости нав ба хайрияи шумо!\n\n"
@@ -315,6 +320,7 @@ TEXTS = {
         "role_needy": "🤲 Мукташ",
         "open_app_hint": "📱 Бардык аракеттер (садага кошуу, көрүү, кабинет) төмөнкү меню баскычы — Ehson App аркылуу ачылуучу колдонмонун ичинде аткарылат.\n\nБул жерде болсо, тек гана маанилүү жаңылыктар жана билдирүүлөр жөнөтүлөт.",
         "open_app_button": "Ehson App",
+        "contact_button": "✉️ Байланыш",
         "upload_receipt_button": "🧾 Чекти жүктөңүз",
         "new_reservation_for_donor": (
             "🔔 Садагаңызга жаңы сурам!\n\n"
@@ -365,6 +371,7 @@ TEXTS = {
         "role_needy": "🤲 Mätäç",
         "open_app_hint": "📱 Ähli hereketler (sadaka goşmak, görmek, kabinet) aşakdaky menýu düwmesi — Ehson App arkaly açylýan programmanyň içinde ýerine ýetirilýär.\n\nBu ýerde bolsa diňe möhüm täzelikler we bildirişler iberilýär.",
         "open_app_button": "Ehson App",
+        "contact_button": "✉️ Habarlaşmak",
         "upload_receipt_button": "🧾 Çeki ýükläň",
         "new_reservation_for_donor": (
             "🔔 Sadakaňyza täze sorag!\n\n"
