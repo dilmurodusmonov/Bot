@@ -308,9 +308,9 @@
     display: flex; flex-direction: column; align-items: center; justify-content: center; gap: 3px;
     padding: 4px; text-align: center; font-size: 9.5px; font-weight: 500; line-height: 1.15;
   }
-  .photo-slot svg { width: 34px; height: 34px; flex-shrink: 0; color: var(--hint); stroke-width: 1.1; }
+  /* Uchala namuna ham bir xil: chizma 24×24 px (viewBox'da 20 birlik). */
+  .photo-slot svg { width: 28.8px; height: 28.8px; flex-shrink: 0; color: var(--hint); stroke-width: 1.3; }
   .photo-slot { overflow: hidden; }
-  .photo-slot svg.slot-turn { width: 48px; height: 48px; stroke-width: 0.95; }
   .photo-slot-num { z-index: 1; }
   .photo-slot-num {
     position: absolute; top: 4px; left: 4px; width: 15px; height: 15px; border-radius: 50%;
@@ -1057,8 +1057,8 @@
     // Ehson rasmlari namunasi — bitta 🎁 sovg'a qutisi 3 xil ko'rinishda:
     // old tomondan, burchakdan (aylantirilgan), tepadan (bant va lenta).
     slotWhole: '<svg ' + SVG_ATTRS + '><polyline points="20 12 20 22 4 22 4 12"></polyline><rect x="2" y="7" width="20" height="5"></rect><line x1="12" y1="22" x2="12" y2="7"></line><path d="M12 7H7.5a2.5 2.5 0 0 1 0-5C11 2 12 7 12 7z"></path><path d="M12 7h4.5a2.5 2.5 0 0 0 0-5C13 2 12 7 12 7z"></path></svg>',
-    slotTurn: '<svg ' + SVG_ATTRS + '><path d="M12 2.5 22 7.2v10L12 21.9 2 17.2v-10z"></path><polyline points="2 7.2 12 11.9 22 7.2"></polyline><line x1="12" y1="11.9" x2="12" y2="21.9"></line><polyline points="2 9.9 12 14.6 22 9.9"></polyline><line x1="7" y1="4.85" x2="17" y2="9.55"></line><line x1="17" y1="4.85" x2="7" y2="9.55"></line><line x1="7" y1="9.55" x2="7" y2="19.55"></line><line x1="17" y1="9.55" x2="17" y2="19.55"></line><path d="M12 7.2C10.24 3.08 6.47 2.38 6.83 4.61 7.18 6.49 10.12 6.96 12 7.2z"></path><path d="M12 7.2C13.76 3.08 17.53 2.38 17.17 4.61 16.82 6.49 13.88 6.96 12 7.2z"></path></svg>',
-    slotTop: '<svg ' + SVG_ATTRS + ' class="slot-turn"><rect x="4.5" y="4.5" width="15" height="15" rx="1.5"></rect><line x1="12" y1="4.5" x2="12" y2="19.5"></line><line x1="4.5" y1="12" x2="19.5" y2="12"></line><path fill="#fff" d="M12 12C9.2 11.2 6.2 8.6 7.4 7.2 8.6 5.8 11.2 8.9 12 12z"></path><path fill="#fff" d="M12 12c2.8.8 5.8 3.4 4.6 4.8-1.2 1.4-3.8-1.7-4.6-4.8z"></path><path d="M12 12c-1.2 1.6-2.4 3.2-3.8 4.2M12 12c1.2-1.6 2.4-3.2 3.8-4.2"></path><circle fill="#fff" cx="12" cy="12" r="1.1"></circle></svg>',
+    slotTurn: '<svg ' + SVG_ATTRS + '><path d="M12 2.5 22 7.2v10.5L12 22.4 2 17.7V7.2z"></path><polyline points="2 7.2 12 11.9 22 7.2"></polyline><line x1="12" y1="11.9" x2="12" y2="22.4"></line><polyline points="2 9.9 12 14.6 22 9.9"></polyline><line x1="7" y1="4.85" x2="17" y2="9.55"></line><line x1="17" y1="4.85" x2="7" y2="9.55"></line><line x1="7" y1="9.55" x2="7" y2="20.05"></line><line x1="17" y1="9.55" x2="17" y2="20.05"></line><path d="M12 7.2C10.24 3.08 6.47 2.38 6.83 4.61 7.18 6.49 10.12 6.96 12 7.2z"></path><path d="M12 7.2C13.76 3.08 17.53 2.38 17.17 4.61 16.82 6.49 13.88 6.96 12 7.2z"></path></svg>',
+    slotTop: '<svg ' + SVG_ATTRS + '><rect x="2" y="2" width="20" height="20" rx="2"></rect><line x1="12" y1="2" x2="12" y2="22"></line><line x1="2" y1="12" x2="22" y2="12"></line><path fill="#fff" d="M12 12C8.27 10.93 4.27 7.47 5.87 5.6 7.47 3.73 10.93 7.87 12 12z"></path><path fill="#fff" d="M12 12c3.73 1.07 7.73 4.53 6.13 6.4-1.6 1.87-5.07-2.27-6.13-6.4z"></path><path d="M12 12c-1.6 2.13-3.2 4.27-5.07 5.6M12 12c1.6-2.13 3.2-4.27 5.07-5.6"></path><circle fill="#fff" cx="12" cy="12" r="1.4"></circle></svg>',
     camera: '<svg ' + SVG_ATTRS + '><path d="M23 19a2 2 0 0 1-2 2H3a2 2 0 0 1-2-2V8a2 2 0 0 1 2-2h4l2-3h6l2 3h4a2 2 0 0 1 2 2z"></path><circle cx="12" cy="13" r="4"></circle></svg>',
     catTech: '<svg ' + SVG_ATTRS + '><rect x="6" y="6" width="12" height="12" rx="1.5"></rect><line x1="9" y1="1" x2="9" y2="6"></line><line x1="15" y1="1" x2="15" y2="6"></line><line x1="9" y1="18" x2="9" y2="23"></line><line x1="15" y1="18" x2="15" y2="23"></line><line x1="1" y1="9" x2="6" y2="9"></line><line x1="1" y1="15" x2="6" y2="15"></line><line x1="18" y1="9" x2="23" y2="9"></line><line x1="18" y1="15" x2="23" y2="15"></line></svg>',
     catFintech: '<svg ' + SVG_ATTRS + '><rect x="2" y="5" width="20" height="14" rx="2.5"></rect><line x1="2" y1="10" x2="22" y2="10"></line><line x1="6" y1="15" x2="10" y2="15"></line></svg>',
