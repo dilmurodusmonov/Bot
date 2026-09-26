@@ -2356,21 +2356,17 @@ async def api_cancel_reservation(request: web.Request) -> web.Response:
         bot, request.app.get("bot_username"), reservation["donation_id"], "available"
     )
 
-    if donation:
-        donor_lang = await _lang_for(donation["donor_id"])
-        # Bekor qilingan bronning yozuvi o'chirilgani uchun (cancel_reservation)
-        # yangi xabar id'ini saqlashning hojati yo'q — bu bronning tsikli
-        # shu yerda tugaydi.
-        await _send_tracked_message(
-            bot,
-            donation["donor_id"],
-            reservation["donor_notify_message_id"],
-            t(
-                donor_lang,
-                "reservation_cancelled_notify_donor",
-                description=escape(donation["description"] or "", quote=False),
-            ),
-        )
+    # Saxiyga "so'rov bekor qilindi" xabari yuborilmaydi — ehson yana
+    # "mavjud"ligi kanaldagi post holatidan ko'rinadi. Faqat eskirgan
+    # "yangi so'rov" xabari ("Pochta chekini yuklash" tugmasi bilan) o'chiriladi.
+    if donation and reservation["donor_notify_message_id"]:
+        try:
+            await bot.delete_message(
+                chat_id=donation["donor_id"],
+                message_id=reservation["donor_notify_message_id"],
+            )
+        except TelegramAPIError:
+            pass
     return web.json_response({"ok": True})
 
 
