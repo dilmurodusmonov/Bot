@@ -299,6 +299,23 @@
   .photo-preview-row.show { display: flex; }
   .photo-preview-item { position: relative; flex-shrink: 0; }
   .photo-preview-row img { width: 84px; height: 84px; object-fit: cover; border-radius: 12px; border: 1px solid var(--border); display: block; cursor: zoom-in; }
+  /* Ehson: 3 ta namuna uyachasi (rasm tanlanmaguncha ikonka va izoh). */
+  .photo-preview-row.photo-slots { display: grid; grid-template-columns: repeat(3, 1fr); gap: 10px; width: 100%; margin-right: 0; }
+  .photo-slot {
+    position: relative; aspect-ratio: 1 / 1; border-radius: 14px; background: #fff;
+    border: 1.5px dashed #B9D8F5; color: var(--blue); cursor: pointer; margin: 0;
+    display: flex; flex-direction: column; align-items: center; justify-content: center; gap: 6px;
+    padding: 6px; text-align: center; font-size: 11.5px; font-weight: 500; line-height: 1.2;
+  }
+  .photo-slot svg { width: 28px; height: 28px; opacity: 0.85; }
+  .photo-slot-num {
+    position: absolute; top: 6px; left: 6px; width: 18px; height: 18px; border-radius: 50%;
+    background: rgba(28,147,243,0.12); font-size: 11px; font-weight: 700; line-height: 18px;
+  }
+  .photo-slot.filled { border: 1px solid var(--border); padding: 0; }
+  .photo-slot.filled img { width: 100%; height: 100%; object-fit: cover; border-radius: 13px; display: block; cursor: zoom-in; }
+  .photo-picker-row.with-slots { margin-top: 8px; }
+  .photo-picker-row.with-slots .photo-fab { display: none; }
   .photo-preview-remove {
     position: absolute; top: -6px; right: -6px; width: 20px; height: 20px; border-radius: 50%;
     background: rgba(0,0,0,0.65); color: #fff; border: none; padding: 0; line-height: 0;
@@ -1036,6 +1053,10 @@
     grid: '<svg ' + SVG_ATTRS + '><rect x="3" y="3" width="7" height="7" rx="1.5"></rect><rect x="14" y="3" width="7" height="7" rx="1.5"></rect><rect x="3" y="14" width="7" height="7" rx="1.5"></rect><rect x="14" y="14" width="7" height="7" rx="1.5"></rect></svg>',
     verifiedBadge: '<svg viewBox="0 0 24 24" width="16" height="16" fill="#4EA4F5"><path fill-rule="evenodd" clip-rule="evenodd" d="M8.603 3.799A4.49 4.49 0 0112 2.25c1.357 0 2.573.6 3.397 1.549a4.49 4.49 0 013.498 1.307 4.491 4.491 0 011.307 3.497A4.49 4.49 0 0121.75 12a4.49 4.49 0 01-1.549 3.397 4.491 4.491 0 01-1.307 3.497 4.491 4.491 0 01-3.497 1.307A4.49 4.49 0 0112 21.75a4.49 4.49 0 01-3.397-1.549 4.49 4.49 0 01-3.498-1.306 4.491 4.491 0 01-1.307-3.498A4.49 4.49 0 012.25 12c0-1.357.6-2.573 1.549-3.397a4.49 4.49 0 011.307-3.497 4.49 4.49 0 013.497-1.307zm7.007 6.387a.75.75 0 10-1.22-.872l-3.236 4.53L9.53 12.22a.75.75 0 00-1.06 1.06l2.25 2.25a.75.75 0 001.14-.094l3.75-5.25z"></path></svg>',
     closeX: '<svg viewBox="0 0 24 24" width="10" height="10" fill="none" stroke="currentColor" stroke-width="3.4" stroke-linecap="round"><path d="M6 6 18 18M18 6 6 18"></path></svg>',
+    // Ehson rasmlari namunasi: umumiy ko'rinish, boshqa tomondan, yaqindan.
+    slotWhole: '<svg ' + SVG_ATTRS + '><rect x="3" y="3" width="18" height="18" rx="2"></rect><circle cx="8.5" cy="8.5" r="1.5"></circle><polyline points="21 15 16 10 5 21"></polyline></svg>',
+    slotTurn: '<svg ' + SVG_ATTRS + '><polyline points="23 4 23 10 17 10"></polyline><polyline points="1 20 1 14 7 14"></polyline><path d="M3.51 9a9 9 0 0 1 14.85-3.36L23 10M1 14l4.64 4.36A9 9 0 0 0 20.49 15"></path></svg>',
+    slotZoom: '<svg ' + SVG_ATTRS + '><circle cx="11" cy="11" r="7"></circle><line x1="21" y1="21" x2="16.65" y2="16.65"></line><line x1="11" y1="8" x2="11" y2="14"></line><line x1="8" y1="11" x2="14" y2="11"></line></svg>',
     camera: '<svg ' + SVG_ATTRS + '><path d="M23 19a2 2 0 0 1-2 2H3a2 2 0 0 1-2-2V8a2 2 0 0 1 2-2h4l2-3h6l2 3h4a2 2 0 0 1 2 2z"></path><circle cx="12" cy="13" r="4"></circle></svg>',
     catTech: '<svg ' + SVG_ATTRS + '><rect x="6" y="6" width="12" height="12" rx="1.5"></rect><line x1="9" y1="1" x2="9" y2="6"></line><line x1="15" y1="1" x2="15" y2="6"></line><line x1="9" y1="18" x2="9" y2="23"></line><line x1="15" y1="18" x2="15" y2="23"></line><line x1="1" y1="9" x2="6" y2="9"></line><line x1="1" y1="15" x2="6" y2="15"></line><line x1="18" y1="9" x2="23" y2="9"></line><line x1="18" y1="15" x2="23" y2="15"></line></svg>',
     catFintech: '<svg ' + SVG_ATTRS + '><rect x="2" y="5" width="20" height="14" rx="2.5"></rect><line x1="2" y1="10" x2="22" y2="10"></line><line x1="6" y1="15" x2="10" y2="15"></line></svg>',
@@ -1082,6 +1103,9 @@
       photo_label: "Rasm",
       photo_note: "Ehsonning 3 ta rasmini albatta biriktiring.",
       photo_three_required: "Iltimos, ehsonning 3 ta rasmini biriktiring (hozir {n} ta).",
+      photo_slot_1: "Umumiy ko'rinish",
+      photo_slot_2: "Boshqa tomondan",
+      photo_slot_3: "Yaqindan (holati)",
       photo_required: "Iltimos, rasm tanlang.",
       receipt_photo_label: "Chekni yuklang",
       receipt_note_label: "Pochta nomini kiriting",
@@ -1189,6 +1213,9 @@
       photo_label: "Фото",
       photo_note: "Обязательно прикрепите 3 фото пожертвования.",
       photo_three_required: "Пожалуйста, прикрепите 3 фото пожертвования (сейчас {n}).",
+      photo_slot_1: "Общий вид",
+      photo_slot_2: "С другой стороны",
+      photo_slot_3: "Крупно (состояние)",
       photo_required: "Пожалуйста, выберите фото.",
       receipt_photo_label: "Загрузите чек",
       receipt_note_label: "Введите название почты",
@@ -1296,6 +1323,9 @@
       photo_label: "Photo",
       photo_note: "Please attach 3 photos of the donation.",
       photo_three_required: "Please attach 3 photos of the donation (now {n}).",
+      photo_slot_1: "Overall view",
+      photo_slot_2: "Other side",
+      photo_slot_3: "Close-up (condition)",
       photo_required: "Please choose a photo.",
       receipt_photo_label: "Upload the receipt",
       receipt_note_label: "Enter the courier name",
@@ -1403,6 +1433,9 @@
       photo_label: "Сурет",
       photo_note: "Қайырдың 3 суретін міндетті түрде тіркеңіз.",
       photo_three_required: "Қайырдың 3 суретін тіркеңіз (қазір {n}).",
+      photo_slot_1: "Жалпы көрініс",
+      photo_slot_2: "Басқа жағынан",
+      photo_slot_3: "Жақыннан (күйі)",
       photo_required: "Сурет таңдаңыз.",
       receipt_photo_label: "Чекті жүктеңіз",
       receipt_note_label: "Пошта атауын енгізіңіз",
@@ -1502,6 +1535,9 @@
       photo_label: "Расм",
       photo_note: "Ҳатман 3 расми хайрияро замима кунед.",
       photo_three_required: "Лутфан, 3 расми хайрияро замима кунед (ҳозир {n} адад).",
+      photo_slot_1: "Намуди умумӣ",
+      photo_slot_2: "Аз тарафи дигар",
+      photo_slot_3: "Аз наздик (ҳолат)",
       photo_required: "Лутфан, расм интихоб кунед.",
       receipt_photo_label: "Чекро бор кунед",
       receipt_note_label: "Номи почтаро ворид кунед",
@@ -1601,6 +1637,9 @@
       photo_label: "Сүрөт",
       photo_note: "Садаганын 3 сүрөтүн милдеттүү түрдө тиркеңиз.",
       photo_three_required: "Садаганын 3 сүрөтүн тиркеңиз (азыр {n}).",
+      photo_slot_1: "Жалпы көрүнүш",
+      photo_slot_2: "Башка тараптан",
+      photo_slot_3: "Жакындан (абалы)",
       photo_required: "Сүрөт тандаңыз.",
       receipt_photo_label: "Чекти жүктөңүз",
       receipt_note_label: "Почтанын атын киргизиңиз",
@@ -1700,6 +1739,9 @@
       photo_label: "Surat",
       photo_note: "Sadakanyň 3 suratyny hökman goşuň.",
       photo_three_required: "Sadakanyň 3 suratyny goşuň (häzir {n}).",
+      photo_slot_1: "Umumy görnüşi",
+      photo_slot_2: "Beýleki tarapdan",
+      photo_slot_3: "Ýakyndan (ýagdaýy)",
       photo_required: "Surat saýlaň.",
       receipt_photo_label: "Çeki ýükläň",
       receipt_note_label: "Poçtanyň adyny giriziň",
@@ -2847,7 +2889,7 @@
         "<label>" + tr("description_label") + "</label>" +
         '<textarea id="desc-input" placeholder="' + escapeHtml(tr("description_placeholder")) + '"></textarea>' +
         "<label>" + tr("photo_label") + "</label>" +
-        photoPickerHtml("donation-photo-input", true, "donation-photo-preview-row") +
+        photoPickerHtml("donation-photo-input", true, "donation-photo-preview-row").replace('class="photo-picker-row"', 'class="photo-picker-row with-slots"') +
         '<p class="note">' + tr("photo_note") + "</p>";
 
       var selectedPhotoFiles = capturedPhotos.slice(0, 3);
@@ -2877,26 +2919,42 @@
         });
       });
 
+      // 3 ta uyacha: tanlangan rasm yoki namuna (ikonka + qanday suratga olish).
+      var DONATION_PHOTO_SLOTS = [
+        { icon: ICONS.slotWhole, label: tr("photo_slot_1") },
+        { icon: ICONS.slotTurn, label: tr("photo_slot_2") },
+        { icon: ICONS.slotZoom, label: tr("photo_slot_3") },
+      ];
       function renderDonationPhotoPreviews() {
         var row = document.getElementById("donation-photo-preview-row");
         row.innerHTML = "";
-        row.classList.toggle("show", selectedPhotoFiles.length > 0);
-        selectedPhotoFiles.forEach(function (file, idx) {
-          var item = document.createElement("div");
-          item.className = "photo-preview-item";
-          var img = document.createElement("img");
-          img.src = URL.createObjectURL(file);
-          img.addEventListener("click", function () { openImageLightbox(img.src); });
-          var removeBtn = document.createElement("button");
-          removeBtn.type = "button";
-          removeBtn.className = "photo-preview-remove";
-          removeBtn.innerHTML = ICONS.closeX;
-          removeBtn.addEventListener("click", function () {
-            selectedPhotoFiles.splice(idx, 1);
-            renderDonationPhotoPreviews();
-          });
-          item.appendChild(img);
-          item.appendChild(removeBtn);
+        row.classList.add("show", "photo-slots");
+        DONATION_PHOTO_SLOTS.forEach(function (slot, idx) {
+          var file = selectedPhotoFiles[idx];
+          var item;
+          if (file) {
+            item = document.createElement("div");
+            item.className = "photo-slot filled";
+            var img = document.createElement("img");
+            img.src = URL.createObjectURL(file);
+            img.addEventListener("click", function () { openImageLightbox(img.src); });
+            var removeBtn = document.createElement("button");
+            removeBtn.type = "button";
+            removeBtn.className = "photo-preview-remove";
+            removeBtn.innerHTML = ICONS.closeX;
+            removeBtn.addEventListener("click", function () {
+              selectedPhotoFiles.splice(idx, 1);
+              renderDonationPhotoPreviews();
+            });
+            item.appendChild(img);
+            item.appendChild(removeBtn);
+          } else {
+            item = document.createElement("label");
+            item.className = "photo-slot";
+            item.setAttribute("for", "donation-photo-input");
+            item.innerHTML = '<span class="photo-slot-num">' + (idx + 1) + "</span>" + slot.icon +
+              "<span>" + escapeHtml(slot.label) + "</span>";
+          }
           row.appendChild(item);
         });
       }
