@@ -11,6 +11,7 @@ import asyncpg
 from aiogram import Bot
 from aiohttp import web
 
+from bot.config import KEEP_AWAKE
 from bot.webapp_api import setup_api_routes, start_channel_sync
 from bot.webpanel import dashboard_handler
 
@@ -151,5 +152,5 @@ async def start_webserver(bot: Bot) -> None:
     start_channel_sync(bot, me.username)
 
     external: Optional[str] = os.getenv("RENDER_EXTERNAL_URL")
-    if external:
+    if external and KEEP_AWAKE:
         app["self_ping_task"] = asyncio.create_task(_self_ping_loop(external.rstrip("/") + "/"))

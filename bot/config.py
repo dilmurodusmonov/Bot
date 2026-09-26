@@ -22,8 +22,15 @@ MINI_APP_SHORT_NAME = os.getenv("MINI_APP_SHORT_NAME", "app")
 
 # Joylangan ehsonlar e'lon qilinadigan kanal. Bot o'sha kanalda admin
 # bo'lishi kerak ("Post messages" huquqi bilan). Bo'sh qoldirilsa
-# kanalga e'lon qilish butunlay o'chiriladi.
-CHANNEL_ID = os.getenv("CHANNEL_ID", "@ehsonli_qollar").strip()
+# kanalga e'lon qilish butunlay o'chiriladi. Standart qiymat yo'q — test
+# bot tasodifan asosiy kanalga post qilib yubormasligi uchun har bir
+# muhitda aniq yoziladi (asosiy bot: CHANNEL_ID=@ehsonli_qollar).
+CHANNEL_ID = os.getenv("CHANNEL_ID", "").strip()
+
+# Render bepul tarifida server uxlab qolmasligi uchun o'ziga so'rov
+# yuboradi. Bepul soatlar (750 soat/oy) bitta xizmatga yetadi — test
+# xizmatida KEEP_AWAKE=0 qo'yib, soatlarni asosiy botga qoldiring.
+KEEP_AWAKE = os.getenv("KEEP_AWAKE", "1").strip().lower() not in ("0", "false", "no", "off")
 
 # Reklama to'lovi (hozircha kartaga o'tkazma + chek, admin qo'lda tasdiqlaydi).
 # Karta ma'lumotlari kodda saqlanmaydi — hosting Environment Variables'da:

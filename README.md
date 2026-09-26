@@ -63,12 +63,27 @@ Variables bo'limida saqlanadi — kodga yoki GitHub'ga yozilmaydi.
 | `BOT_TOKEN` | ha | @BotFather'dan olingan bot tokeni |
 | `DATABASE_URL` | ha | PostgreSQL ulanish manzili |
 | `WEBAPP_URL` | Render'da shart emas | Mini App manzili; Render'da `RENDER_EXTERNAL_URL` avtomatik olinadi |
-| `CHANNEL_ID` | yo'q | Ehsonlar e'lon qilinadigan kanal (bot admin bo'lishi kerak) |
+| `CHANNEL_ID` | yo'q | Ehsonlar e'lon qilinadigan kanal (bot admin bo'lishi kerak). Standart qiymat yo'q — bo'sh bo'lsa kanalga post qilinmaydi |
+| `KEEP_AWAKE` | yo'q | `1` (standart) — Render bepul tarifida server uxlamasligi uchun o'ziga so'rov yuboradi; test xizmatida `0` |
 | `MINI_APP_SHORT_NAME` | yo'q | @BotFather /newapp qisqa nomi (standart `app`) |
 | `ADMIN_USERNAME`, `ADMIN_PASSWORD` | /admin uchun | Statistika paneli logini va paroli |
 | `AD_CARD_NUMBER`, `AD_CARD_HOLDER` | reklama to'lovi uchun | To'lov qabul qilinadigan karta |
 | `AD_ADMIN_IDS` | reklama to'lovi uchun | Cheklarni tasdiqlovchi adminlar Telegram ID'lari (vergul bilan) |
 | `IG_GRAPH_TOKEN`, `IG_BUSINESS_ID`, `INSTAGRAM_PROXY` | yo'q | Instagram profillarini topish (ixtiyoriy) |
+
+### Asosiy va test botlar
+
+Bir xil kod ikki alohida Render xizmatida ishlaydi — farqi faqat
+environment o'zgaruvchilarida:
+
+| | Asosiy (@ehsonli_qollar_bot) | Test |
+|---|---|---|
+| `BOT_TOKEN` | asosiy bot tokeni | test bot tokeni |
+| `DATABASE_URL` | alohida (yangi) baza | test bazasi |
+| `CHANNEL_ID` | `@ehsonli_qollar` | test kanal yoki bo'sh |
+| `KEEP_AWAKE` | `1` | `0` |
+
+Ikki bot hech qachon bitta token yoki bitta bazani ishlatmasligi kerak.
 
 ### Ishga tushirishdan oldin tekshiring
 - Bot kanalda admin (post yozish, tahrirlash, o'chirish huquqlari bilan).
