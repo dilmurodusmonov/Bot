@@ -88,12 +88,15 @@ def _get_pool() -> asyncpg.Pool:
 
 async def init_db() -> None:
     global _pool
-    # Neon bepul tarifi bo'sh ulanishlarni o'zi uzadi — eskirgan ulanishni
-    # ishlatib xato olmaslik uchun bo'sh ulanishlar 60 soniyada yangilanadi;
-    # osilib qolgan so'rov 20 soniyadan keyin to'xtatiladi.
+    # Neon bepul tarifi 5 daqiqa so'rov bo'lmasa bazani uxlatadi va
+    # ulanishlarni uzadi — eskirgan ulanishni ishlatib xato olmaslik uchun
+    # bo'sh ulanish 4 daqiqada yopiladi (undan oldin baza uxlamaydi, shuning
+    # uchun ulanish tirik). Avval 60 soniya edi — har daqiqalik tanaffusdan
+    # keyin yangi ulanish (TLS + avtorizatsiya, ~50-100 ms) ochilardi.
+    # Osilib qolgan so'rov 20 soniyadan keyin to'xtatiladi.
     _pool = await asyncpg.create_pool(
         DATABASE_URL, min_size=2, max_size=10,
-        max_inactive_connection_lifetime=60, command_timeout=20,
+        max_inactive_connection_lifetime=240, command_timeout=20,
     )
     async with _pool.acquire() as conn:
         await conn.execute(SCHEMA)
@@ -223,7 +226,8 @@ async def get_support_claim(user_id: int, ttl) -> Optional[tuple[int, int]]:
 async def claim_support_user(user_id: int, bot_id: int, admin_chat_id: int, ttl) -> tuple[int, int, bool]:
     """Suhbatni adminga biriktiradi (faol biriktirish bo'lmasa) — atomar: ikki
     admin bir vaqtda javob bersa, faqat bittasi oladi. (egasining bot ID,
-    chat ID, shu chaqiruvda biriktirildimi). Faollik vaqti yangilanadi."""
+    chat ID, shu chaqiruvda biriktirildimi). Mavjud biriktirishning faollik
+    vaqti bu yerda yangilanmaydi — javobga ruxsat bo'lsa touch_support_claim."""
     pool = _get_pool()
     row = await pool.fetchrow(
         """INSERT INTO support_claims (user_id, bot_id, admin_chat_id, updated_at)
@@ -236,10 +240,7 @@ async def claim_support_user(user_id: int, bot_id: int, admin_chat_id: int, ttl)
     )
     if row:
         return row["bot_id"], row["admin_chat_id"], True
-    row = await pool.fetchrow(
-        "UPDATE support_claims SET updated_at = now() WHERE user_id = $1 RETURNING bot_id, admin_chat_id",
-        user_id,
-    )
+    row = await pool.fetchrow("SELECT bot_id, admin_chat_id FROM support_claims WHERE user_id = $1", user_id)
     return row["bot_id"], row["admin_chat_id"], False
 
 
@@ -858,6 +859,25 @@ async def get_due_ship_reminders(first, second, repeat) -> list[dict[str, Any]]:
         first, second, repeat,
     )
     return [dict(row) for row in rows]
+
+
+async def get_next_reminder_due(first, second, repeat):
+    """Eng yaqin eslatma vaqti (yo'lga chiqarish va qabul qilish
+    eslatmalari orasida) yoki None — eslatma tsikli shu vaqtgacha uxlaydi."""
+    return await _get_pool().fetchval(
+        """SELECT MIN(due) FROM (
+               SELECT CASE WHEN donor_reminder_count = 0 THEN created_at + $1::interval
+                           WHEN donor_reminder_count = 1 THEN donor_last_reminder_at + $2::interval
+                           ELSE donor_last_reminder_at + $3::interval END AS due
+               FROM reservations WHERE status = 'reserved'
+               UNION ALL
+               SELECT CASE WHEN needy_reminder_count = 0 THEN shipped_at + $1::interval
+                           WHEN needy_reminder_count = 1 THEN needy_last_reminder_at + $2::interval
+                           ELSE needy_last_reminder_at + $3::interval END
+               FROM reservations WHERE status = 'shipped'
+           ) t""",
+        first, second, repeat,
+    )
 
 
 async def get_due_receive_reminders(first, second, repeat) -> list[dict[str, Any]]:
