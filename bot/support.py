@@ -249,10 +249,12 @@ async def _copy_with_user_button(
                 reply_markup=InlineKeyboardMarkup(inline_keyboard=[[button]]),
             )
         except TelegramBadRequest as e:
-            # Masalan BUTTON_USER_PRIVACY_RESTRICTED — keyingi variant.
-            # Boshqa xato (admin botga /start bosmagan va h.k.) — tugma aybdor emas.
-            if "BUTTON" not in str(e).upper():
+            # Admin shu botga /start bosmagan — qolgan variantlar ham o'tmaydi.
+            if "chat not found" in str(e).lower():
                 raise
+            # Tugma bilan bog'liq har qanday xato (BUTTON_USER_PRIVACY_RESTRICTED,
+            # BUTTON_USER_INVALID va h.k.) — keyingi variant, oxirida tugmasiz.
+            logger.info("Foydalanuvchi tugmasi o'tmadi (%s) — keyingi variant", e)
     return await _copy(src, dst, admin_id, message, media=media)
 
 
