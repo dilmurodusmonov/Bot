@@ -29,7 +29,7 @@ from aiogram.exceptions import TelegramAPIError, TelegramBadRequest
 from aiogram.filters import Command, CommandStart
 from aiogram.types import (
     BufferedInputFile,
-    CopyTextButton,
+    CallbackQuery,
     InlineKeyboardButton,
     InlineKeyboardMarkup,
     Message,
@@ -216,20 +216,30 @@ async def _send_reply_to_user(
         await _copy(src, dst, user_id, message)
 
 
+# Faqat ismni ko'rsatadigan tugma (lichkani ochib bo'lmaganda).
+_NAME_ONLY = "support_name"
+
+
+@router.callback_query(F.data == _NAME_ONLY)
+async def on_name_only(callback: CallbackQuery) -> None:
+    await callback.answer()
+
+
 async def _copy_with_user_button(
     src: Bot, dst: Bot, admin_id: int, message: Message, media: Optional[Media] = None,
 ) -> Message:
     """Xabarning o'zi, ostida "👤 Ism" tugmasi — forward'da avatar ko'rinmaganda
     (foydalanuvchi uzatishni yashirgan) yoki xabar boshqa bot orqali kelganda.
     Tugma lichkani ochadi (username bo'lsa t.me, bo'lmasa tg://user?id=...);
-    foydalanuvchi maxfiylik sababli ID orqali lichkaga ruxsat bermasa — ID nusxalanadi."""
+    foydalanuvchi maxfiylik sababli ID orqali lichkaga ruxsat bermasa — tugmada
+    faqat ism turadi (bosilganda hech narsa bo'lmaydi)."""
     user = message.from_user
     label = f"👤 {user.full_name or user.id}"[:64]
     buttons = []
     if user.username:
         buttons.append(InlineKeyboardButton(text=label, url=f"https://t.me/{user.username}"))
     buttons.append(InlineKeyboardButton(text=label, url=f"tg://user?id={user.id}"))
-    buttons.append(InlineKeyboardButton(text=label, copy_text=CopyTextButton(text=str(user.id))))
+    buttons.append(InlineKeyboardButton(text=label, callback_data=_NAME_ONLY))
     for button in buttons:
         try:
             return await _copy(
