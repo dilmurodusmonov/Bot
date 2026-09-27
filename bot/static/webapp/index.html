@@ -932,10 +932,14 @@
     display: flex; align-items: center; justify-content: center;
   }
   .cat-row-name { flex: 1; font-weight: 700; }
-  .cat-row-stats { display: flex; align-items: baseline; gap: 1px; font-weight: 700; font-size: 14.5px; }
-  .cat-row-total { color: var(--text); }
-  .cat-row-slash { color: #9AA3AF; }
-  .cat-row-delivered { color: #1C93F3; }
+  .cat-row-stats { display: flex; align-items: center; font-weight: 700; font-size: 14.5px; }
+  /* Bo'limdagi mavjud ehsonlar: bor bo'lsa ko'k "+n" (bo'limlar sahifasidagi
+     belgi bilan bir xil), bo'lmasa oddiy "0". */
+  .cat-row-avail {
+    background: #1C93F3; color: #fff; font-size: 12.5px; line-height: 1;
+    padding: 4px 8px; border-radius: 10px;
+  }
+  .cat-row-zero { color: var(--text); }
   .cat-row-arrow { color: #9AA3AF; font-size: 18px; }
   .profile-header { text-align: center; margin: 4px 0 24px; }
   .avatar-lg { width: 88px; height: 88px; margin: 0 auto 14px; font-size: 32px; }
@@ -2795,9 +2799,9 @@
             '<span class="' + iconClass + '">' + iconInner + "</span>" +
             '<span class="cat-row-name">' + escapeHtml(name) + "</span>" +
             '<span class="cat-row-stats">' +
-            '<span class="cat-row-total">' + formatCount(cs.total) + "</span>" +
-            '<span class="cat-row-slash">/</span>' +
-            '<span class="cat-row-delivered">' + formatCount(cs.delivered) + "</span>" +
+            (hasAvailable
+              ? '<span class="cat-row-avail">+' + formatCount(cs.available) + "</span>"
+              : '<span class="cat-row-zero">0</span>') +
             "</span>" +
             '<span class="cat-row-arrow">›</span></button>';
         }).join("") + "</div>";
