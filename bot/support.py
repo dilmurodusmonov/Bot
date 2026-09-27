@@ -40,11 +40,13 @@ from aiogram.types import (
 from bot.config import MINI_APP_SHORT_NAME, SUPPORT_ADMIN_IDS, SUPPORT_CEO_ID
 from bot.database import (
     claim_support_user,
+    get_active_support_claims,
     get_support_claim,
     get_support_message_copies,
     get_support_message_target,
     get_user_language,
     pop_support_copies_except,
+    release_support_claims,
     save_support_message,
     touch_support_claim,
 )
@@ -325,6 +327,53 @@ async def _remove_from_other_admins(bot: Bot, support_bots: dict[int, Bot], user
 async def on_id(message: Message) -> None:
     """Har kim o'z Telegram ID'sini bilib olishi uchun (admin ro'yxatiga qo'shishda kerak)."""
     await message.answer(f"🆔 Sizning Telegram ID: <code>{message.from_user.id}</code>")
+
+
+async def _admin_name(bots: list[Bot], admin_id: int) -> tuple[str, list[str]]:
+    """Adminning ismi va u qaysi aloqa botlariga /start bosgani (bot uni ko'ra oladimi)."""
+    name, reachable = str(admin_id), []
+    for b in bots:
+        try:
+            chat = await b.get_chat(admin_id)
+        except TelegramAPIError:
+            continue
+        name = chat.full_name or name
+        reachable.append("@" + ((await b.me()).username or str(b.id)))
+    return name, reachable
+
+
+@router.message(Command("holat"), F.func(lambda m: m.from_user and m.from_user.id in SUPPORT_ADMIN_IDS))
+async def on_status(message: Message, bot: Bot, support_bots: Optional[dict[int, Bot]] = None) -> None:
+    """Aloqa sozlamalari va faol suhbatlar — xabar kimga borishini tekshirish uchun."""
+    bots = list((support_bots or {bot.id: bot}).values())
+    usernames = {b.id: "@" + ((await b.me()).username or str(b.id)) for b in bots}
+    lines = ["🩺 <b>Aloqa holati</b>", "", "🤖 Botlar:"]
+    for i, b in enumerate(bots):
+        lines.append(f"• {usernames[b.id]}" + (" — CEO boti" if i == 0 else ""))
+    lines += ["", "👥 Adminlar (SUPPORT_ADMIN_IDS):"]
+    names = {}
+    for admin_id in SUPPORT_ADMIN_IDS:
+        name, reachable = await _admin_name(bots, admin_id)
+        names[admin_id] = name
+        role = "CEO" if _is_ceo(admin_id) else "admin"
+        where = ", ".join(reachable) if reachable else "❌ hech bir botga /start bosmagan"
+        lines.append(f"• {escape(name, quote=False)} (<code>{admin_id}</code>, {role}): {where}")
+    claims = await get_active_support_claims(CLAIM_TTL)
+    lines += ["", f"💬 Biriktirilgan suhbatlar (so'nggi 24 soat): {len(claims)} ta"]
+    for c in claims[:10]:
+        owner = names.get(c["admin_chat_id"], str(c["admin_chat_id"]))
+        lines.append(f"• foydalanuvchi <code>{c['user_id']}</code> → {escape(owner, quote=False)}")
+    if claims:
+        lines += ["", "Bu foydalanuvchilarning xabarlari faqat suhbat egasi va CEO'ga boradi. "
+                      "Hammasini bo'shatish: /bosh"]
+    await message.answer("\n".join(lines))
+
+
+@router.message(Command("bosh"), F.func(lambda m: m.from_user and _is_ceo(m.from_user.id)))
+async def on_release(message: Message) -> None:
+    """CEO: barcha suhbatlarni bo'shatadi — keyingi xabarlar yana hamma adminlarga."""
+    count = await release_support_claims()
+    await message.answer(f"✅ {count} ta suhbat bo'shatildi. Keyingi xabarlar barcha adminlarga boradi.")
 
 
 @router.message(CommandStart())
