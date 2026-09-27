@@ -80,6 +80,7 @@ from bot.database import (
     get_reservations_by_needy,
     set_donation_channel_messages,
     set_donation_channel_status,
+    get_available_counts_by_category,
     get_channel_out_of_sync,
     get_unpublished_donations,
     set_donation_status,
@@ -527,6 +528,13 @@ async def api_categories(request: web.Request) -> web.Response:
     return web.json_response(
         [{"key": key, "label": category_name(key, lang)} for key in CATEGORIES]
     )
+
+
+async def api_category_counts(request: web.Request) -> web.Response:
+    """Bo'limlar sahifasidagi "+n" belgilari uchun — mavjud ehsonlar soni."""
+    await _require_user_id(request)
+    counts = await get_available_counts_by_category()
+    return web.json_response({key: counts.get(key, 0) for key in CATEGORIES})
 
 
 async def api_donations(request: web.Request) -> web.Response:
@@ -3087,6 +3095,7 @@ def setup_api_routes(app: web.Application) -> None:
     app.router.add_post("/api/ads/payments/{id:\\d+}/dismiss", api_ads_dismiss_rejection)
     app.router.add_post("/api/ads/{id:\\d+}/click", api_ads_click)
     app.router.add_get("/api/categories", api_categories)
+    app.router.add_get("/api/category-counts", api_category_counts)
     app.router.add_get("/api/donations", api_donations)
     app.router.add_get("/api/donation/{id:\\d+}", api_donation)
     app.router.add_get("/api/my-donations", api_my_donations)
