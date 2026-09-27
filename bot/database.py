@@ -125,7 +125,10 @@ async def init_db() -> None:
 
 async def _migrate_support_messages(conn: asyncpg.Connection) -> None:
     """Aloqa boti: admin chatidagi xabar qaysi foydalanuvchiniki ekani —
-    admin Reply qilganda javob shu foydalanuvchiga yuboriladi."""
+    admin Reply qilganda javob shu foydalanuvchiga yuboriladi. Aloqa botlari
+    bir nechta bo'lishi mumkin: bot_id — xabar admin chatiga qaysi bot orqali
+    kelgani, origin_bot_id — foydalanuvchi qaysi botga yozgani (javob shu bot
+    orqali qaytadi). Eski yozuvlarda ikkalasi 0."""
     await conn.execute(
         """CREATE TABLE IF NOT EXISTS support_messages (
                admin_chat_id BIGINT NOT NULL,
@@ -135,21 +138,41 @@ async def _migrate_support_messages(conn: asyncpg.Connection) -> None:
                PRIMARY KEY (admin_chat_id, admin_message_id)
            )"""
     )
+    await conn.execute("ALTER TABLE support_messages ADD COLUMN IF NOT EXISTS bot_id BIGINT NOT NULL DEFAULT 0")
+    await conn.execute("ALTER TABLE support_messages ADD COLUMN IF NOT EXISTS origin_bot_id BIGINT NOT NULL DEFAULT 0")
+    # Har bir botning admin chati alohida — xabar raqamlari botlar orasida
+    # takrorlanishi mumkin, shuning uchun kalitga bot_id ham kiradi.
+    key_len = await conn.fetchval(
+        "SELECT array_length(conkey, 1) FROM pg_constraint WHERE conname = 'support_messages_pkey'"
+    )
+    if key_len == 2:
+        await conn.execute("ALTER TABLE support_messages DROP CONSTRAINT support_messages_pkey")
+        await conn.execute(
+            "ALTER TABLE support_messages ADD PRIMARY KEY (bot_id, admin_chat_id, admin_message_id)"
+        )
 
 
-async def save_support_message(admin_chat_id: int, admin_message_id: int, user_id: int) -> None:
+async def save_support_message(
+    bot_id: int, admin_chat_id: int, admin_message_id: int, user_id: int, origin_bot_id: int,
+) -> None:
     await _get_pool().execute(
-        """INSERT INTO support_messages (admin_chat_id, admin_message_id, user_id)
-           VALUES ($1, $2, $3) ON CONFLICT DO NOTHING""",
-        admin_chat_id, admin_message_id, user_id,
+        """INSERT INTO support_messages (bot_id, admin_chat_id, admin_message_id, user_id, origin_bot_id)
+           VALUES ($1, $2, $3, $4, $5) ON CONFLICT DO NOTHING""",
+        bot_id, admin_chat_id, admin_message_id, user_id, origin_bot_id,
     )
 
 
-async def get_support_message_user(admin_chat_id: int, admin_message_id: int) -> Optional[int]:
-    return await _get_pool().fetchval(
-        "SELECT user_id FROM support_messages WHERE admin_chat_id = $1 AND admin_message_id = $2",
-        admin_chat_id, admin_message_id,
+async def get_support_message_target(
+    bot_id: int, admin_chat_id: int, admin_message_id: int,
+) -> Optional[tuple[int, int]]:
+    """(foydalanuvchi ID, u yozgan bot ID; eski yozuvlarda 0)."""
+    row = await _get_pool().fetchrow(
+        """SELECT user_id, origin_bot_id FROM support_messages
+           WHERE admin_chat_id = $2 AND admin_message_id = $3 AND bot_id IN ($1, 0)
+           ORDER BY bot_id DESC LIMIT 1""",
+        bot_id, admin_chat_id, admin_message_id,
     )
+    return (row["user_id"], row["origin_bot_id"]) if row else None
 
 
 async def _create_indexes(conn: asyncpg.Connection) -> None:

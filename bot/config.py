@@ -55,7 +55,15 @@ AD_ADMIN_IDS = [
 # aloqa botining tokeni; bo'sh bo'lsa aloqa boti ishga tushmaydi.
 # Foydalanuvchi xabarlari SUPPORT_ADMIN_IDS (bo'lmasa AD_ADMIN_IDS) dagi
 # adminlarga yuboriladi; admin xabarga Reply qilib javob beradi.
-SUPPORT_BOT_TOKEN = os.getenv("SUPPORT_BOT_TOKEN", "").strip()
+# Ikkinchi aloqa boti (masalan @manager_ehson_bot) — SUPPORT_BOT_TOKEN_2:
+# foydalanuvchi qaysi botga yozsa ham xabar ikkala botdagi adminlarga keladi,
+# javob foydalanuvchi yozgan bot orqali qaytadi.
+SUPPORT_BOT_TOKENS = list(dict.fromkeys(
+    token for token in (
+        os.getenv("SUPPORT_BOT_TOKEN", "") + "," + os.getenv("SUPPORT_BOT_TOKEN_2", "")
+    ).replace(" ", "").split(",") if token
+))
+SUPPORT_BOT_TOKEN = SUPPORT_BOT_TOKENS[0] if SUPPORT_BOT_TOKENS else ""
 SUPPORT_ADMIN_IDS = [
     int(part) for part in os.getenv("SUPPORT_ADMIN_IDS", "").replace(" ", "").split(",")
     if part.lstrip("-").isdigit()
