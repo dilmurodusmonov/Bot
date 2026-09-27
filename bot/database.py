@@ -2,7 +2,7 @@ from typing import Any, Optional
 
 import asyncpg
 
-from bot.config import DATABASE_URL
+from bot.config import DATABASE_URL, MIGRATE_FROM_DATABASE_URL
 
 SCHEMA = """
 CREATE TABLE IF NOT EXISTS users (
@@ -118,6 +118,9 @@ async def init_db() -> None:
             """UPDATE ad_bids SET description_checked = FALSE
                WHERE platform = 'instagram' AND description IS NULL AND description_checked"""
         )
+        if MIGRATE_FROM_DATABASE_URL:
+            from bot.db_copy import copy_database
+            await copy_database(MIGRATE_FROM_DATABASE_URL, conn)
 
 
 async def _migrate_support_messages(conn: asyncpg.Connection) -> None:

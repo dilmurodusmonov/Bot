@@ -68,6 +68,7 @@ Variables bo'limida saqlanadi — kodga yoki GitHub'ga yozilmaydi.
 | `SUPPORT_BOT_TOKEN` | yo'q | O'zimizning aloqa botimiz (@ceo_ehson_bot) tokeni — reklamasiz, Livegram o'rniga. Bo'sh bo'lsa aloqa boti ishlamaydi |
 | `SUPPORT_ADMIN_IDS` | yo'q | Aloqa xabarlari boradigan adminlar ID'lari (vergul bilan); bo'sh bo'lsa `AD_ADMIN_IDS` |
 | `KEEP_AWAKE` | yo'q | `1` (standart) — Render bepul tarifida server uxlamasligi uchun o'ziga so'rov yuboradi; test xizmatida `0` |
+| `MIGRATE_FROM_DATABASE_URL` | yo'q | Faqat serverni boshqa mintaqaga ko'chirishda: eski baza manzili. Yangi baza bo'sh bo'lsa, ishga tushganda hamma ma'lumot bir marta nusxalanadi; keyin o'chirib qo'yiladi |
 | `MINI_APP_SHORT_NAME` | yo'q | @BotFather /newapp qisqa nomi (standart `app`) |
 | `ADMIN_USERNAME`, `ADMIN_PASSWORD` | /admin uchun | Statistika paneli logini va paroli |
 | `AD_CARD_NUMBER`, `AD_CARD_HOLDER` | reklama to'lovi uchun | To'lov qabul qilinadigan karta |
