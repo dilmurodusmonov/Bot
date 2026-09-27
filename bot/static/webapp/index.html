@@ -215,9 +215,18 @@
   .empty-state { text-align: center; color: var(--hint); padding: 60px 20px; font-size: 14.5px; }
   .cat-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 10px; }
   .cat-card {
+    position: relative;
     background: var(--section-bg); border: 1px solid var(--border); color: var(--text);
     border-radius: 14px; padding: 18px 10px; font-size: 14px; font-weight: 500; text-align: center;
   }
+  /* Bo'limdagi mavjud ehsonlar soni — kartaning tepa chetida "+n". */
+  .cat-count {
+    position: absolute; top: -8px; right: 10px;
+    background: #1C93F3; color: #fff; font-size: 11.5px; font-weight: 700; line-height: 1;
+    padding: 3px 7px; border-radius: 10px; border: 2px solid var(--bg);
+    animation: catCountIn .25s ease-out;
+  }
+  @keyframes catCountIn { from { transform: scale(.6); opacity: 0; } to { transform: scale(1); opacity: 1; } }
   .error-box { background: rgba(229,72,77,0.12); color: #C0392B; border-radius: 10px; padding: 10px 12px; font-size: 13.5px; margin-top: 12px; }
   .toast-overlay {
     position: fixed; inset: 0; background: rgba(0,0,0,0.45); z-index: 60;
@@ -3371,10 +3380,14 @@
   }
 
   function renderNeedyCategories() {
+    // Mavjud ehsonlar soni bo'limlar bilan parallel so'raladi va kelishi
+    // bilan kartalarga "+n" bo'lib qo'shiladi (sahifa uni kutib turmaydi).
+    var countsPromise = api("GET", "/api/category-counts").catch(function () { return null; });
     getCategories().then(function (categories) {
       app.innerHTML = '<div class="cat-grid">' + categories.map(function (c) {
         return '<button class="cat-card" data-cat="' + c.key + '">' + escapeHtml(c.label) + "</button>";
       }).join("") + "</div>";
+      var grid = app.querySelector(".cat-grid");
       app.querySelectorAll("[data-cat]").forEach(function (btn) {
         btn.addEventListener("click", function () {
           goto("needy_list", { category: btn.getAttribute("data-cat") });
@@ -3382,6 +3395,18 @@
       });
       hideMainButton();
       setBackButton();
+      countsPromise.then(function (counts) {
+        if (!counts || !grid.isConnected) return;
+        grid.querySelectorAll("[data-cat]").forEach(function (btn) {
+          var n = counts[btn.getAttribute("data-cat")] || 0;
+          if (n > 0) {
+            var badge = document.createElement("span");
+            badge.className = "cat-count";
+            badge.textContent = "+" + n;
+            btn.appendChild(badge);
+          }
+        });
+      });
     }).catch(function () { showError(); });
   }
 
