@@ -120,7 +120,7 @@ async def init_db() -> None:
         )
         if MIGRATE_FROM_DATABASE_URL:
             from bot.db_copy import copy_database
-            await copy_database(MIGRATE_FROM_DATABASE_URL, conn)
+            await copy_database(MIGRATE_FROM_DATABASE_URL, DATABASE_URL, conn)
 
 
 async def _migrate_support_messages(conn: asyncpg.Connection) -> None:
