@@ -324,10 +324,7 @@ async def on_start(message: Message) -> None:
             "👋 Siz aloqa botining adminisiz.\n\n"
             "📩 Foydalanuvchilar yozgan xabarlar shu yerga keladi!\n"
             "✍️ Javob berish uchun xabarga <b>Reply</b> qilib yozing!\n"
-            "🤖 Javob foydalanuvchiga bot nomidan boradi!\n"
-            + ("👁 Barcha suhbatlar va adminlarning javoblari shu yerda ko'rinadi!"
-               if _is_ceo(message.from_user.id) else
-               "⚡ Birinchi javob bergan admin suhbatni oladi — xabar boshqa adminlardan o'chadi!")
+            "🤖 Javob foydalanuvchiga bot nomidan boradi!"
         )
         return
     await message.answer(t(await _lang_for(message), "support_welcome"))
