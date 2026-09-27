@@ -549,6 +549,14 @@ async def get_available_donations(category: str) -> list[dict[str, Any]]:
     return [dict(row) for row in rows]
 
 
+async def get_available_counts_by_category() -> dict[str, int]:
+    """Har bir bo'limdagi mavjud (band qilinmagan) ehsonlar soni."""
+    rows = await _get_pool().fetch(
+        "SELECT category, COUNT(*) AS n FROM donations WHERE status = 'available' GROUP BY category"
+    )
+    return {row["category"]: row["n"] for row in rows}
+
+
 async def get_available_donations_page(
     category: str, limit: int, before_id: Optional[int] = None
 ) -> list[dict[str, Any]]:
