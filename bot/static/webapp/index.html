@@ -5189,7 +5189,39 @@
     document.addEventListener("visibilitychange", function () { if (!document.hidden) pingPresence(); });
   }
 
-  api("GET", "/api/me")
+  // Server (masalan Render bepul tarifida) uxlab qolgan bo'lsa, uyg'onishi
+  // 30–60 soniya oladi — shu vaqt ichida xato ko'rsatmay, qayta uriniladi.
+  function loadMe() {
+    var started = Date.now();
+    var attempt = 0;
+    return new Promise(function (resolve, reject) {
+      function tryOnce() {
+        attempt += 1;
+        var timedOut = false;
+        var timer = setTimeout(function () { timedOut = true; retry(new Error("timeout")); }, 15000);
+        api("GET", "/api/me").then(function (me) {
+          clearTimeout(timer);
+          if (!timedOut) resolve(me);
+        }).catch(function (err) {
+          clearTimeout(timer);
+          if (timedOut) return;
+          // Kirish ma'lumoti rad etilsa (401/403) qayta urinishning foydasi yo'q.
+          if (err && (err.status === 401 || err.status === 403)) { reject(err); return; }
+          retry(err);
+        });
+      }
+      function retry(err) {
+        if (Date.now() - started > 90000) { reject(err); return; }
+        if (attempt >= 2) {
+          app.innerHTML = '<div class="center-loader">Server ishga tushmoqda, biroz kuting…</div>';
+        }
+        setTimeout(tryOnce, 4000);
+      }
+      tryOnce();
+    });
+  }
+
+  loadMe()
     .then(function (me) {
       state.me = me;
       startPresence();
@@ -5220,19 +5252,13 @@
       goto("home", {}, false);
     })
     .catch(function () {
-      var debug = {
-        tg_exists: !!tg,
-        initData_len: tg ? (tg.initData || "").length : null,
-        initDataUnsafe: tg ? tg.initDataUnsafe : null,
-        version: tg ? tg.version : null,
-        platform: tg ? tg.platform : null,
-        ua: navigator.userAgent,
-      };
+      // Texnik ma'lumot (initData) ekranga chiqarilmaydi — skrinshot orqali
+      // tarqalsa, uning yordamida boshqa birov nomidan so'rov yuborish mumkin.
       app.innerHTML =
-        '<div class="empty-state">Ulanishda xatolik.</div>' +
-        '<pre style="text-align:left;white-space:pre-wrap;word-break:break-all;font-size:11px;background:var(--section-bg);padding:12px;border-radius:10px;">' +
-        escapeHtml(JSON.stringify(debug, null, 2)) +
-        "</pre>";
+        '<div class="empty-state">Ulanishda xatolik. Internetni tekshirib, qayta urinib ko\'ring.' +
+        '<br><br><button class="card-btn" id="retry-btn">Qayta urinish</button></div>';
+      var retryBtn = document.getElementById("retry-btn");
+      if (retryBtn) retryBtn.addEventListener("click", function () { location.reload(); });
     });
 })();
 </script>
