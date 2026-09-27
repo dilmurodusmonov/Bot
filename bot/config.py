@@ -84,7 +84,15 @@ SUPPORT_BOT_TOKEN = SUPPORT_BOT_TOKENS[0] if SUPPORT_BOT_TOKENS else ""
 SUPPORT_ADMIN_IDS = [
     int(part) for part in os.getenv("SUPPORT_ADMIN_IDS", "").replace(" ", "").split(",")
     if part.lstrip("-").isdigit()
-] or AD_ADMIN_IDS
+] or list(AD_ADMIN_IDS)
+# CEO — barcha aloqa suhbatlarini kuzatadi (xabarlar va boshqa adminlarning
+# javoblari unga doim keladi, undan o'chirilmaydi). Berilmasa —
+# SUPPORT_ADMIN_IDS dagi birinchi ID. Boshqa adminlardan birinchi javob
+# bergani suhbatni oladi: suhbat faqat u va CEO o'rtasida davom etadi.
+_ceo = os.getenv("SUPPORT_CEO_ID", "").strip()
+SUPPORT_CEO_ID = int(_ceo) if _ceo.lstrip("-").isdigit() else (SUPPORT_ADMIN_IDS[0] if SUPPORT_ADMIN_IDS else None)
+if SUPPORT_CEO_ID is not None and SUPPORT_CEO_ID not in SUPPORT_ADMIN_IDS:
+    SUPPORT_ADMIN_IDS.insert(0, SUPPORT_CEO_ID)
 
 # Instagram rasmiy API (Business Discovery): reklama beruvchining Instagram
 # Business/Creator profili (ism, bio, rasm) instagram.com'ni bloklamasdan
