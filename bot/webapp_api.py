@@ -474,7 +474,7 @@ def _donation_json(
         "like_count": like_count,
         "liked_by_me": liked_by_me,
         "share_count": d.get("share_count", 0),
-        "is_mine": d["donor_id"] == viewer_id if viewer_id else False,
+        "is_mine": bool(viewer_id) and int(d["donor_id"]) == int(viewer_id),
     }
 
 
@@ -584,7 +584,10 @@ async def api_donation(request: web.Request) -> web.Response:
     likes = await get_like_info([donation_id], telegram_id)
     like = likes.get(donation_id, {})
     return web.json_response(
-        _donation_json(donation, lang, like_count=like.get("count", 0), liked_by_me=like.get("liked", False))
+        _donation_json(
+            donation, lang, like_count=like.get("count", 0), liked_by_me=like.get("liked", False),
+            viewer_id=telegram_id,
+        )
     )
 
 
