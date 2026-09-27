@@ -91,7 +91,7 @@ from bot.database import (
     set_user_role,
     toggle_donation_like,
 )
-from bot.notify import send_tracked_message as _send_tracked_message
+from bot.notify import WIDE_BUBBLE_PAD, send_tracked_message as _send_tracked_message
 from bot.texts import (
     CATEGORIES,
     CHANNEL_OPEN_BUTTON,
@@ -711,7 +711,7 @@ async def _upload_photos(bot: Bot, telegram_id: int, photos: list[tuple[bytes, s
 # Telegram'da inline tugma kengligi xabar pufagi kengligiga teng. Oxiridagi
 # ko'rinmas (U+2800) qator pufakni to'liq kenglikka yoyadi — "Pochta chekini
 # yuklash", "Ehsonni ko'rish", "Chekni ko'rish" tugmalari bir xil keng chiqadi.
-_WIDE_BUBBLE_PAD = "\n" + "⠀" * 36
+_WIDE_BUBBLE_PAD = WIDE_BUBBLE_PAD
 
 
 async def api_create_reservation(request: web.Request) -> web.Response:
