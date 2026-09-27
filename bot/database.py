@@ -243,6 +243,23 @@ async def claim_support_user(user_id: int, bot_id: int, admin_chat_id: int, ttl)
     return row["bot_id"], row["admin_chat_id"], False
 
 
+async def get_active_support_claims(ttl) -> list[dict[str, Any]]:
+    """Faol biriktirishlar (admin /holat buyrug'i uchun) — eng yangisi birinchi."""
+    rows = await _get_pool().fetch(
+        """SELECT user_id, bot_id, admin_chat_id, updated_at FROM support_claims
+           WHERE updated_at > now() - $1::interval ORDER BY updated_at DESC LIMIT 20""",
+        ttl,
+    )
+    return [dict(r) for r in rows]
+
+
+async def release_support_claims() -> int:
+    """Barcha biriktirishlarni tugatadi — foydalanuvchilarning keyingi
+    xabarlari yana barcha adminlarga boradi."""
+    result = await _get_pool().execute("DELETE FROM support_claims")
+    return int(result.split()[-1])
+
+
 async def touch_support_claim(user_id: int) -> None:
     await _get_pool().execute("UPDATE support_claims SET updated_at = now() WHERE user_id = $1", user_id)
 
