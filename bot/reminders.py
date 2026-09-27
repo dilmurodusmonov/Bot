@@ -15,8 +15,8 @@ from bot.database import (
     record_donor_reminder,
     record_needy_reminder,
 )
-from bot.notify import send_tracked_message
-from bot.texts import t
+from bot.notify import WIDE_BUBBLE_PAD, send_tracked_message
+from bot.texts import category_name, t
 
 logger = logging.getLogger(__name__)
 
@@ -57,9 +57,39 @@ async def _send_with_retry(factory):
             await asyncio.sleep(e.retry_after + 1)
 
 
+def _ship_reminder_text(lang: str, reservation: dict) -> str:
+    """Eslatma sarlavhasi + "yangi so'rov" xabaridagi to'liq ma'lumotlar
+    (bo'lim, ehson, muhtojning ismi, manzili, telefoni) — eslatma o'sha
+    xabar o'rniga keladi, ma'lumotlar chatda yo'qolmasin."""
+    full = t(
+        lang,
+        "new_reservation_for_donor",
+        category=escape(category_name(reservation["category"], lang), quote=False),
+        description=escape(reservation["description"] or "", quote=False),
+        full_name=escape(reservation["full_name"], quote=False),
+        address=escape(reservation["address"], quote=False),
+        phone=escape(reservation["phone"], quote=False),
+    )
+    # "🔔 Yangi so'rov!" sarlavhasi eslatma sarlavhasiga almashtiriladi.
+    body = full.split("\n\n", 1)[-1]
+    return t(lang, "ship_reminder") + "\n\n" + body + WIDE_BUBBLE_PAD
+
+
+def _upload_receipt_keyboard(lang: str) -> Optional[InlineKeyboardMarkup]:
+    if not WEBAPP_URL:
+        return None
+    return InlineKeyboardMarkup(inline_keyboard=[[
+        InlineKeyboardButton(
+            text=t(lang, "upload_receipt_button"),
+            web_app=WebAppInfo(url=f"{WEBAPP_URL}&screen=donor_cabinet"),
+        )
+    ]])
+
+
 async def _check_ship_reminders(bot: Bot) -> None:
     # Vaqti kelgan bronlar bazaning o'zida saralanadi (ehson va til bilan
     # birga, bitta so'rovda) — bronlar soni ko'payganda ham tez ishlaydi.
+    # Eslatma chek yuklanmaguncha (ehson yo'lga chiqmaguncha) takrorlanadi.
     due = await get_due_ship_reminders(
         FIRST_REMINDER_AFTER, SECOND_REMINDER_AFTER, REPEAT_REMINDER_AFTER
     )
@@ -70,12 +100,8 @@ async def _check_ship_reminders(bot: Bot) -> None:
                 bot,
                 reservation["donor_id"],
                 reservation["donor_notify_message_id"],
-                t(
-                    donor_lang,
-                    "ship_reminder",
-                    description=escape(reservation["description"] or "", quote=False),
-                ),
-                reply_markup=_open_app_keyboard(donor_lang, "donor_cabinet"),
+                _ship_reminder_text(donor_lang, reservation),
+                reply_markup=_upload_receipt_keyboard(donor_lang),
             ))
             await record_donor_reminder(reservation["id"], message_id)
         except TelegramForbiddenError:
