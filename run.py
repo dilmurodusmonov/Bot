@@ -42,7 +42,9 @@ async def main() -> None:
     support_task = None
     if SUPPORT_BOT_TOKEN:
         support_bot = Bot(token=SUPPORT_BOT_TOKEN, default=DefaultBotProperties(parse_mode=ParseMode.HTML))
-        support_dp = Dispatcher()
+        # Aloqa botidagi javoblar ostidagi "🤖 Ehson App" tugmasi asosiy
+        # botning Mini App'ini ochadi — buning uchun asosiy bot nomi kerak.
+        support_dp = Dispatcher(main_bot_username=(await bot.get_me()).username)
         support_dp.include_router(support.router)
         # Livegram kabi oldingi xizmat qo'ygan webhook olib tashlanadi —
         # aks holda xabarlar bizga kelmaydi.
