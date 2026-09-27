@@ -10,9 +10,15 @@ import time
 from html import escape
 
 from aiogram import Bot, F, Router
-from aiogram.exceptions import TelegramAPIError
+from aiogram.exceptions import TelegramAPIError, TelegramBadRequest
 from aiogram.filters import CommandStart
-from aiogram.types import Message, ReactionTypeEmoji
+from aiogram.types import (
+    CopyTextButton,
+    InlineKeyboardButton,
+    InlineKeyboardMarkup,
+    Message,
+    ReactionTypeEmoji,
+)
 
 from bot.config import SUPPORT_ADMIN_IDS
 from bot.database import get_support_message_user, get_user_language, save_support_message
@@ -64,6 +70,24 @@ async def _send_reply_to_user(bot: Bot, user_id: int, message: Message) -> None:
         # Stiker, dumaloq video va h.k. — izoh qo'yib bo'lmaydi: avval belgi, keyin xabar.
         await bot.send_message(user_id, REPLY_HEADER.strip())
         await bot.copy_message(chat_id=user_id, from_chat_id=message.chat.id, message_id=message.message_id)
+
+
+async def _send_user_info(bot: Bot, admin_id: int, text: str, user_id: int, reply_to: int) -> Message:
+    """Forward'da avatar ko'rinmaganda: ism/ID va tugmalar — "Lichkaga yozish"
+    (tg://user?id=...) va "ID nusxalash". Foydalanuvchining maxfiylik
+    sozlamasi lichka havolasiga ruxsat bermasa, Telegram tugmani rad etadi —
+    shunda faqat ID nusxalash tugmasi qoladi."""
+    copy_btn = InlineKeyboardButton(text="📋 ID nusxalash", copy_text=CopyTextButton(text=str(user_id)))
+    dm_btn = InlineKeyboardButton(text="💬 Lichkaga yozish", url=f"tg://user?id={user_id}")
+    for rows in ([[dm_btn], [copy_btn]], [[copy_btn]]):
+        try:
+            return await bot.send_message(
+                admin_id, text, reply_to_message_id=reply_to, disable_web_page_preview=True,
+                reply_markup=InlineKeyboardMarkup(inline_keyboard=rows),
+            )
+        except TelegramBadRequest:
+            continue
+    return await bot.send_message(admin_id, text, reply_to_message_id=reply_to, disable_web_page_preview=True)
 
 
 @router.message(CommandStart())
@@ -132,9 +156,7 @@ async def on_user_message(message: Message, bot: Bot) -> None:
             # avatar ko'rinmaydi — shuning uchun ism havolasini alohida yozamiz.
             origin_hidden = getattr(fwd.forward_origin, "type", None) == "hidden_user"
             if origin_hidden and now - _last_header.get((admin_id, user.id), 0) > HEADER_INTERVAL_SECONDS:
-                info = await bot.send_message(
-                    admin_id, who, reply_to_message_id=fwd.message_id, disable_web_page_preview=True,
-                )
+                info = await _send_user_info(bot, admin_id, who, user.id, fwd.message_id)
         except TelegramAPIError:
             logger.warning("Aloqa xabari adminga yetmadi (admin %s /start bosmagan bo'lishi mumkin)", admin_id)
             continue
