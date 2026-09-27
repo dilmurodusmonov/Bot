@@ -140,6 +140,13 @@ async def _migrate_support_messages(conn: asyncpg.Connection) -> None:
     )
     await conn.execute("ALTER TABLE support_messages ADD COLUMN IF NOT EXISTS bot_id BIGINT NOT NULL DEFAULT 0")
     await conn.execute("ALTER TABLE support_messages ADD COLUMN IF NOT EXISTS origin_bot_id BIGINT NOT NULL DEFAULT 0")
+    # Foydalanuvchining asl xabari (u yozgan bot chatidagi raqami) — bitta
+    # xabarning turli admin chatlaridagi nusxalarini bog'laydi: bir admin
+    # javob bersa, javob boshqa adminlarga ham shu xabar ostida ko'rsatiladi.
+    await conn.execute("ALTER TABLE support_messages ADD COLUMN IF NOT EXISTS user_message_id BIGINT NOT NULL DEFAULT 0")
+    await conn.execute(
+        "CREATE INDEX IF NOT EXISTS support_messages_user_msg ON support_messages (user_id, user_message_id)"
+    )
     # Har bir botning admin chati alohida — xabar raqamlari botlar orasida
     # takrorlanishi mumkin, shuning uchun kalitga bot_id ham kiradi.
     key_len = await conn.fetchval(
@@ -154,25 +161,42 @@ async def _migrate_support_messages(conn: asyncpg.Connection) -> None:
 
 async def save_support_message(
     bot_id: int, admin_chat_id: int, admin_message_id: int, user_id: int, origin_bot_id: int,
+    user_message_id: int = 0,
 ) -> None:
     await _get_pool().execute(
-        """INSERT INTO support_messages (bot_id, admin_chat_id, admin_message_id, user_id, origin_bot_id)
-           VALUES ($1, $2, $3, $4, $5) ON CONFLICT DO NOTHING""",
-        bot_id, admin_chat_id, admin_message_id, user_id, origin_bot_id,
+        """INSERT INTO support_messages
+               (bot_id, admin_chat_id, admin_message_id, user_id, origin_bot_id, user_message_id)
+           VALUES ($1, $2, $3, $4, $5, $6) ON CONFLICT DO NOTHING""",
+        bot_id, admin_chat_id, admin_message_id, user_id, origin_bot_id, user_message_id,
     )
 
 
 async def get_support_message_target(
     bot_id: int, admin_chat_id: int, admin_message_id: int,
-) -> Optional[tuple[int, int]]:
-    """(foydalanuvchi ID, u yozgan bot ID; eski yozuvlarda 0)."""
+) -> Optional[tuple[int, int, int]]:
+    """(foydalanuvchi ID, u yozgan bot ID, asl xabar raqami; eski yozuvlarda 0)."""
     row = await _get_pool().fetchrow(
-        """SELECT user_id, origin_bot_id FROM support_messages
+        """SELECT user_id, origin_bot_id, user_message_id FROM support_messages
            WHERE admin_chat_id = $2 AND admin_message_id = $3 AND bot_id IN ($1, 0)
            ORDER BY bot_id DESC LIMIT 1""",
         bot_id, admin_chat_id, admin_message_id,
     )
-    return (row["user_id"], row["origin_bot_id"]) if row else None
+    return (row["user_id"], row["origin_bot_id"], row["user_message_id"]) if row else None
+
+
+async def get_support_message_copies(
+    user_id: int, origin_bot_id: int, user_message_id: int,
+) -> list[tuple[int, int, int]]:
+    """Foydalanuvchining bitta xabarining admin chatlaridagi nusxalari —
+    har bir (bot, admin chati) uchun birinchisi: (bot ID, chat ID, xabar raqami)."""
+    rows = await _get_pool().fetch(
+        """SELECT DISTINCT ON (bot_id, admin_chat_id) bot_id, admin_chat_id, admin_message_id
+           FROM support_messages
+           WHERE user_id = $1 AND origin_bot_id = $2 AND user_message_id = $3
+           ORDER BY bot_id, admin_chat_id, created_at, admin_message_id""",
+        user_id, origin_bot_id, user_message_id,
+    )
+    return [(r["bot_id"], r["admin_chat_id"], r["admin_message_id"]) for r in rows]
 
 
 async def _create_indexes(conn: asyncpg.Connection) -> None:
