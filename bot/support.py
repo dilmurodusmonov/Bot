@@ -46,7 +46,7 @@ async def _lang_for(message: Message) -> str:
 
 # Admin javobi foydalanuvchiga shu belgi bilan boradi — javob Ehson App
 # jamoasidan ekani darhol ajralib turadi.
-REPLY_HEADER = "🤖 <b>Ehson App</b>\n"
+REPLY_HEADER = "🤖 <b>Ehson App</b>\n\n"
 # Izoh (caption) qo'shib bo'ladigan xabar turlari.
 _CAPTION_TYPES = ("photo", "video", "document", "audio", "voice", "animation")
 
