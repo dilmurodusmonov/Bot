@@ -147,6 +147,17 @@ async def _migrate_support_messages(conn: asyncpg.Connection) -> None:
     await conn.execute(
         "CREATE INDEX IF NOT EXISTS support_messages_user_msg ON support_messages (user_id, user_message_id)"
     )
+    # Suhbat kimga biriktirilgan: birinchi javob bergan admin (bot + chat).
+    # Oxirgi faollikdan (xabar yoki javob) belgilangan vaqt o'tsa, biriktirish
+    # tugaydi — foydalanuvchining yangi xabari yana barcha adminlarga boradi.
+    await conn.execute(
+        """CREATE TABLE IF NOT EXISTS support_claims (
+               user_id BIGINT PRIMARY KEY,
+               bot_id BIGINT NOT NULL,
+               admin_chat_id BIGINT NOT NULL,
+               updated_at TIMESTAMPTZ NOT NULL DEFAULT now()
+           )"""
+    )
     # Har bir botning admin chati alohida — xabar raqamlari botlar orasida
     # takrorlanishi mumkin, shuning uchun kalitga bot_id ham kiradi.
     key_len = await conn.fetchval(
@@ -195,6 +206,57 @@ async def get_support_message_copies(
            WHERE user_id = $1 AND origin_bot_id = $2 AND user_message_id = $3
            ORDER BY bot_id, admin_chat_id, created_at, admin_message_id""",
         user_id, origin_bot_id, user_message_id,
+    )
+    return [(r["bot_id"], r["admin_chat_id"], r["admin_message_id"]) for r in rows]
+
+
+async def get_support_claim(user_id: int, ttl) -> Optional[tuple[int, int]]:
+    """Faol biriktirish: (bot ID, admin chat ID) yoki None."""
+    row = await _get_pool().fetchrow(
+        """SELECT bot_id, admin_chat_id FROM support_claims
+           WHERE user_id = $1 AND updated_at > now() - $2::interval""",
+        user_id, ttl,
+    )
+    return (row["bot_id"], row["admin_chat_id"]) if row else None
+
+
+async def claim_support_user(user_id: int, bot_id: int, admin_chat_id: int, ttl) -> tuple[int, int, bool]:
+    """Suhbatni adminga biriktiradi (faol biriktirish bo'lmasa) — atomar: ikki
+    admin bir vaqtda javob bersa, faqat bittasi oladi. (egasining bot ID,
+    chat ID, shu chaqiruvda biriktirildimi). Faollik vaqti yangilanadi."""
+    pool = _get_pool()
+    row = await pool.fetchrow(
+        """INSERT INTO support_claims (user_id, bot_id, admin_chat_id, updated_at)
+           VALUES ($1, $2, $3, now())
+           ON CONFLICT (user_id) DO UPDATE
+               SET bot_id = EXCLUDED.bot_id, admin_chat_id = EXCLUDED.admin_chat_id, updated_at = now()
+               WHERE support_claims.updated_at <= now() - $4::interval
+           RETURNING bot_id, admin_chat_id""",
+        user_id, bot_id, admin_chat_id, ttl,
+    )
+    if row:
+        return row["bot_id"], row["admin_chat_id"], True
+    row = await pool.fetchrow(
+        "UPDATE support_claims SET updated_at = now() WHERE user_id = $1 RETURNING bot_id, admin_chat_id",
+        user_id,
+    )
+    return row["bot_id"], row["admin_chat_id"], False
+
+
+async def touch_support_claim(user_id: int) -> None:
+    await _get_pool().execute("UPDATE support_claims SET updated_at = now() WHERE user_id = $1", user_id)
+
+
+async def pop_support_copies_except(user_id: int, keep_chat_ids: list[int]) -> list[tuple[int, int, int]]:
+    """Foydalanuvchi xabarlarining keep_chat_ids'dan boshqa admin chatlaridagi
+    nusxalari (so'nggi 2 kun — Telegram eskiroq xabarni o'chirishga ruxsat
+    bermaydi) bazadan o'chiriladi va (bot ID, chat ID, xabar raqami) qaytadi."""
+    rows = await _get_pool().fetch(
+        """DELETE FROM support_messages
+           WHERE user_id = $1 AND NOT (admin_chat_id = ANY($2::bigint[]))
+             AND created_at > now() - interval '2 days'
+           RETURNING bot_id, admin_chat_id, admin_message_id""",
+        user_id, keep_chat_ids,
     )
     return [(r["bot_id"], r["admin_chat_id"], r["admin_message_id"]) for r in rows]
 

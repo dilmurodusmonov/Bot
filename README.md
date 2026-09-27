@@ -68,6 +68,7 @@ Variables bo'limida saqlanadi — kodga yoki GitHub'ga yozilmaydi.
 | `SUPPORT_BOT_TOKEN` | yo'q | O'zimizning aloqa botimiz (@ceo_ehson_bot) tokeni — reklamasiz, Livegram o'rniga. Bo'sh bo'lsa aloqa boti ishlamaydi |
 | `SUPPORT_BOT_TOKEN_2` | yo'q | Ikkinchi aloqa boti (masalan @manager_ehson_bot) tokeni. Foydalanuvchi qaysi aloqa botiga yozsa ham xabar ikkala botdagi adminlarga keladi; admin qaysi botdan javob bersa ham javob foydalanuvchi yozgan bot orqali boradi |
 | `SUPPORT_ADMIN_IDS` | yo'q | Aloqa xabarlari boradigan adminlar ID'lari (vergul bilan); bo'sh bo'lsa `AD_ADMIN_IDS` |
+| `SUPPORT_CEO_ID` | yo'q | Barcha aloqa suhbatlarini kuzatuvchi CEO'ning Telegram ID'si (bo'sh bo'lsa `SUPPORT_ADMIN_IDS` dagi birinchi ID). Birinchi javob bergan admin suhbatni oladi: xabar boshqa adminlardan o'chadi, suhbat faqat u va CEO o'rtasida davom etadi (24 soat jimlikdan keyin yana hammaga) |
 | `KEEP_AWAKE` | yo'q | `1` (standart) — Render bepul tarifida server uxlamasligi uchun o'ziga so'rov yuboradi; test xizmatida `0` |
 | `MIGRATE_FROM_DATABASE_URL` | yo'q | Faqat serverni boshqa mintaqaga ko'chirishda: eski baza manzili. Ishga tushganda eski bazadagi hamma ma'lumot yangi bazaga bir marta nusxalanadi (yangi bazadagi yozuvlar almashtiriladi); keyin o'chirib qo'yiladi |
 | `MINI_APP_SHORT_NAME` | yo'q | @BotFather /newapp qisqa nomi (standart `app`) |
