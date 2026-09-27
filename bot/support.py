@@ -4,6 +4,13 @@ Foydalanuvchi aloqa botiga yozgan har bir xabar (matn, rasm, ovoz, fayl...)
 adminlarga uzatiladi (forward) — tepasida yozgan odamning avatari va ismi
 ko'rinadi, bosilsa uning profili ochiladi. Admin shu xabarlardan biriga Reply qilib javob yozsa,
 javob foydalanuvchiga bot nomidan boradi — admin akkaunti yashirin qoladi.
+
+Aloqa botlari bir nechta bo'lishi mumkin (SUPPORT_BOT_TOKEN_2): foydalanuvchi
+qaysi botga yozsa ham xabar har bir botdagi admin chatlariga keladi (admin
+qaysi botga /start bosgan bo'lsa). Admin qaysi botdan javob yozsa ham, javob
+foydalanuvchiga u yozgan bot orqali boradi. Botlar bir-birining chatidagi
+xabarni nusxalay olmaydi va fayl ID'lari botga xos — boshqa bot orqali
+yuborishda matn qayta yoziladi, fayllar yuklab olinib qayta yuklanadi.
 """
 import logging
 import time
@@ -14,6 +21,7 @@ from aiogram import Bot, F, Router
 from aiogram.exceptions import TelegramAPIError, TelegramBadRequest
 from aiogram.filters import CommandStart
 from aiogram.types import (
+    BufferedInputFile,
     CopyTextButton,
     InlineKeyboardButton,
     InlineKeyboardMarkup,
@@ -22,7 +30,7 @@ from aiogram.types import (
 )
 
 from bot.config import MINI_APP_SHORT_NAME, SUPPORT_ADMIN_IDS
-from bot.database import get_support_message_user, get_user_language, save_support_message
+from bot.database import get_support_message_target, get_user_language, save_support_message
 from bot.texts import LANGUAGES, t
 
 logger = logging.getLogger(__name__)
@@ -65,37 +73,109 @@ def _app_keyboard(main_bot_username: Optional[str]) -> Optional[InlineKeyboardMa
     )]])
 
 
+# Boshqa bot orqali qayta yuboriladigan fayl turlari: (maydon, usul, standart nom).
+# animation document'dan oldin — GIF'da ikkalasi ham bo'ladi.
+_MEDIA_KINDS = (
+    ("photo", "send_photo", "photo.jpg"),
+    ("animation", "send_animation", "animation.mp4"),
+    ("video", "send_video", "video.mp4"),
+    ("video_note", "send_video_note", "video_note.mp4"),
+    ("sticker", "send_sticker", "sticker.webp"),
+    ("voice", "send_voice", "voice.ogg"),
+    ("audio", "send_audio", "audio.mp3"),
+    ("document", "send_document", "file"),
+)
+
+Media = tuple[str, str, bytes, str]
+
+
+async def _download_media(src: Bot, message: Message) -> Optional[Media]:
+    """Xabardagi faylni src bot orqali yuklab oladi: (tur, usul, baytlar, nom)."""
+    for kind, method, default_name in _MEDIA_KINDS:
+        obj = getattr(message, kind)
+        if not obj:
+            continue
+        if kind == "photo":
+            obj = obj[-1]
+        name = getattr(obj, "file_name", None) or default_name
+        if kind == "sticker":
+            name = "sticker.webm" if obj.is_video else "sticker.tgs" if obj.is_animated else name
+        buf = await src.download(obj.file_id)
+        return kind, method, buf.getvalue(), name
+    return None
+
+
+def _describe(message: Message) -> str:
+    """Fayl bo'lmagan, boshqa bot orqali nusxalab bo'lmaydigan xabar turlari."""
+    if message.location:
+        return f"📍 {message.location.latitude}, {message.location.longitude}"
+    if message.contact:
+        c = message.contact
+        return f"📞 {escape(' '.join(filter(None, [c.first_name, c.last_name])))}: {escape(c.phone_number)}"
+    return f"[{message.content_type}]"
+
+
+async def _copy(
+    src: Bot, dst: Bot, chat_id: int, message: Message,
+    caption: Optional[str] = None, reply_markup: Optional[InlineKeyboardMarkup] = None,
+    media: Optional[Media] = None,
+) -> Message:
+    """message'ni chat_id ga dst bot orqali yuboradi. Bir bot bo'lsa —
+    copy_message; boshqa bot bo'lsa matn qayta yoziladi, fayl qayta yuklanadi
+    (media — oldindan yuklab olingan fayl, har admin uchun qayta yuklamaslik uchun)."""
+    if src.id == dst.id:
+        kwargs = {}
+        if caption is not None:
+            kwargs.update(caption=caption[:1024], parse_mode="HTML")
+        if reply_markup is not None:
+            kwargs["reply_markup"] = reply_markup
+        return await dst.copy_message(
+            chat_id=chat_id, from_chat_id=message.chat.id, message_id=message.message_id, **kwargs,
+        )
+    if message.text:
+        return await dst.send_message(
+            chat_id, message.html_text, disable_web_page_preview=True, reply_markup=reply_markup,
+        )
+    if media is None:
+        media = await _download_media(src, message)
+    if media is None:
+        return await dst.send_message(chat_id, (caption or "") + _describe(message), reply_markup=reply_markup)
+    kind, method, data, name = media
+    kwargs = {kind: BufferedInputFile(data, filename=name), "reply_markup": reply_markup}
+    if kind in _CAPTION_TYPES:
+        text = caption if caption is not None else message.html_text
+        if text:
+            kwargs.update(caption=text[:1024], parse_mode="HTML")
+    return await getattr(dst, method)(chat_id, **kwargs)
+
+
 async def _send_reply_to_user(
-    bot: Bot, user_id: int, message: Message, main_bot_username: Optional[str] = None,
+    src: Bot, dst: Bot, user_id: int, message: Message, main_bot_username: Optional[str] = None,
 ) -> None:
+    """Admin javobi (src botdagi xabar) foydalanuvchiga dst bot orqali."""
     keyboard = _app_keyboard(main_bot_username)
     header = "" if keyboard else REPLY_HEADER
     if message.text:
-        await bot.send_message(
+        await dst.send_message(
             user_id, header + message.html_text, disable_web_page_preview=True, reply_markup=keyboard,
         )
     elif any(getattr(message, kind) for kind in _CAPTION_TYPES):
-        caption = header + (message.html_text or "")
-        await bot.copy_message(
-            chat_id=user_id, from_chat_id=message.chat.id, message_id=message.message_id,
-            caption=caption[:1024], parse_mode="HTML", reply_markup=keyboard,
-        )
+        await _copy(src, dst, user_id, message, caption=header + (message.html_text or ""), reply_markup=keyboard)
     elif keyboard:
         # Stiker, dumaloq video va h.k. — tugma xabarning o'ziga biriktiriladi.
-        await bot.copy_message(
-            chat_id=user_id, from_chat_id=message.chat.id, message_id=message.message_id,
-            reply_markup=keyboard,
-        )
+        await _copy(src, dst, user_id, message, reply_markup=keyboard)
     else:
-        await bot.send_message(user_id, REPLY_HEADER.strip())
-        await bot.copy_message(chat_id=user_id, from_chat_id=message.chat.id, message_id=message.message_id)
+        await dst.send_message(user_id, REPLY_HEADER.strip())
+        await _copy(src, dst, user_id, message)
 
 
-async def _copy_with_user_button(bot: Bot, admin_id: int, message: Message) -> Message:
-    """Forward'da avatar ko'rinmaganda (foydalanuvchi uzatishni yashirgan):
-    xabarning o'zi nusxalanadi, ostida "👤 Ism" tugmasi. Tugma lichkani
-    ochadi (username bo'lsa t.me, bo'lmasa tg://user?id=...); foydalanuvchi
-    maxfiylik sababli ID orqali lichkaga ruxsat bermasa — ID nusxalanadi."""
+async def _copy_with_user_button(
+    src: Bot, dst: Bot, admin_id: int, message: Message, media: Optional[Media] = None,
+) -> Message:
+    """Xabarning o'zi, ostida "👤 Ism" tugmasi — forward'da avatar ko'rinmaganda
+    (foydalanuvchi uzatishni yashirgan) yoki xabar boshqa bot orqali kelganda.
+    Tugma lichkani ochadi (username bo'lsa t.me, bo'lmasa tg://user?id=...);
+    foydalanuvchi maxfiylik sababli ID orqali lichkaga ruxsat bermasa — ID nusxalanadi."""
     user = message.from_user
     label = f"👤 {user.full_name or user.id}"[:64]
     buttons = []
@@ -105,14 +185,16 @@ async def _copy_with_user_button(bot: Bot, admin_id: int, message: Message) -> M
     buttons.append(InlineKeyboardButton(text=label, copy_text=CopyTextButton(text=str(user.id))))
     for button in buttons:
         try:
-            return await bot.copy_message(
-                chat_id=admin_id, from_chat_id=message.chat.id, message_id=message.message_id,
+            return await _copy(
+                src, dst, admin_id, message, media=media,
                 reply_markup=InlineKeyboardMarkup(inline_keyboard=[[button]]),
             )
-        except TelegramBadRequest:
+        except TelegramBadRequest as e:
             # Masalan BUTTON_USER_PRIVACY_RESTRICTED — keyingi variant.
-            continue
-    return await bot.copy_message(chat_id=admin_id, from_chat_id=message.chat.id, message_id=message.message_id)
+            # Boshqa xato (admin botga /start bosmagan va h.k.) — tugma aybdor emas.
+            if "BUTTON" not in str(e).upper():
+                raise
+    return await _copy(src, dst, admin_id, message, media=media)
 
 
 @router.message(CommandStart())
@@ -129,15 +211,21 @@ async def on_start(message: Message) -> None:
 
 
 @router.message(F.reply_to_message, F.func(lambda m: m.from_user and m.from_user.id in SUPPORT_ADMIN_IDS))
-async def on_admin_reply(message: Message, bot: Bot, main_bot_username: Optional[str] = None) -> None:
-    """Admin foydalanuvchi xabariga Reply qildi — javobni foydalanuvchiga yuboramiz."""
-    user_id = await get_support_message_user(message.chat.id, message.reply_to_message.message_id)
-    if not user_id:
+async def on_admin_reply(
+    message: Message, bot: Bot, main_bot_username: Optional[str] = None,
+    support_bots: Optional[dict[int, Bot]] = None,
+) -> None:
+    """Admin foydalanuvchi xabariga Reply qildi — javobni foydalanuvchiga
+    u yozgan bot orqali yuboramiz."""
+    target = await get_support_message_target(bot.id, message.chat.id, message.reply_to_message.message_id)
+    if not target:
         await message.reply("⚠️ Bu xabar qaysi foydalanuvchiniki ekanini topa olmadim. "
                             "Foydalanuvchidan kelgan xabarga Reply qiling.")
         return
+    user_id, origin_bot_id = target
+    dst = (support_bots or {}).get(origin_bot_id, bot)
     try:
-        await _send_reply_to_user(bot, user_id, message, main_bot_username)
+        await _send_reply_to_user(bot, dst, user_id, message, main_bot_username)
     except TelegramAPIError as e:
         await message.reply(f"❌ Yuborilmadi: {escape(str(e))[:300]}\n(Foydalanuvchi botni bloklagan bo'lishi mumkin.)")
         return
@@ -156,32 +244,46 @@ async def on_admin_message(message: Message) -> None:
 
 
 @router.message()
-async def on_user_message(message: Message, bot: Bot) -> None:
-    """Foydalanuvchi xabari — barcha adminlarga yuboriladi."""
+async def on_user_message(message: Message, bot: Bot, support_bots: Optional[dict[int, Bot]] = None) -> None:
+    """Foydalanuvchi xabari — har bir aloqa botidagi barcha adminlarga yuboriladi."""
     user = message.from_user
     if not user or message.chat.type != "private":
         return
+    # Avval foydalanuvchi yozgan bot, keyin qolganlari.
+    bots = sorted((support_bots or {bot.id: bot}).values(), key=lambda b: b.id != bot.id)
+    media: Optional[Media] = None
+    media_loaded = False
     delivered = False
-    for admin_id in SUPPORT_ADMIN_IDS:
-        try:
-            # Forward: xabar tepasida foydalanuvchining avatari va ismi
-            # ko'rinadi, ism bosilsa profili/lichkasi ochiladi.
-            sent = await bot.forward_message(
-                chat_id=admin_id, from_chat_id=message.chat.id, message_id=message.message_id,
-            )
-            # Foydalanuvchi uzatishni yashirgan bo'lsa avatar ko'rinmaydi —
-            # forward o'rniga xabarning o'zi "👤 Ism" tugmasi bilan yuboriladi.
-            if getattr(sent.forward_origin, "type", None) == "hidden_user":
-                try:
-                    await bot.delete_message(chat_id=admin_id, message_id=sent.message_id)
-                except TelegramAPIError:
-                    pass
-                sent = await _copy_with_user_button(bot, admin_id, message)
-        except TelegramAPIError:
-            logger.warning("Aloqa xabari adminga yetmadi (admin %s /start bosmagan bo'lishi mumkin)", admin_id)
-            continue
-        await save_support_message(admin_id, sent.message_id, user.id)
-        delivered = True
+    for dst in bots:
+        for admin_id in SUPPORT_ADMIN_IDS:
+            try:
+                if dst.id == bot.id:
+                    # Forward: xabar tepasida foydalanuvchining avatari va ismi
+                    # ko'rinadi, ism bosilsa profili/lichkasi ochiladi.
+                    sent = await bot.forward_message(
+                        chat_id=admin_id, from_chat_id=message.chat.id, message_id=message.message_id,
+                    )
+                    # Foydalanuvchi uzatishni yashirgan bo'lsa avatar ko'rinmaydi —
+                    # forward o'rniga xabarning o'zi "👤 Ism" tugmasi bilan yuboriladi.
+                    if getattr(sent.forward_origin, "type", None) == "hidden_user":
+                        try:
+                            await bot.delete_message(chat_id=admin_id, message_id=sent.message_id)
+                        except TelegramAPIError:
+                            pass
+                        sent = await _copy_with_user_button(bot, bot, admin_id, message)
+                else:
+                    # Boshqa bot forward qila olmaydi — fayl bir marta yuklab
+                    # olinadi va har bir adminga qayta yuklanadi.
+                    if not media_loaded and not message.text:
+                        media_loaded = True
+                        media = await _download_media(bot, message)
+                    sent = await _copy_with_user_button(bot, dst, admin_id, message, media)
+            except TelegramAPIError:
+                logger.warning("Aloqa xabari adminga yetmadi (admin %s bot %s ga /start bosmagan bo'lishi mumkin)",
+                               admin_id, dst.id)
+                continue
+            await save_support_message(dst.id, admin_id, sent.message_id, user.id, bot.id)
+            delivered = True
 
     if not delivered:
         logger.error("Aloqa xabari hech bir adminga yetmadi (SUPPORT_ADMIN_IDS: %s)", SUPPORT_ADMIN_IDS)
