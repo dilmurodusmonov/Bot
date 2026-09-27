@@ -69,10 +69,13 @@ def _is_ceo(admin_id: int) -> bool:
 
 
 def _bots_for_admin(admin_id: int, bots: list[Bot], prefer_id: Optional[int] = None) -> list[Bot]:
-    """Adminga qaysi bot orqali yuborish tartibi: CEO — birinchi (CEO) bot,
-    boshqa adminlar — ikkinchi va keyingi botlar (o'z botlari), keyin qolgani.
-    prefer_id — suhbat biriktirilgan bot, u birinchi sinaladi."""
-    order = list(bots) if _is_ceo(admin_id) else bots[1:] + bots[:1]
+    """Adminga qaysi bot orqali yuborish tartibi: CEO'ga — faqat CEO aloqa
+    boti (birinchi bot) orqali, barcha xabar va javoblar o'sha yerda
+    jamlanadi; boshqa adminlarga — ikkinchi va keyingi botlar (o'z botlari),
+    keyin qolgani. prefer_id — suhbat biriktirilgan bot, u birinchi sinaladi."""
+    if _is_ceo(admin_id):
+        return bots[:1]
+    order = bots[1:] + bots[:1]
     if prefer_id:
         order.sort(key=lambda b: b.id != prefer_id)
     return order
@@ -274,8 +277,12 @@ async def _share_reply_with_admins(
     header = f"↩️ <b>{escape(message.from_user.full_name or 'Admin', quote=False)}</b> javob berdi:\n\n"
     media: Optional[Media] = None
     media_loaded = False
+    ceo_bot_id = next(iter(support_bots))
     for bot_id, chat_id, message_id in await get_support_message_copies(user_id, origin_bot_id, user_message_id):
         if chat_id not in recipients or chat_id == message.chat.id:
+            continue
+        # CEO javoblarni faqat CEO aloqa botida ko'radi.
+        if _is_ceo(chat_id) and bot_id not in (ceo_bot_id, 0):
             continue
         dst = support_bots.get(bot_id) if bot_id else bot
         if dst is None:
