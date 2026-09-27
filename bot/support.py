@@ -32,9 +32,6 @@ router = Router()
 # shuncha vaqtda bir marta yuboriladi (ketma-ket yozganda chat to'lmasin).
 ACK_INTERVAL_SECONDS = 30 * 60
 _last_ack: dict[int, float] = {}
-# Adminga "kimdan" sarlavhasi ketma-ket xabarlarda takrorlanmaydi.
-HEADER_INTERVAL_SECONDS = 10 * 60
-_last_header: dict[tuple[int, int], float] = {}
 
 
 def _is_admin(message: Message) -> bool:
@@ -72,22 +69,28 @@ async def _send_reply_to_user(bot: Bot, user_id: int, message: Message) -> None:
         await bot.copy_message(chat_id=user_id, from_chat_id=message.chat.id, message_id=message.message_id)
 
 
-async def _send_user_info(bot: Bot, admin_id: int, text: str, user_id: int, reply_to: int) -> Message:
-    """Forward'da avatar ko'rinmaganda: ism/ID va tugmalar — "Lichkaga yozish"
-    (tg://user?id=...) va "ID nusxalash". Foydalanuvchining maxfiylik
-    sozlamasi lichka havolasiga ruxsat bermasa, Telegram tugmani rad etadi —
-    shunda faqat ID nusxalash tugmasi qoladi."""
-    copy_btn = InlineKeyboardButton(text="📋 ID nusxalash", copy_text=CopyTextButton(text=str(user_id)))
-    dm_btn = InlineKeyboardButton(text="💬 Lichkaga yozish", url=f"tg://user?id={user_id}")
-    for rows in ([[dm_btn], [copy_btn]], [[copy_btn]]):
+async def _copy_with_user_button(bot: Bot, admin_id: int, message: Message) -> Message:
+    """Forward'da avatar ko'rinmaganda (foydalanuvchi uzatishni yashirgan):
+    xabarning o'zi nusxalanadi, ostida "👤 Ism" tugmasi. Tugma lichkani
+    ochadi (username bo'lsa t.me, bo'lmasa tg://user?id=...); foydalanuvchi
+    maxfiylik sababli ID orqali lichkaga ruxsat bermasa — ID nusxalanadi."""
+    user = message.from_user
+    label = f"👤 {user.full_name or user.id}"[:64]
+    buttons = []
+    if user.username:
+        buttons.append(InlineKeyboardButton(text=label, url=f"https://t.me/{user.username}"))
+    buttons.append(InlineKeyboardButton(text=label, url=f"tg://user?id={user.id}"))
+    buttons.append(InlineKeyboardButton(text=label, copy_text=CopyTextButton(text=str(user.id))))
+    for button in buttons:
         try:
-            return await bot.send_message(
-                admin_id, text, reply_to_message_id=reply_to, disable_web_page_preview=True,
-                reply_markup=InlineKeyboardMarkup(inline_keyboard=rows),
+            return await bot.copy_message(
+                chat_id=admin_id, from_chat_id=message.chat.id, message_id=message.message_id,
+                reply_markup=InlineKeyboardMarkup(inline_keyboard=[[button]]),
             )
         except TelegramBadRequest:
+            # Masalan BUTTON_USER_PRIVACY_RESTRICTED — keyingi variant.
             continue
-    return await bot.send_message(admin_id, text, reply_to_message_id=reply_to, disable_web_page_preview=True)
+    return await bot.copy_message(chat_id=admin_id, from_chat_id=message.chat.id, message_id=message.message_id)
 
 
 @router.message(CommandStart())
@@ -136,38 +139,31 @@ async def on_user_message(message: Message, bot: Bot) -> None:
     user = message.from_user
     if not user or message.chat.type != "private":
         return
-    # Ism bosilsa profil/lichka ochiladi: username bo'lsa t.me havolasi,
-    # bo'lmasa tg://user?id=... (Telegram ilovasi profilni ochadi).
-    link = f"https://t.me/{user.username}" if user.username else f"tg://user?id={user.id}"
-    username = f" · @{escape(user.username)}" if user.username else ""
-    who = f'👤 <a href="{link}">{escape(user.full_name or str(user.id))}</a>{username}\n🆔 <code>{user.id}</code>'
-
     delivered = False
-    now = time.time()
     for admin_id in SUPPORT_ADMIN_IDS:
         try:
             # Forward: xabar tepasida foydalanuvchining avatari va ismi
             # ko'rinadi, ism bosilsa profili/lichkasi ochiladi.
-            fwd = await bot.forward_message(
+            sent = await bot.forward_message(
                 chat_id=admin_id, from_chat_id=message.chat.id, message_id=message.message_id,
             )
-            info = None
-            # Foydalanuvchi Telegram sozlamalarida uzatishni yashirgan bo'lsa,
-            # avatar ko'rinmaydi — shuning uchun ism havolasini alohida yozamiz.
-            origin_hidden = getattr(fwd.forward_origin, "type", None) == "hidden_user"
-            if origin_hidden and now - _last_header.get((admin_id, user.id), 0) > HEADER_INTERVAL_SECONDS:
-                info = await _send_user_info(bot, admin_id, who, user.id, fwd.message_id)
+            # Foydalanuvchi uzatishni yashirgan bo'lsa avatar ko'rinmaydi —
+            # forward o'rniga xabarning o'zi "👤 Ism" tugmasi bilan yuboriladi.
+            if getattr(sent.forward_origin, "type", None) == "hidden_user":
+                try:
+                    await bot.delete_message(chat_id=admin_id, message_id=sent.message_id)
+                except TelegramAPIError:
+                    pass
+                sent = await _copy_with_user_button(bot, admin_id, message)
         except TelegramAPIError:
             logger.warning("Aloqa xabari adminga yetmadi (admin %s /start bosmagan bo'lishi mumkin)", admin_id)
             continue
-        if info:
-            _last_header[(admin_id, user.id)] = now
-            await save_support_message(admin_id, info.message_id, user.id)
-        await save_support_message(admin_id, fwd.message_id, user.id)
+        await save_support_message(admin_id, sent.message_id, user.id)
         delivered = True
 
     if not delivered:
         logger.error("Aloqa xabari hech bir adminga yetmadi (SUPPORT_ADMIN_IDS: %s)", SUPPORT_ADMIN_IDS)
+    now = time.time()
     if now - _last_ack.get(user.id, 0) > ACK_INTERVAL_SECONDS:
         _last_ack[user.id] = now
         await message.answer(t(await _lang_for(message), "support_received"))
