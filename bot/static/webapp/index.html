@@ -3446,11 +3446,14 @@
         "&limit=" + NEEDY_PAGE_SIZE + (before ? "&before=" + before : ""));
     }
 
-    // O'z ehsonini band qilib bo'lmaydi (server ham rad etadi).
+    // O'z ehsonini band qilib bo'lmaydi (server ham rad etadi) — uning
+    // o'rniga egasiga "O'chirish" tugmasi chiqadi.
     function cardsHtml(items) {
       return items.map(function (d) {
         var body = donationCardHtml(d);
-        if (canReserve && !d.is_mine) {
+        if (d.is_mine) {
+          body += '<button class="card-btn" data-delete-own="' + d.id + '">' + tr("delete_donation") + "</button>";
+        } else if (canReserve) {
           body += '<button class="card-btn" data-take="' + d.id + '">' + tr("take_it") + "</button>";
         }
         return body + "</div></div>";
@@ -3460,6 +3463,22 @@
     function wireChunk(root) {
       wireCardGalleries(root);
       wireCardActions(root);
+      root.querySelectorAll("[data-delete-own]").forEach(function (btn) {
+        btn.addEventListener("click", function () {
+          (new Image()).src = "/webapp-assets/sweat.webp";
+          if (!window.confirm(tr("confirm_delete_donation"))) return;
+          api("POST", "/api/donations/" + btn.getAttribute("data-delete-own") + "/delete", {})
+            .then(function () {
+              if (tg && tg.HapticFeedback) tg.HapticFeedback.notificationOccurred("success");
+              var deletedOverlay = showSuccess(tr("donation_deleted"), "\uD83D\uDE13", "anim:sweat.webp");
+              setTimeout(function () {
+                if (deletedOverlay.parentNode) deletedOverlay.parentNode.removeChild(deletedOverlay);
+                if (renderNeedyList.token === screenToken) renderNeedyList();
+              }, 5000);
+            })
+            .catch(function () { showError(); });
+        });
+      });
       if (canReserve) {
         root.querySelectorAll("[data-take]").forEach(function (btn) {
           btn.addEventListener("click", function () {
