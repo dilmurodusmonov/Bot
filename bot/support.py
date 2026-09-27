@@ -1,8 +1,8 @@
 """O'zimizning aloqa (qo'llab-quvvatlash) botimiz — Livegram o'rniga, reklamasiz.
 
 Foydalanuvchi aloqa botiga yozgan har bir xabar (matn, rasm, ovoz, fayl...)
-adminlarga yuboriladi: avval kimdan kelgani haqida qisqa sarlavha, keyin
-xabarning o'zi. Admin shu xabarlardan biriga Reply qilib javob yozsa,
+adminlarga uzatiladi (forward) — tepasida yozgan odamning avatari va ismi
+ko'rinadi, bosilsa uning profili ochiladi. Admin shu xabarlardan biriga Reply qilib javob yozsa,
 javob foydalanuvchiga bot nomidan boradi — admin akkaunti yashirin qoladi.
 """
 import logging
@@ -90,28 +90,36 @@ async def on_user_message(message: Message, bot: Bot) -> None:
     user = message.from_user
     if not user or message.chat.type != "private":
         return
-    name = escape(user.full_name or "")
-    username = f" (@{escape(user.username)})" if user.username else ""
-    header = f"✉️ <b>Yangi xabar</b>\n👤 {name}{username}\n🆔 <code>{user.id}</code>"
+    # Ism bosilsa profil/lichka ochiladi: username bo'lsa t.me havolasi,
+    # bo'lmasa tg://user?id=... (Telegram ilovasi profilni ochadi).
+    link = f"https://t.me/{user.username}" if user.username else f"tg://user?id={user.id}"
+    username = f" · @{escape(user.username)}" if user.username else ""
+    who = f'👤 <a href="{link}">{escape(user.full_name or str(user.id))}</a>{username}\n🆔 <code>{user.id}</code>'
 
     delivered = False
     now = time.time()
     for admin_id in SUPPORT_ADMIN_IDS:
         try:
-            head = None
-            if now - _last_header.get((admin_id, user.id), 0) > HEADER_INTERVAL_SECONDS:
-                head = await bot.send_message(admin_id, header)
-            copy = await bot.copy_message(
+            # Forward: xabar tepasida foydalanuvchining avatari va ismi
+            # ko'rinadi, ism bosilsa profili/lichkasi ochiladi.
+            fwd = await bot.forward_message(
                 chat_id=admin_id, from_chat_id=message.chat.id, message_id=message.message_id,
-                reply_to_message_id=head.message_id if head else None,
             )
+            info = None
+            # Foydalanuvchi Telegram sozlamalarida uzatishni yashirgan bo'lsa,
+            # avatar ko'rinmaydi — shuning uchun ism havolasini alohida yozamiz.
+            origin_hidden = getattr(fwd.forward_origin, "type", None) == "hidden_user"
+            if origin_hidden and now - _last_header.get((admin_id, user.id), 0) > HEADER_INTERVAL_SECONDS:
+                info = await bot.send_message(
+                    admin_id, who, reply_to_message_id=fwd.message_id, disable_web_page_preview=True,
+                )
         except TelegramAPIError:
             logger.warning("Aloqa xabari adminga yetmadi (admin %s /start bosmagan bo'lishi mumkin)", admin_id)
             continue
-        _last_header[(admin_id, user.id)] = now
-        if head:
-            await save_support_message(admin_id, head.message_id, user.id)
-        await save_support_message(admin_id, copy.message_id, user.id)
+        if info:
+            _last_header[(admin_id, user.id)] = now
+            await save_support_message(admin_id, info.message_id, user.id)
+        await save_support_message(admin_id, fwd.message_id, user.id)
         delivered = True
 
     if not delivered:
