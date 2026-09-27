@@ -98,9 +98,9 @@ async def on_start(message: Message) -> None:
     if _is_admin(message):
         await message.answer(
             "👋 Siz aloqa botining adminisiz.\n\n"
-            "Foydalanuvchilar yozgan xabarlar shu yerga keladi. Javob berish uchun "
-            "xabarga <b>Reply</b> qilib yozing — javob foydalanuvchiga "
-            "bot nomidan boradi."
+            "🔴 Foydalanuvchilar yozgan xabarlar shu yerga keladi!\n"
+            "🔴 Javob berish uchun xabarga <b>Reply</b> qilib yozing!\n"
+            "🔴 Javob foydalanuvchiga bot nomidan boradi!"
         )
         return
     await message.answer(t(await _lang_for(message), "support_welcome"))
