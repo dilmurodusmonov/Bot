@@ -734,9 +734,9 @@ async def get_reservations_by_needy(needy_id: int) -> list[dict[str, Any]]:
 
 async def get_due_ship_reminders(first, second, repeat) -> list[dict[str, Any]]:
     """Saxiy hali yo'lga chiqarmagan va eslatma vaqti kelgan bronlar —
-    ehson (donor_id, tavsif) va saxiy tili bilan birga, bitta so'rovda."""
+    ehson (donor_id, bo'lim, tavsif) va saxiy tili bilan birga, bitta so'rovda."""
     rows = await _get_pool().fetch(
-        """SELECT r.*, d.donor_id, d.description, u.language AS donor_language
+        """SELECT r.*, d.donor_id, d.category, d.description, u.language AS donor_language
            FROM reservations r
            JOIN donations d ON d.id = r.donation_id
            LEFT JOIN users u ON u.telegram_id = d.donor_id

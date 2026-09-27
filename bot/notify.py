@@ -4,6 +4,10 @@ from aiogram import Bot
 from aiogram.exceptions import TelegramAPIError
 from aiogram.types import InlineKeyboardMarkup
 
+# Xabar oxiriga qo'shiladigan ko'rinmas qator: pufak ekran kengligida
+# chiqadi va ostidagi tugma bilan bir xil enda turadi.
+WIDE_BUBBLE_PAD = "\n" + "⠀" * 36
+
 
 async def send_tracked_message(
     bot: Bot,

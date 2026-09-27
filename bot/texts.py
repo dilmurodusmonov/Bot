@@ -95,10 +95,8 @@ TEXTS = {
         ),
         "view_receipt_button": "🧾 Chekni ko'rish",
         "view_donation_button": "Ehsonni ko'rish",
-        "ship_reminder": (
-            "⏰ Eslatma! <b>{description}</b> ehsoningizni hali yo'lga chiqarmadingiz. "
-            "Iltimos, tezroq yuboring va Ehson App orqali chekni yuklang."
-        ),
+        # Eslatma sarlavhasi — ostida "yangi so'rov" xabaridagi to'liq ma'lumotlar.
+        "ship_reminder": "⏰ Eslatma! Ehsoningiz hali yo'lga chiqarilmadi!",
         "receive_reminder": (
             "⏰ Eslatma! Ehsoningiz yo'lda, lekin hali qabul qilganizni tasdiqlamadingiz. "
             "Iltimos, Ehson App orqali tasdiqlang."
@@ -148,10 +146,8 @@ TEXTS = {
         ),
         "view_receipt_button": "🧾 Посмотреть чек",
         "view_donation_button": "Посмотреть пожертвование",
-        "ship_reminder": (
-            "⏰ Напоминание! Вы ещё не отправили пожертвование «<b>{description}</b>». "
-            "Пожалуйста, отправьте его как можно скорее и загрузите чек через Ehson App."
-        ),
+        # Eslatma sarlavhasi — ostida "yangi so'rov" xabaridagi to'liq ma'lumotlar.
+        "ship_reminder": "⏰ Напоминание! Ваше пожертвование ещё не отправлено!",
         "receive_reminder": (
             "⏰ Напоминание! Ваше пожертвование в пути, но вы ещё не подтвердили получение. "
             "Пожалуйста, подтвердите через Ehson App."
@@ -201,10 +197,8 @@ TEXTS = {
         ),
         "view_receipt_button": "🧾 View receipt",
         "view_donation_button": "View donation",
-        "ship_reminder": (
-            "⏰ Reminder! You haven't shipped your donation \"<b>{description}</b>\" yet. "
-            "Please ship it soon and upload the receipt via Ehson App."
-        ),
+        # Eslatma sarlavhasi — ostida "yangi so'rov" xabaridagi to'liq ma'lumotlar.
+        "ship_reminder": "⏰ Reminder! Your donation hasn't been shipped yet!",
         "receive_reminder": (
             "⏰ Reminder! Your donation is on the way, but you haven't confirmed receipt yet. "
             "Please confirm via Ehson App."
@@ -254,10 +248,8 @@ TEXTS = {
         ),
         "view_receipt_button": "🧾 Чекті көру",
         "view_donation_button": "Қайырды көру",
-        "ship_reminder": (
-            "⏰ Еске салу! Сіз әлі <b>«{description}»</b> қайырыңызды жолға шығармадыңыз. "
-            "Өтінемін, жақын арада жіберіп, Ehson App арқылы чекті жүктеңіз."
-        ),
+        # Eslatma sarlavhasi — ostida "yangi so'rov" xabaridagi to'liq ma'lumotlar.
+        "ship_reminder": "⏰ Еске салу! Қайырыңыз әлі жолға шығарылмады!",
         "receive_reminder": (
             "⏰ Еске салу! Қайырыңыз жолда, бірақ сіз әлі қабылдағаныңызды растамадыңыз. "
             "Өтінемін, Ehson App арқылы растаңыз."
@@ -307,10 +299,8 @@ TEXTS = {
         ),
         "view_receipt_button": "🧾 Дидани чек",
         "view_donation_button": "Дидани хайрия",
-        "ship_reminder": (
-            "⏰ Ёдоварӣ! Шумо ҳанӯз хайрияи <b>«{description}»</b>-ро нафиристодаед. "
-            "Лутфан, наздиктар фиристед ва тавассути Ehson App чекро бор кунед."
-        ),
+        # Eslatma sarlavhasi — ostida "yangi so'rov" xabaridagi to'liq ma'lumotlar.
+        "ship_reminder": "⏰ Ёдоварӣ! Хайрияи шумо ҳанӯз фиристода нашудааст!",
         "receive_reminder": (
             "⏰ Ёдоварӣ! Хайрияи шумо дар роҳ аст, аммо шумо ҳанӯз қабул карданатонро тасдиқ накардаед. "
             "Лутфан, тавассути Ehson App тасдиқ кунед."
@@ -360,10 +350,8 @@ TEXTS = {
         ),
         "view_receipt_button": "🧾 Чекти көрүү",
         "view_donation_button": "Садаганы көрүү",
-        "ship_reminder": (
-            "⏰ Эскертүү! Сиз әли <b>«{description}»</b> садагаңызды жолго чыгарган жоксуз. "
-            "Сураныч, жакын арада жөнөтүп, Ehson App аркылуу чекти жүктөңүз."
-        ),
+        # Eslatma sarlavhasi — ostida "yangi so'rov" xabaridagi to'liq ma'lumotlar.
+        "ship_reminder": "⏰ Эскертүү! Садагаңыз али жолго чыгарыла элек!",
         "receive_reminder": (
             "⏰ Эскертүү! Садагаңыз жолдо, бирок сиз әли кабыл алганыңызды тастыктаган жоксуз. "
             "Сураныч, Ehson App аркылуу тастыктаңыз."
@@ -413,10 +401,8 @@ TEXTS = {
         ),
         "view_receipt_button": "🧾 Çeki görmek",
         "view_donation_button": "Sadakany görmek",
-        "ship_reminder": (
-            "⏰ Ýatlatma! Siz entäk <b>«{description}»</b> sadakaňyzy ýola çykarmadyňyz. "
-            "Haýyş, ýakyn wagtda iberiň we Ehson App arkaly çeki ýükläň."
-        ),
+        # Eslatma sarlavhasi — ostida "yangi so'rov" xabaridagi to'liq ma'lumotlar.
+        "ship_reminder": "⏰ Ýatlatma! Sadakaňyz entäk ýola çykarylmady!",
         "receive_reminder": (
             "⏰ Ýatlatma! Sadakaňyz ýolda, ýöne siz entäk kabul edendigiňizi tassyklamadyňyz. "
             "Haýyş, Ehson App arkaly tassyklaň."
