@@ -44,6 +44,28 @@ async def _lang_for(message: Message) -> str:
     return code if code in LANGUAGES else "uz"
 
 
+# Admin javobi foydalanuvchiga shu belgi bilan boradi — javob Ehson App
+# jamoasidan ekani darhol ajralib turadi.
+REPLY_HEADER = "🤖 <b>Ehson App</b>\n"
+# Izoh (caption) qo'shib bo'ladigan xabar turlari.
+_CAPTION_TYPES = ("photo", "video", "document", "audio", "voice", "animation")
+
+
+async def _send_reply_to_user(bot: Bot, user_id: int, message: Message) -> None:
+    if message.text:
+        await bot.send_message(user_id, REPLY_HEADER + message.html_text, disable_web_page_preview=True)
+    elif any(getattr(message, kind) for kind in _CAPTION_TYPES):
+        caption = REPLY_HEADER + (message.html_text or "")
+        await bot.copy_message(
+            chat_id=user_id, from_chat_id=message.chat.id, message_id=message.message_id,
+            caption=caption[:1024], parse_mode="HTML",
+        )
+    else:
+        # Stiker, dumaloq video va h.k. — izoh qo'yib bo'lmaydi: avval belgi, keyin xabar.
+        await bot.send_message(user_id, REPLY_HEADER.strip())
+        await bot.copy_message(chat_id=user_id, from_chat_id=message.chat.id, message_id=message.message_id)
+
+
 @router.message(CommandStart())
 async def on_start(message: Message) -> None:
     if _is_admin(message):
@@ -66,7 +88,7 @@ async def on_admin_reply(message: Message, bot: Bot) -> None:
                             "Foydalanuvchidan kelgan xabarga Reply qiling.")
         return
     try:
-        await bot.copy_message(chat_id=user_id, from_chat_id=message.chat.id, message_id=message.message_id)
+        await _send_reply_to_user(bot, user_id, message)
     except TelegramAPIError as e:
         await message.reply(f"❌ Yuborilmadi: {escape(str(e))[:300]}\n(Foydalanuvchi botni bloklagan bo'lishi mumkin.)")
         return
