@@ -9,17 +9,17 @@ CATEGORIES = {
         "uz": "👟 Oyoq kiyimlar", "ru": "👟 Обувь", "en": "👟 Shoes",
         "kk": "👟 Аяқ киім", "tg": "👟 Пойафзол", "ky": "👟 Бут кийим", "tk": "👟 Aýakgap",
     },
-    "household": {
-        "uz": "🏠 Uy-ro'zg'or buyumlari", "ru": "🏠 Хозтовары", "en": "🏠 Household items",
-        "kk": "🏠 Тұрмыстық заттар", "tg": "🏠 Лавозимоти рӯзгор", "ky": "🏠 Тиричилик буюмдары", "tk": "🏠 Öý-hojalyk goşlary",
+    "books": {
+        "uz": "📚 Kitoblar", "ru": "📚 Книги", "en": "📚 Books",
+        "kk": "📚 Кітаптар", "tg": "📚 Китобҳо", "ky": "📚 Китептер", "tk": "📚 Kitaplar",
     },
     "toys": {
         "uz": "🧸 O'yinchoqlar", "ru": "🧸 Игрушки", "en": "🧸 Toys",
         "kk": "🧸 Ойыншықтар", "tg": "🧸 Бозичаҳо", "ky": "🧸 Оюнчуктар", "tk": "🧸 Oýunjaklar",
     },
-    "books": {
-        "uz": "📚 Kitoblar", "ru": "📚 Книги", "en": "📚 Books",
-        "kk": "📚 Кітаптар", "tg": "📚 Китобҳо", "ky": "📚 Китептер", "tk": "📚 Kitaplar",
+    "household": {
+        "uz": "🏠 Uy-ro'zg'or buyumlari", "ru": "🏠 Хозтовары", "en": "🏠 Household items",
+        "kk": "🏠 Тұрмыстық заттар", "tg": "🏠 Лавозимоти рӯзгор", "ky": "🏠 Тиричилик буюмдары", "tk": "🏠 Öý-hojalyk goşlary",
     },
     "appliances": {
         "uz": "🔌 Maishiy texnikalar", "ru": "🔌 Бытовая техника", "en": "🔌 Home appliances",
