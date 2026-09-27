@@ -587,6 +587,22 @@ async def count_channel_out_of_sync() -> int:
     )
 
 
+async def get_unpublished_donations(limit: int = 5) -> list[int]:
+    """Kanalga chiqmay qolgan (masalan bot o'sha paytda kanalda huquqsiz
+    bo'lgan) ochiq ehsonlar — so'nggi 3 kun ichida joylanganlari. Hozirgina
+    joylanganlari (2 daqiqa) o'tkazib yuboriladi: ular hali e'lon qilinmoqda."""
+    rows = await _get_pool().fetch(
+        """SELECT id FROM donations
+           WHERE status = 'available'
+             AND (channel_message_ids IS NULL OR channel_message_ids = '')
+             AND created_at < now() - interval '2 minutes'
+             AND created_at > now() - interval '3 days'
+           ORDER BY id LIMIT $1""",
+        limit,
+    )
+    return [row["id"] for row in rows]
+
+
 async def get_channel_out_of_sync(limit: int = 20) -> list[dict[str, Any]]:
     """Kanal posti ehsonning hozirgi holatini ko'rsatmayotgan ehsonlar."""
     rows = await _get_pool().fetch(

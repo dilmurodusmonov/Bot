@@ -259,6 +259,38 @@ async def on_preview_debug(message: Message, command: CommandObject) -> None:
     await message.answer("\n".join(lines)[:4000], disable_web_page_preview=True)
 
 
+async def _channel_check(bot: Bot) -> str:
+    """Kanal sozlamasi to'g'rimi: kanal topiladimi, bot unda post joylay oladimi,
+    oxirgi e'lon xatosi."""
+    import time
+
+    from bot.config import CHANNEL_ID
+    from bot.webapp_api import LAST_CHANNEL_ERROR
+
+    if not CHANNEL_ID:
+        return "📢 Kanal: ❌ CHANNEL_ID qo'yilmagan — ehsonlar kanalga chiqmaydi"
+    try:
+        chat = await bot.get_chat(CHANNEL_ID)
+        member = await bot.get_chat_member(chat.id, bot.id)
+    except TelegramAPIError as e:
+        line = (f"📢 Kanal {escape(CHANNEL_ID)}: ❌ {escape(str(e))[:200]}\n"
+                "   (kanal nomi noto'g'ri yoki bot kanalga admin qilib qo'shilmagan)")
+    else:
+        status = getattr(member.status, "value", member.status)
+        can_post = status == "creator" or (
+            status == "administrator" and getattr(member, "can_post_messages", False)
+        )
+        line = (f"📢 Kanal {escape(CHANNEL_ID)} ({escape(chat.title or '', quote=False)}): "
+                + ("bot admin, post joylay oladi ✅" if can_post
+                   else f"❌ bot post joylay olmaydi (holati: {status}) — "
+                        "kanalda botni admin qilib, \"Post messages\" huquqini bering"))
+    if LAST_CHANNEL_ERROR["text"]:
+        ago = (time.time() - LAST_CHANNEL_ERROR["at"]) / 60
+        line += (f"\n   Oxirgi xato ({ago:.0f} daqiqa oldin, ehson #{LAST_CHANNEL_ERROR['donation_id']}): "
+                 f"{escape(LAST_CHANNEL_ERROR['text'])}")
+    return line
+
+
 @router.message(Command("ping"), F.from_user.id.in_(AD_ADMIN_IDS))
 async def on_ping(message: Message) -> None:
     """Admin uchun tezlik tashxisi: baza va Telegram kechikishi, protsessor
@@ -296,6 +328,7 @@ async def on_ping(message: Message) -> None:
         f"✈️ Telegram API: <b>{tg_ms:.0f}</b> ms",
         f"🧠 Protsessor testi: <b>{cpu_ms:.0f}</b> ms (tez serverda 10–30 ms)",
         f"💾 Xotira: <b>{rss_mb:.0f}</b> MB · rasm keshi {len(_PHOTO_CACHE)} ta / {cache_mb:.1f} MB",
+        await _channel_check(message.bot),
         f"📢 Kanal: {await count_channel_out_of_sync()} ta post yangilanishi kutmoqda, "
         f"{channel_failures_count()} tasi xato bermoqda",
         f"⏱ Ishlash vaqti: {uptime_min:.0f} daqiqa",

@@ -81,6 +81,7 @@ from bot.database import (
     set_donation_channel_messages,
     set_donation_channel_status,
     get_channel_out_of_sync,
+    get_unpublished_donations,
     set_donation_status,
     set_donor_notify_message,
     set_needy_notify_message,
@@ -227,6 +228,15 @@ async def _channel_photo(bot: Bot, photo_ids: list[str]):
     return BufferedInputFile(collage, filename="ehson.jpg")
 
 
+# Kanalga oxirgi e'lon xatosi — admin /ping buyrug'ida ko'rsatiladi.
+LAST_CHANNEL_ERROR: dict = {"text": None, "at": 0.0, "donation_id": None}
+# Hozir e'lon qilinayotgan ehsonlar (bir ehson ikki marta post qilinmasin) va
+# kanalga chiqmay qolganlarini qayta urinish oralig'i (2, 4 daqiqa, ko'pi
+# bilan 5 daqiqada bir) — bot huquqi tuzatilgach post tez chiqadi.
+_publishing: set[int] = set()
+_publish_failures: dict[int, tuple[int, float]] = {}
+
+
 async def _publish_to_channel(
     bot: Bot, bot_username: Optional[str], donation_id: int
 ) -> None:
@@ -235,11 +245,12 @@ async def _publish_to_channel(
     Kanal bilan bog'liq har qanday muammo (bot admin emas, rasm yuklab
     olinmadi va h.k.) ehson joylanishini buzmasligi kerak — funksiya fon
     vazifasi sifatida chaqiriladi va barcha xatolar jurnalga yoziladi."""
-    if not CHANNEL_ID:
+    if not CHANNEL_ID or donation_id in _publishing:
         return
+    _publishing.add(donation_id)
     try:
         donation = await get_donation(donation_id)
-        if not donation:
+        if not donation or _channel_message_ids(donation):
             return
         photo_ids = _donation_photo_ids(donation)
         if not photo_ids:
@@ -260,8 +271,15 @@ async def _publish_to_channel(
             await _channel_call(lambda: bot.delete_message(chat_id=CHANNEL_ID, message_id=msg.message_id))
         elif current["status"] != "available":
             await _refresh_channel_post_now(bot, bot_username, donation_id, current["status"])
-    except Exception:
+        _publish_failures.pop(donation_id, None)
+        LAST_CHANNEL_ERROR.update(text=None)
+    except Exception as e:
+        LAST_CHANNEL_ERROR.update(text=f"{type(e).__name__}: {e}"[:300], at=time.time(), donation_id=donation_id)
+        count = _publish_failures.get(donation_id, (0, 0.0))[0] + 1
+        _publish_failures[donation_id] = (count, time.monotonic() + min(300, 60 * 2 ** count))
         logger.exception("Kanalga e'lon qilib bo'lmadi (ehson %s)", donation_id)
+    finally:
+        _publishing.discard(donation_id)
 
 
 async def _refresh_channel_post_now(
@@ -326,7 +344,8 @@ def channel_failures_count() -> int:
 
 async def _channel_sync_loop(bot: Bot, bot_username: Optional[str]) -> None:
     """Har daqiqada kanal postlari ehson holatiga mosligini tekshiradi va
-    mos kelmaganlarini (tahrir yo'qolgan bo'lsa) qayta tahrirlaydi."""
+    mos kelmaganlarini (tahrir yo'qolgan bo'lsa) qayta tahrirlaydi; kanalga
+    chiqmay qolgan ochiq ehsonlarni e'lon qiladi."""
     while True:
         try:
             if CHANNEL_ID:
@@ -336,6 +355,12 @@ async def _channel_sync_loop(bot: Bot, bot_username: Optional[str]) -> None:
                     if failure and failure[1] > now:
                         continue
                     await _refresh_channel_post_now(bot, bot_username, row["id"])
+                # Kanalga umuman chiqmay qolgan ochiq ehsonlar qayta e'lon qilinadi.
+                for donation_id in await get_unpublished_donations():
+                    failure = _publish_failures.get(donation_id)
+                    if failure and failure[1] > now:
+                        continue
+                    await _publish_to_channel(bot, bot_username, donation_id)
         except Exception:
             logger.exception("Kanal holatlarini tekshirishda xatolik")
         await asyncio.sleep(CHANNEL_SYNC_INTERVAL_SECONDS)
