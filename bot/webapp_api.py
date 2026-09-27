@@ -290,10 +290,13 @@ async def _refresh_channel_post_now(
         # kanaldan qo'lda o'chirilgan. Ikkalasida ham qayta urinish shart emas.
         if "not modified" not in text and "not found" not in text and "message_id_invalid" not in text:
             logger.exception("Kanal postini yangilab bo'lmadi (ehson %s)", donation_id)
+            _channel_backoff(donation_id)
             return
     except Exception:
         logger.exception("Kanal postini yangilab bo'lmadi (ehson %s)", donation_id)
+        _channel_backoff(donation_id)
         return
+    _channel_failures.pop(donation_id, None)
     await set_donation_channel_status(donation_id, status)
 
 
@@ -305,6 +308,20 @@ async def _refresh_channel_post(
 
 
 CHANNEL_SYNC_INTERVAL_SECONDS = 60
+# Doim xato beradigan post (masalan bot kanalda huquqsiz) har daqiqada
+# qayta urinib kanal navbatini band qilmasin: 2, 4, 8... daqiqa, ko'pi bilan
+# 1 soatda bir marta uriniladi.
+_channel_failures: dict[int, tuple[int, float]] = {}
+
+
+def _channel_backoff(donation_id: int) -> None:
+    count = _channel_failures.get(donation_id, (0, 0.0))[0] + 1
+    _channel_failures[donation_id] = (count, time.monotonic() + min(3600, 60 * 2 ** count))
+
+
+def channel_failures_count() -> int:
+    return len(_channel_failures)
+
 
 
 async def _channel_sync_loop(bot: Bot, bot_username: Optional[str]) -> None:
@@ -313,7 +330,11 @@ async def _channel_sync_loop(bot: Bot, bot_username: Optional[str]) -> None:
     while True:
         try:
             if CHANNEL_ID:
+                now = time.monotonic()
                 for row in await get_channel_out_of_sync():
+                    failure = _channel_failures.get(row["id"])
+                    if failure and failure[1] > now:
+                        continue
                     await _refresh_channel_post_now(bot, bot_username, row["id"])
         except Exception:
             logger.exception("Kanal holatlarini tekshirishda xatolik")
