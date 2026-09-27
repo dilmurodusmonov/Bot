@@ -72,7 +72,7 @@ async def on_start(message: Message) -> None:
         await message.answer(
             "👋 Siz aloqa botining adminisiz.\n\n"
             "Foydalanuvchilar yozgan xabarlar shu yerga keladi. Javob berish uchun "
-            "xabarga <b>Reply</b> (Ответить) qilib yozing — javob foydalanuvchiga "
+            "xabarga <b>Reply</b> qilib yozing — javob foydalanuvchiga "
             "bot nomidan boradi."
         )
         return
