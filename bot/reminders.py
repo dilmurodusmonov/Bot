@@ -1,6 +1,6 @@
 import asyncio
 import logging
-from datetime import timedelta
+from datetime import datetime, timedelta, timezone
 from html import escape
 from typing import Optional
 
@@ -12,6 +12,7 @@ from bot.config import WEBAPP_URL
 from bot.database import (
     get_due_receive_reminders,
     get_due_ship_reminders,
+    get_next_reminder_due,
     record_donor_reminder,
     record_needy_reminder,
 )
@@ -20,7 +21,19 @@ from bot.texts import category_name, t
 
 logger = logging.getLogger(__name__)
 
-CHECK_INTERVAL_SECONDS = 5 * 60
+# Tsikl keyingi eslatma vaqtigacha uxlaydi (bazani keraksiz uyg'otmaslik
+# uchun — Neon bepul tarifida baza ishlash soatlari cheklangan). Yangi bron
+# yoki yo'lga chiqarishda wake_reminders() uni uyg'otadi; har ehtimolga
+# qarshi ko'pi bilan 6 soatda bir tekshiriladi.
+MIN_SLEEP_SECONDS = 60
+MAX_SLEEP_SECONDS = 6 * 3600
+_wake_event: Optional[asyncio.Event] = None
+
+
+def wake_reminders() -> None:
+    """Yangi eslatma vaqti paydo bo'ldi (bron, yo'lga chiqarish) — tsikl qayta hisoblaydi."""
+    if _wake_event is not None:
+        _wake_event.set()
 
 # Birinchi eslatma holat boshlanganidan 12 soat o'tgach, ikkinchisi undan
 # 6 soat keyin, keyingilari esa har 1 soatda — javob berilmaguncha yoki
@@ -138,13 +151,27 @@ async def _check_receive_reminders(bot: Bot) -> None:
 
 
 async def run_reminder_loop(bot: Bot) -> None:
-    """Fonda ishlaydigan cheksiz tsikl — har CHECK_INTERVAL_SECONDS'da
-    yo'lga chiqarilmagan va qabul qilinmagan bronlarni tekshirib,
-    muddati o'tganlariga eslatma yuboradi."""
+    """Fonda ishlaydigan cheksiz tsikl — yo'lga chiqarilmagan va qabul
+    qilinmagan bronlarni tekshirib, muddati o'tganlariga eslatma yuboradi,
+    so'ng keyingi eslatma vaqtigacha uxlaydi."""
+    global _wake_event
+    _wake_event = asyncio.Event()
     while True:
+        delay = MAX_SLEEP_SECONDS
         try:
             await _check_ship_reminders(bot)
             await _check_receive_reminders(bot)
+            next_due = await get_next_reminder_due(
+                FIRST_REMINDER_AFTER, SECOND_REMINDER_AFTER, REPEAT_REMINDER_AFTER
+            )
+            if next_due is not None:
+                delay = (next_due - datetime.now(timezone.utc)).total_seconds()
+            delay = min(max(delay, MIN_SLEEP_SECONDS), MAX_SLEEP_SECONDS)
         except Exception:
             logger.exception("Eslatma tsiklida xatolik")
-        await asyncio.sleep(CHECK_INTERVAL_SECONDS)
+            delay = 5 * 60
+        _wake_event.clear()
+        try:
+            await asyncio.wait_for(_wake_event.wait(), timeout=delay)
+        except asyncio.TimeoutError:
+            pass

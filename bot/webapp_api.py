@@ -92,6 +92,7 @@ from bot.database import (
     set_user_role,
     toggle_donation_like,
 )
+from bot.reminders import wake_reminders
 from bot.notify import WIDE_BUBBLE_PAD, send_tracked_message as _send_tracked_message
 from bot.texts import (
     CATEGORIES,
@@ -323,6 +324,7 @@ async def _refresh_channel_post(
     bot: Bot, bot_username: Optional[str], donation_id: int, status: str
 ) -> None:
     """Kanal postini fonda (navbat orqali) yangilaydi — API javobi kutmaydi."""
+    mark_channel_activity()
     _spawn(_refresh_channel_post_now(bot, bot_username, donation_id, status))
 
 
@@ -343,14 +345,31 @@ def channel_failures_count() -> int:
 
 
 
+# Neon bepul tarifi: baza 5 daqiqa so'rov bo'lmasa uxlaydi va oyiga ~400
+# soat ishlash limiti bor. Har daqiqalik tekshiruv bazani 24 soat uyg'oq
+# ushlab, limitni oy o'rtasida tugatib qo'yardi. Endi tekshiruv faqat kanal
+# bilan bog'liq voqeadan (ehson joylash, holat o'zgarishi) keyingi 15 daqiqa
+# ichida har daqiqada, qolgan vaqtda — 3 soatda bir marta.
+CHANNEL_ACTIVE_WINDOW_SECONDS = 15 * 60
+CHANNEL_IDLE_CHECK_SECONDS = 3 * 3600
+_channel_state = {"active_until": 0.0, "next_idle_check": 0.0}
+
+
+def mark_channel_activity() -> None:
+    _channel_state["active_until"] = time.monotonic() + CHANNEL_ACTIVE_WINDOW_SECONDS
+
+
 async def _channel_sync_loop(bot: Bot, bot_username: Optional[str]) -> None:
-    """Har daqiqada kanal postlari ehson holatiga mosligini tekshiradi va
-    mos kelmaganlarini (tahrir yo'qolgan bo'lsa) qayta tahrirlaydi; kanalga
-    chiqmay qolgan ochiq ehsonlarni e'lon qiladi."""
+    """Kanal postlari ehson holatiga mosligini tekshiradi va mos
+    kelmaganlarini (tahrir yo'qolgan bo'lsa) qayta tahrirlaydi; kanalga
+    chiqmay qolgan ochiq ehsonlarni e'lon qiladi. Bazaga faqat voqeadan
+    keyin yoki 3 soatda bir murojaat qiladi (yuqoridagi izoh)."""
     while True:
         try:
-            if CHANNEL_ID:
-                now = time.monotonic()
+            now = time.monotonic()
+            due = now < _channel_state["active_until"] or now >= _channel_state["next_idle_check"]
+            if CHANNEL_ID and due:
+                _channel_state["next_idle_check"] = now + CHANNEL_IDLE_CHECK_SECONDS
                 for row in await get_channel_out_of_sync():
                     failure = _channel_failures.get(row["id"])
                     if failure and failure[1] > now:
@@ -508,26 +527,52 @@ async def api_set_role(request: web.Request) -> web.Response:
     return web.json_response({"ok": True})
 
 
-async def api_stats(request: web.Request) -> web.Response:
-    await _require_user_id(request)
+async def _stats_payload() -> dict:
     # Ikki so'rov parallel (avval 9 ta ketma-ket so'rov edi).
     stats, by_category = await asyncio.gather(get_home_stats(), get_category_stats())
-    return web.json_response(
-        {
-            "total_donations": stats["total_donations"],
-            "delivered_donations": stats["delivered_donations"],
-            "new_last_24h": stats["new_last_24h"],
-            "by_category": by_category,
-        }
-    )
+    return {
+        "total_donations": stats["total_donations"],
+        "delivered_donations": stats["delivered_donations"],
+        "new_last_24h": stats["new_last_24h"],
+        "by_category": by_category,
+    }
+
+
+async def api_stats(request: web.Request) -> web.Response:
+    await _require_user_id(request)
+    return web.json_response(await _stats_payload())
+
+
+def _categories_payload(lang: str) -> list[dict]:
+    return [{"key": key, "label": category_name(key, lang)} for key in CATEGORIES]
 
 
 async def api_categories(request: web.Request) -> web.Response:
     telegram_id = await _require_user_id(request)
-    lang = await _lang_for(telegram_id)
-    return web.json_response(
-        [{"key": key, "label": category_name(key, lang)} for key in CATEGORIES]
+    return web.json_response(_categories_payload(await _lang_for(telegram_id)))
+
+
+async def api_bootstrap(request: web.Request) -> web.Response:
+    """Ilova ochilishida kerak bo'ladigan hamma narsa bitta so'rovda:
+    foydalanuvchi, bo'limlar, bosh sahifa statistikasi, belgilar va TOP
+    reklamalar. Avval /api/me tugagach yana 4 ta so'rov ketardi — endi
+    telefon serverga bir marta borib keladi (har ochilishda ~1 aylanma tejaladi)."""
+    telegram_id = await _require_user_id(request)
+    user = await create_user_if_missing(telegram_id)
+    lang = user["language"] or "uz"
+    stats, donor_pending, needy_pending, bids = await asyncio.gather(
+        _stats_payload(),
+        count_pending_ship(telegram_id),
+        count_pending_receive(telegram_id),
+        get_ad_bids_ranked(),
     )
+    return web.json_response({
+        "me": {"language": user["language"], "role": user["role"], "support_bot": SUPPORT_BOT},
+        "categories": _categories_payload(lang),
+        "stats": stats,
+        "badges": {"donor_pending": donor_pending, "needy_pending": needy_pending},
+        "ads_top": _top_ads_payload(bids),
+    })
 
 
 async def api_category_counts(request: web.Request) -> web.Response:
@@ -748,6 +793,7 @@ async def api_create_reservation(request: web.Request) -> web.Response:
     )
     if reservation_id is None:
         raise web.HTTPConflict(text="already reserved")
+    wake_reminders()
     await _refresh_channel_post(
         request.app["bot"], request.app.get("bot_username"), donation_id, "reserved"
     )
@@ -2576,15 +2622,18 @@ async def api_presence(request: web.Request) -> web.Response:
 async def api_ads_top(request: web.Request) -> web.Response:
     """Bosh sahifadagi reklama banneri uchun reytingning TOP-3 reklamasi."""
     await _require_user_id(request)
-    bids = (await get_ad_bids_ranked())[:3]
-    return web.json_response([
+    return web.json_response(_top_ads_payload(await get_ad_bids_ranked()))
+
+
+def _top_ads_payload(bids: list[dict]) -> list[dict]:
+    return [
         {
             "id": b["id"], "rank": i + 1, "brand_name": b["brand_name"], "url": b["url"],
             "platform": b.get("platform") or "website", "photo_url": b.get("photo_url"),
             "description": b.get("description") or "",
         }
-        for i, b in enumerate(bids)
-    ])
+        for i, b in enumerate(bids[:3])
+    ]
 
 
 async def api_ads_click(request: web.Request) -> web.Response:
@@ -2702,6 +2751,7 @@ async def api_create_donation(request: web.Request) -> web.Response:
         photo_file_ids=photo_file_ids,
         description=description,
     )
+    mark_channel_activity()
     _spawn(_publish_to_channel(bot, request.app.get("bot_username"), donation_id))
     return web.json_response({"ok": True, "donation_id": donation_id})
 
@@ -2731,6 +2781,7 @@ async def api_ship_reservation(request: web.Request) -> web.Response:
 
     if not await set_reservation_shipped(reservation_id, photo_file_id, receipt_note):
         raise web.HTTPConflict()
+    wake_reminders()
     await set_donation_status(donation["id"], "shipped")
     await _refresh_channel_post(
         bot, request.app.get("bot_username"), donation["id"], "shipped"
@@ -3098,6 +3149,7 @@ def setup_api_routes(app: web.Application) -> None:
     app.router.add_post("/api/ads/payments/{id:\\d+}/dismiss", api_ads_dismiss_rejection)
     app.router.add_post("/api/ads/{id:\\d+}/click", api_ads_click)
     app.router.add_get("/api/categories", api_categories)
+    app.router.add_get("/api/bootstrap", api_bootstrap)
     app.router.add_get("/api/category-counts", api_category_counts)
     app.router.add_get("/api/donations", api_donations)
     app.router.add_get("/api/donation/{id:\\d+}", api_donation)
