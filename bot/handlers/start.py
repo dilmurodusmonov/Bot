@@ -12,7 +12,7 @@ from aiogram.types import (
 
 from bot.config import SUPPORT_BOT, WEBAPP_URL
 from bot.database import create_user_if_missing, get_user, set_user_language, set_user_role
-from bot.keyboards import language_keyboard, role_keyboard
+from bot.keyboards import role_keyboard
 from bot.texts import LANGUAGES, categories_list, t
 from bot.utils import get_lang
 
@@ -68,13 +68,8 @@ async def cmd_start(message: Message, state: FSMContext) -> None:
         reply_markup=InlineKeyboardMarkup(inline_keyboard=rows) if rows else None,
     )
 
-    if not user["language"]:
-        await message.answer(t("uz", "choose_language"), reply_markup=language_keyboard())
-        return
-
-    if not user["role"]:
-        await message.answer(t(lang, "choose_role"), reply_markup=role_keyboard(lang))
-        return
+    # Til va rol faqat Ehson App ichida tanlanadi (ilova birinchi ochilganda
+    # o'zi so'raydi) — bot chatida alohida tugmalar chiqarilmaydi.
 
 
 @router.callback_query(F.data.startswith("lang:"))
