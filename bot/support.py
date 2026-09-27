@@ -8,6 +8,7 @@ javob foydalanuvchiga bot nomidan boradi — admin akkaunti yashirin qoladi.
 import logging
 import time
 from html import escape
+from typing import Optional
 
 from aiogram import Bot, F, Router
 from aiogram.exceptions import TelegramAPIError, TelegramBadRequest
@@ -20,7 +21,7 @@ from aiogram.types import (
     ReactionTypeEmoji,
 )
 
-from bot.config import SUPPORT_ADMIN_IDS
+from bot.config import MINI_APP_SHORT_NAME, SUPPORT_ADMIN_IDS
 from bot.database import get_support_message_user, get_user_language, save_support_message
 from bot.texts import LANGUAGES, t
 
@@ -47,24 +48,45 @@ async def _lang_for(message: Message) -> str:
     return code if code in LANGUAGES else "uz"
 
 
-# Admin javobi foydalanuvchiga shu belgi bilan boradi — javob Ehson App
-# jamoasidan ekani darhol ajralib turadi.
+# Admin javobi foydalanuvchiga matnning o'zi bo'lib boradi, ostida
+# "🤖 Ehson App" tugmasi — bosilsa Ehson App ochiladi (javobni ilovada
+# tekshirish uchun). Asosiy bot nomi ma'lum bo'lmasa, belgi matn boshida.
 REPLY_HEADER = "🤖 <b>Ehson App</b>\n\n"
+REPLY_BUTTON_TEXT = "🤖 Ehson App"
 # Izoh (caption) qo'shib bo'ladigan xabar turlari.
 _CAPTION_TYPES = ("photo", "video", "document", "audio", "voice", "animation")
 
 
-async def _send_reply_to_user(bot: Bot, user_id: int, message: Message) -> None:
+def _app_keyboard(main_bot_username: Optional[str]) -> Optional[InlineKeyboardMarkup]:
+    if not main_bot_username:
+        return None
+    return InlineKeyboardMarkup(inline_keyboard=[[InlineKeyboardButton(
+        text=REPLY_BUTTON_TEXT, url=f"https://t.me/{main_bot_username}/{MINI_APP_SHORT_NAME}",
+    )]])
+
+
+async def _send_reply_to_user(
+    bot: Bot, user_id: int, message: Message, main_bot_username: Optional[str] = None,
+) -> None:
+    keyboard = _app_keyboard(main_bot_username)
+    header = "" if keyboard else REPLY_HEADER
     if message.text:
-        await bot.send_message(user_id, REPLY_HEADER + message.html_text, disable_web_page_preview=True)
+        await bot.send_message(
+            user_id, header + message.html_text, disable_web_page_preview=True, reply_markup=keyboard,
+        )
     elif any(getattr(message, kind) for kind in _CAPTION_TYPES):
-        caption = REPLY_HEADER + (message.html_text or "")
+        caption = header + (message.html_text or "")
         await bot.copy_message(
             chat_id=user_id, from_chat_id=message.chat.id, message_id=message.message_id,
-            caption=caption[:1024], parse_mode="HTML",
+            caption=caption[:1024], parse_mode="HTML", reply_markup=keyboard,
+        )
+    elif keyboard:
+        # Stiker, dumaloq video va h.k. — tugma xabarning o'ziga biriktiriladi.
+        await bot.copy_message(
+            chat_id=user_id, from_chat_id=message.chat.id, message_id=message.message_id,
+            reply_markup=keyboard,
         )
     else:
-        # Stiker, dumaloq video va h.k. — izoh qo'yib bo'lmaydi: avval belgi, keyin xabar.
         await bot.send_message(user_id, REPLY_HEADER.strip())
         await bot.copy_message(chat_id=user_id, from_chat_id=message.chat.id, message_id=message.message_id)
 
@@ -107,7 +129,7 @@ async def on_start(message: Message) -> None:
 
 
 @router.message(F.reply_to_message, F.func(lambda m: m.from_user and m.from_user.id in SUPPORT_ADMIN_IDS))
-async def on_admin_reply(message: Message, bot: Bot) -> None:
+async def on_admin_reply(message: Message, bot: Bot, main_bot_username: Optional[str] = None) -> None:
     """Admin foydalanuvchi xabariga Reply qildi — javobni foydalanuvchiga yuboramiz."""
     user_id = await get_support_message_user(message.chat.id, message.reply_to_message.message_id)
     if not user_id:
@@ -115,7 +137,7 @@ async def on_admin_reply(message: Message, bot: Bot) -> None:
                             "Foydalanuvchidan kelgan xabarga Reply qiling.")
         return
     try:
-        await _send_reply_to_user(bot, user_id, message)
+        await _send_reply_to_user(bot, user_id, message, main_bot_username)
     except TelegramAPIError as e:
         await message.reply(f"❌ Yuborilmadi: {escape(str(e))[:300]}\n(Foydalanuvchi botni bloklagan bo'lishi mumkin.)")
         return
