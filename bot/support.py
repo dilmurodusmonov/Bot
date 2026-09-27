@@ -321,7 +321,7 @@ async def on_id(message: Message) -> None:
 async def on_start(message: Message) -> None:
     if _is_admin(message):
         await message.answer(
-            "👋 Siz aloqa botining adminisiz.\n\n"
+            "👋 Siz Ehsonli Qo'llar botining adminisiz.\n\n"
             "📩 Foydalanuvchilar yozgan xabarlar shu yerga keladi!\n"
             "✍️ Javob berish uchun xabarga <b>Reply</b> qilib yozing!\n"
             "🤖 Javob foydalanuvchiga bot nomidan boradi!"
