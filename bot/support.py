@@ -412,6 +412,8 @@ async def on_admin_reply(
     if owner_id != admin_id and not _is_ceo(admin_id):
         await message.reply("⚠️ Bu suhbatga boshqa admin javob bermoqda.")
         return
+    if not claimed_now:
+        await touch_support_claim(user_id)
     dst = bots_map.get(origin_bot_id, bot)
     try:
         await _send_reply_to_user(bot, dst, user_id, message, main_bot_username)

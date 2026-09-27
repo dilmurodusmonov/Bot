@@ -2375,10 +2375,10 @@
     if (needyLabel) needyLabel.textContent = tr("role_needy");
   }
 
-  function refreshAvatarRing() {
+  function refreshAvatarRing(prefetched) {
     var ring = document.getElementById("avatar-ring");
     if (!ring) return;
-    api("GET", "/api/badges").then(function (badges) {
+    (prefetched ? Promise.resolve(prefetched) : api("GET", "/api/badges")).then(function (badges) {
       var pending = state.me.role === "donor" ? badges.donor_pending : badges.needy_pending;
       ring.classList.toggle("story-ring", pending > 0);
     }).catch(function () {});
@@ -2720,13 +2720,19 @@
     hideMainButton();
   }
 
+  // /api/bootstrap bilan kelgan bosh sahifa ma'lumotlari — faqat ilova
+  // ochilgandagi birinchi renderHome uchun (keyingilari yangi so'raydi).
+  var homePrefetch = null;
+
   function renderHome() {
     navStack = [];
+    var pre = homePrefetch && Date.now() - homePrefetch.at < 15000 ? homePrefetch : null;
+    homePrefetch = null;
     Promise.all([
       getCategories(),
-      api("GET", "/api/stats"),
-      api("GET", "/api/badges").catch(function () { return {}; }),
-      api("GET", "/api/ads/top").catch(function () { return []; }),
+      pre ? pre.stats : api("GET", "/api/stats"),
+      pre ? pre.badges : api("GET", "/api/badges").catch(function () { return {}; }),
+      pre ? pre.ads : api("GET", "/api/ads/top").catch(function () { return []; }),
     ])
       .then(function (results) {
         var categories = results[0];
@@ -2915,7 +2921,8 @@
         });
         var avatarEl = document.getElementById("avatar-btn");
         if (avatarEl) avatarEl.addEventListener("click", function () { goto("profile"); });
-        refreshAvatarRing();
+        // Belgilar shu sahifa bilan birga kelgan — qayta so'ralmaydi.
+        refreshAvatarRing(badges);
 
         startAdCarousel();
         ad2Timer = startSimpleCarousel("ad-banner-2", "ad-dots-2", 5, "ad-views-count-2");
@@ -5252,9 +5259,9 @@
         attempt += 1;
         var timedOut = false;
         var timer = setTimeout(function () { timedOut = true; retry(new Error("timeout")); }, 15000);
-        api("GET", "/api/me").then(function (me) {
+        api("GET", "/api/bootstrap").then(function (boot) {
           clearTimeout(timer);
-          if (!timedOut) resolve(me);
+          if (!timedOut) resolve(boot);
         }).catch(function (err) {
           clearTimeout(timer);
           if (timedOut) return;
@@ -5275,10 +5282,15 @@
   }
 
   loadMe()
-    .then(function (me) {
+    .then(function (boot) {
+      var me = boot.me;
       state.me = me;
       startPresence();
       state.lang = me.language || "uz";
+      // Bosh sahifa ma'lumotlari shu so'rovning o'zida keldi — renderHome
+      // ularni qayta so'ramaydi (ilova bitta aylanmada ochiladi).
+      categoriesCache[state.lang] = boot.categories;
+      homePrefetch = { at: Date.now(), stats: boot.stats, badges: boot.badges, ads: boot.ads_top };
       if (!me.language) { goto("language", {}, false); return; }
       if (!me.role) { goto("role", {}, false); return; }
       // Kanaldagi havola saqlangan sahifadan ustun turadi.
