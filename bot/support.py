@@ -6,14 +6,21 @@ ko'rinadi, bosilsa uning profili ochiladi. Admin shu xabarlardan biriga Reply qi
 javob foydalanuvchiga bot nomidan boradi — admin akkaunti yashirin qoladi.
 
 Aloqa botlari bir nechta bo'lishi mumkin (SUPPORT_BOT_TOKEN_2): foydalanuvchi
-qaysi botga yozsa ham xabar har bir botdagi admin chatlariga keladi (admin
-qaysi botga /start bosgan bo'lsa). Admin qaysi botdan javob yozsa ham, javob
-foydalanuvchiga u yozgan bot orqali boradi. Botlar bir-birining chatidagi
+qaysi botga yozsa ham xabar har bir adminga keladi — CEO'ga birinchi (CEO)
+bot orqali, boshqa adminlarga o'z botlari orqali (qaysi botga /start bosgan
+bo'lsa). Admin qaysi botdan javob yozsa ham, javob foydalanuvchiga u yozgan
+bot orqali boradi.
+
+Birinchi javob bergan admin suhbatni oladi: foydalanuvchi xabarlari boshqa
+adminlardan o'chiriladi, keyingi xabarlar faqat unga va CEO'ga keladi. CEO
+barcha suhbatlarni va adminlarning javoblarini ko'radi; boshqa adminlar faqat
+o'z suhbatlarini. CEO birinchi javob bersa, suhbat CEO'da qoladi. Botlar bir-birining chatidagi
 xabarni nusxalay olmaydi va fayl ID'lari botga xos — boshqa bot orqali
 yuborishda matn qayta yoziladi, fayllar yuklab olinib qayta yuklanadi.
 """
 import logging
 import time
+from datetime import timedelta
 from html import escape
 from typing import Optional
 
@@ -30,12 +37,16 @@ from aiogram.types import (
     ReplyParameters,
 )
 
-from bot.config import MINI_APP_SHORT_NAME, SUPPORT_ADMIN_IDS
+from bot.config import MINI_APP_SHORT_NAME, SUPPORT_ADMIN_IDS, SUPPORT_CEO_ID
 from bot.database import (
+    claim_support_user,
+    get_support_claim,
     get_support_message_copies,
     get_support_message_target,
     get_user_language,
+    pop_support_copies_except,
     save_support_message,
+    touch_support_claim,
 )
 from bot.texts import LANGUAGES, t
 
@@ -47,6 +58,24 @@ router = Router()
 # shuncha vaqtda bir marta yuboriladi (ketma-ket yozganda chat to'lmasin).
 ACK_INTERVAL_SECONDS = 30 * 60
 _last_ack: dict[int, float] = {}
+
+# Suhbat admin'ga biriktirilgandan keyin shuncha vaqt hech kim yozmasa,
+# biriktirish tugaydi — foydalanuvchining yangi savoli yana barcha adminlarga.
+CLAIM_TTL = timedelta(hours=24)
+
+
+def _is_ceo(admin_id: int) -> bool:
+    return admin_id == SUPPORT_CEO_ID
+
+
+def _bots_for_admin(admin_id: int, bots: list[Bot], prefer_id: Optional[int] = None) -> list[Bot]:
+    """Adminga qaysi bot orqali yuborish tartibi: CEO — birinchi (CEO) bot,
+    boshqa adminlar — ikkinchi va keyingi botlar (o'z botlari), keyin qolgani.
+    prefer_id — suhbat biriktirilgan bot, u birinchi sinaladi."""
+    order = list(bots) if _is_ceo(admin_id) else bots[1:] + bots[:1]
+    if prefer_id:
+        order.sort(key=lambda b: b.id != prefer_id)
+    return order
 
 
 def _is_admin(message: Message) -> bool:
@@ -235,18 +264,18 @@ async def _mirror_reply(
 
 async def _share_reply_with_admins(
     bot: Bot, message: Message, support_bots: dict[int, Bot],
-    user_id: int, origin_bot_id: int, user_message_id: int,
+    user_id: int, origin_bot_id: int, user_message_id: int, recipients: set[int],
 ) -> None:
-    """Bir admin javob berdi — javob shu foydalanuvchi xabari kelgan boshqa
-    admin chatlarida ham (boshqa botda ham) ko'rsatiladi. Nusxaga Reply
+    """Admin javobi recipients'dagi adminlarga ham (CEO; CEO javob bersa —
+    suhbat egasiga) foydalanuvchi xabari ostida ko'rsatiladi. Nusxaga Reply
     qilinsa, u ham foydalanuvchiga boradi."""
-    if not user_message_id:
+    if not user_message_id or not recipients:
         return
     header = f"↩️ <b>{escape(message.from_user.full_name or 'Admin', quote=False)}</b> javob berdi:\n\n"
     media: Optional[Media] = None
     media_loaded = False
     for bot_id, chat_id, message_id in await get_support_message_copies(user_id, origin_bot_id, user_message_id):
-        if (bot_id or bot.id) == bot.id and chat_id == message.chat.id:
+        if chat_id not in recipients or chat_id == message.chat.id:
             continue
         dst = support_bots.get(bot_id) if bot_id else bot
         if dst is None:
@@ -260,6 +289,19 @@ async def _share_reply_with_admins(
             logger.warning("Admin javobi boshqa adminga ko'rsatilmadi (admin %s bot %s)", chat_id, bot_id)
             continue
         await save_support_message(dst.id, chat_id, sent.message_id, user_id, origin_bot_id, user_message_id)
+
+
+async def _remove_from_other_admins(bot: Bot, support_bots: dict[int, Bot], user_id: int, keep: list[int]) -> None:
+    """Suhbat biriktirildi — foydalanuvchi xabarlari (va ularga javoblar)
+    keep'dan boshqa admin chatlaridan o'chiriladi."""
+    for bot_id, chat_id, message_id in await pop_support_copies_except(user_id, keep):
+        dst = support_bots.get(bot_id) if bot_id else bot
+        if dst is None:
+            continue
+        try:
+            await dst.delete_message(chat_id=chat_id, message_id=message_id)
+        except TelegramAPIError:
+            pass
 
 
 @router.message(Command("id"))
@@ -276,7 +318,9 @@ async def on_start(message: Message) -> None:
             "📩 Foydalanuvchilar yozgan xabarlar shu yerga keladi!\n"
             "✍️ Javob berish uchun xabarga <b>Reply</b> qilib yozing!\n"
             "🤖 Javob foydalanuvchiga bot nomidan boradi!\n"
-            "👥 Boshqa adminlarning javoblari ham shu yerda ko'rinadi!"
+            + ("👁 Barcha suhbatlar va adminlarning javoblari shu yerda ko'rinadi!"
+               if _is_ceo(message.from_user.id) else
+               "⚡ Birinchi javob bergan admin suhbatni oladi — xabar boshqa adminlardan o'chadi!")
         )
         return
     await message.answer(t(await _lang_for(message), "support_welcome"))
@@ -295,14 +339,31 @@ async def on_admin_reply(
                             "Foydalanuvchidan kelgan xabarga Reply qiling.")
         return
     user_id, origin_bot_id, user_message_id = target
-    dst = (support_bots or {}).get(origin_bot_id, bot)
+    admin_id = message.from_user.id
+    bots_map = support_bots or {bot.id: bot}
+    # Birinchi javob bergan admin suhbatni oladi (atomar). Suhbat boshqa
+    # adminda bo'lsa — faqat CEO aralasha oladi.
+    owner_bot_id, owner_id, claimed_now = await claim_support_user(user_id, bot.id, admin_id, CLAIM_TTL)
+    if owner_id != admin_id and not _is_ceo(admin_id):
+        await message.reply("⚠️ Bu suhbatga boshqa admin javob bermoqda.")
+        return
+    dst = bots_map.get(origin_bot_id, bot)
     try:
         await _send_reply_to_user(bot, dst, user_id, message, main_bot_username)
     except TelegramAPIError as e:
         await message.reply(f"❌ Yuborilmadi: {escape(str(e))[:300]}\n(Foydalanuvchi botni bloklagan bo'lishi mumkin.)")
         return
+    if claimed_now:
+        keep = [admin_id] + ([SUPPORT_CEO_ID] if SUPPORT_CEO_ID is not None else [])
+        await _remove_from_other_admins(bot, bots_map, user_id, keep)
+    # Javobni kim ko'radi: CEO (boshqa admin javob bersa), suhbat egasi (CEO javob bersa).
+    recipients = set()
+    if SUPPORT_CEO_ID is not None and not _is_ceo(admin_id):
+        recipients.add(SUPPORT_CEO_ID)
+    if owner_id != admin_id:
+        recipients.add(owner_id)
     await _share_reply_with_admins(
-        bot, message, support_bots or {bot.id: bot}, user_id, origin_bot_id or bot.id, user_message_id,
+        bot, message, bots_map, user_id, origin_bot_id or bot.id, user_message_id, recipients,
     )
     try:
         await bot.set_message_reaction(
@@ -318,47 +379,67 @@ async def on_admin_message(message: Message) -> None:
     await message.reply("ℹ️ Javob berish uchun foydalanuvchidan kelgan xabarga <b>Reply</b> qiling.")
 
 
+async def _deliver_to_admin(
+    bot: Bot, message: Message, admin_id: int, bots: list[Bot], prefer_id: Optional[int], media_box: dict,
+) -> Optional[tuple[Bot, Message]]:
+    """Foydalanuvchi xabarini adminga birinchi ishlagan bot orqali yuboradi
+    (admin bir nechta botga /start bosgan bo'lsa ham xabar bir marta keladi)."""
+    for dst in _bots_for_admin(admin_id, bots, prefer_id):
+        try:
+            if dst.id == bot.id:
+                # Forward: xabar tepasida foydalanuvchining avatari va ismi
+                # ko'rinadi, ism bosilsa profili/lichkasi ochiladi.
+                sent = await bot.forward_message(
+                    chat_id=admin_id, from_chat_id=message.chat.id, message_id=message.message_id,
+                )
+                # Foydalanuvchi uzatishni yashirgan bo'lsa avatar ko'rinmaydi —
+                # forward o'rniga xabarning o'zi "👤 Ism" tugmasi bilan yuboriladi.
+                if getattr(sent.forward_origin, "type", None) == "hidden_user":
+                    try:
+                        await bot.delete_message(chat_id=admin_id, message_id=sent.message_id)
+                    except TelegramAPIError:
+                        pass
+                    sent = await _copy_with_user_button(bot, bot, admin_id, message)
+            else:
+                # Boshqa bot forward qila olmaydi — fayl bir marta yuklab
+                # olinadi va har bir adminga qayta yuklanadi.
+                if not media_box["loaded"] and not message.text:
+                    media_box["loaded"] = True
+                    media_box["media"] = await _download_media(bot, message)
+                sent = await _copy_with_user_button(bot, dst, admin_id, message, media_box["media"])
+            return dst, sent
+        except TelegramAPIError:
+            continue
+    logger.warning("Aloqa xabari adminga yetmadi (admin %s hech bir aloqa botiga /start bosmagan)", admin_id)
+    return None
+
+
 @router.message()
 async def on_user_message(message: Message, bot: Bot, support_bots: Optional[dict[int, Bot]] = None) -> None:
-    """Foydalanuvchi xabari — har bir aloqa botidagi barcha adminlarga yuboriladi."""
+    """Foydalanuvchi xabari — suhbat biriktirilgan bo'lsa egasiga va CEO'ga,
+    aks holda barcha adminlarga."""
     user = message.from_user
     if not user or message.chat.type != "private":
         return
-    # Avval foydalanuvchi yozgan bot, keyin qolganlari.
-    bots = sorted((support_bots or {bot.id: bot}).values(), key=lambda b: b.id != bot.id)
-    media: Optional[Media] = None
-    media_loaded = False
+    bots = list((support_bots or {bot.id: bot}).values())
+    claim = await get_support_claim(user.id, CLAIM_TTL)
+    if claim:
+        owner_bot_id, owner_id = claim
+        targets: list[tuple[int, Optional[int]]] = [(owner_id, owner_bot_id)]
+        if SUPPORT_CEO_ID is not None and SUPPORT_CEO_ID != owner_id:
+            targets.append((SUPPORT_CEO_ID, None))
+        await touch_support_claim(user.id)
+    else:
+        targets = [(admin_id, None) for admin_id in SUPPORT_ADMIN_IDS]
+    media_box = {"loaded": False, "media": None}
     delivered = False
-    for dst in bots:
-        for admin_id in SUPPORT_ADMIN_IDS:
-            try:
-                if dst.id == bot.id:
-                    # Forward: xabar tepasida foydalanuvchining avatari va ismi
-                    # ko'rinadi, ism bosilsa profili/lichkasi ochiladi.
-                    sent = await bot.forward_message(
-                        chat_id=admin_id, from_chat_id=message.chat.id, message_id=message.message_id,
-                    )
-                    # Foydalanuvchi uzatishni yashirgan bo'lsa avatar ko'rinmaydi —
-                    # forward o'rniga xabarning o'zi "👤 Ism" tugmasi bilan yuboriladi.
-                    if getattr(sent.forward_origin, "type", None) == "hidden_user":
-                        try:
-                            await bot.delete_message(chat_id=admin_id, message_id=sent.message_id)
-                        except TelegramAPIError:
-                            pass
-                        sent = await _copy_with_user_button(bot, bot, admin_id, message)
-                else:
-                    # Boshqa bot forward qila olmaydi — fayl bir marta yuklab
-                    # olinadi va har bir adminga qayta yuklanadi.
-                    if not media_loaded and not message.text:
-                        media_loaded = True
-                        media = await _download_media(bot, message)
-                    sent = await _copy_with_user_button(bot, dst, admin_id, message, media)
-            except TelegramAPIError:
-                logger.warning("Aloqa xabari adminga yetmadi (admin %s bot %s ga /start bosmagan bo'lishi mumkin)",
-                               admin_id, dst.id)
-                continue
-            await save_support_message(dst.id, admin_id, sent.message_id, user.id, bot.id, message.message_id)
-            delivered = True
+    for admin_id, prefer_id in targets:
+        result = await _deliver_to_admin(bot, message, admin_id, bots, prefer_id, media_box)
+        if not result:
+            continue
+        dst, sent = result
+        await save_support_message(dst.id, admin_id, sent.message_id, user.id, bot.id, message.message_id)
+        delivered = True
 
     if not delivered:
         logger.error("Aloqa xabari hech bir adminga yetmadi (SUPPORT_ADMIN_IDS: %s)", SUPPORT_ADMIN_IDS)
