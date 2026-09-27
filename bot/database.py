@@ -88,7 +88,13 @@ def _get_pool() -> asyncpg.Pool:
 
 async def init_db() -> None:
     global _pool
-    _pool = await asyncpg.create_pool(DATABASE_URL, min_size=2, max_size=10)
+    # Neon bepul tarifi bo'sh ulanishlarni o'zi uzadi — eskirgan ulanishni
+    # ishlatib xato olmaslik uchun bo'sh ulanishlar 60 soniyada yangilanadi;
+    # osilib qolgan so'rov 20 soniyadan keyin to'xtatiladi.
+    _pool = await asyncpg.create_pool(
+        DATABASE_URL, min_size=2, max_size=10,
+        max_inactive_connection_lifetime=60, command_timeout=20,
+    )
     async with _pool.acquire() as conn:
         await conn.execute(SCHEMA)
         await _migrate_ad_stats(conn)
@@ -536,6 +542,22 @@ async def set_donation_channel_messages(
 async def set_donation_channel_status(donation_id: int, status: Optional[str]) -> None:
     await _get_pool().execute(
         "UPDATE donations SET channel_status = $2 WHERE id = $1", donation_id, status
+    )
+
+
+async def db_ping() -> float:
+    """Bazaga bitta oddiy so'rov vaqti (ms) — /ping tashxisi uchun."""
+    import time
+    started = time.perf_counter()
+    await _get_pool().fetchval("SELECT 1")
+    return (time.perf_counter() - started) * 1000
+
+
+async def count_channel_out_of_sync() -> int:
+    return await _get_pool().fetchval(
+        """SELECT COUNT(*) FROM donations
+           WHERE channel_message_ids IS NOT NULL AND channel_message_ids <> ''
+             AND channel_status IS DISTINCT FROM status"""
     )
 
 
