@@ -938,7 +938,13 @@
   .cat-row-avail {
     background: #1C93F3; color: #fff; font-size: 12.5px; line-height: 1;
     padding: 4px 8px; border-radius: 10px;
+    font-variant-numeric: tabular-nums;
   }
+  /* "0" belgisi "+1" bilan aynan bir xil enda: ko'rinmas "+0" joyni egallaydi,
+     "0" uning ustida o'rtada turadi (har qanday shriftda bir xil chiqadi). */
+  .cat-row-avail-zero { display: inline-grid; justify-items: center; }
+  .cat-row-avail-zero > span { grid-area: 1 / 1; }
+  .cat-row-avail-zero > .cat-row-avail-size { visibility: hidden; }
   .cat-row-arrow { color: #9AA3AF; font-size: 18px; }
   .profile-header { text-align: center; margin: 4px 0 24px; }
   .avatar-lg { width: 88px; height: 88px; margin: 0 auto 14px; font-size: 32px; }
@@ -2798,7 +2804,9 @@
             '<span class="' + iconClass + '">' + iconInner + "</span>" +
             '<span class="cat-row-name">' + escapeHtml(name) + "</span>" +
             '<span class="cat-row-stats">' +
-            '<span class="cat-row-avail">' + (hasAvailable ? "+" + formatCount(cs.available) : "0") + "</span>" +
+            (hasAvailable
+              ? '<span class="cat-row-avail">+' + formatCount(cs.available) + "</span>"
+              : '<span class="cat-row-avail cat-row-avail-zero"><span class="cat-row-avail-size" aria-hidden="true">+0</span><span>0</span></span>') +
             "</span>" +
             '<span class="cat-row-arrow">›</span></button>';
         }).join("") + "</div>";
