@@ -28,7 +28,24 @@ MINI_APP_SHORT_NAME = os.getenv("MINI_APP_SHORT_NAME", "app")
 # kanalga e'lon qilish butunlay o'chiriladi. Standart qiymat yo'q — test
 # bot tasodifan asosiy kanalga post qilib yubormasligi uchun har bir
 # muhitda aniq yoziladi (asosiy bot: CHANNEL_ID=@ehsonli_qollar).
-CHANNEL_ID = os.getenv("CHANNEL_ID", "").strip()
+
+
+def _normalize_channel(value: str) -> str:
+    """"ehsonli_qollar", "t.me/ehsonli_qollar" yoki havola ko'rinishida
+    yozilsa ham Telegram kutgan "@ehsonli_qollar" ga keltiriladi; raqamli
+    ID (-100...) o'zgarmaydi."""
+    value = value.strip().rstrip("/")
+    for prefix in ("https://", "http://"):
+        if value.startswith(prefix):
+            value = value[len(prefix):]
+    if value.startswith("t.me/") or value.startswith("telegram.me/"):
+        value = value.split("/", 1)[1]
+    if value and not value.startswith("@") and not value.lstrip("-").isdigit():
+        value = "@" + value
+    return value
+
+
+CHANNEL_ID = _normalize_channel(os.getenv("CHANNEL_ID", ""))
 
 # Aloqa (qo'llab-quvvatlash) boti — ilova sozlamalarida va /start xabarida
 # "Aloqa" tugmasi shu botni ochadi. Bo'sh qoldirilsa tugma ko'rinmaydi.
