@@ -1,4 +1,5 @@
 import os
+import re
 import time
 
 from dotenv import load_dotenv
@@ -63,10 +64,13 @@ KEEP_AWAKE = os.getenv("KEEP_AWAKE", "1").strip().lower() not in ("0", "false", 
 #   Telegram ID'lari; ular botga /start bosgan bo'lishi kerak)
 AD_CARD_NUMBER = "".join(ch for ch in os.getenv("AD_CARD_NUMBER", "") if ch.isdigit())
 AD_CARD_HOLDER = os.getenv("AD_CARD_HOLDER", "").strip()
-AD_ADMIN_IDS = [
-    int(part) for part in os.getenv("AD_ADMIN_IDS", "").replace(" ", "").split(",")
-    if part.lstrip("-").isdigit()
-]
+def _id_list(name: str) -> list[int]:
+    """Telegram ID'lar ro'yxati: vergul, nuqtali vergul, probel yoki yangi
+    qator bilan ajratilgan bo'lsa ham o'qiladi (takrorlar olib tashlanadi)."""
+    return list(dict.fromkeys(int(x) for x in re.findall(r"-?\d+", os.getenv(name, ""))))
+
+
+AD_ADMIN_IDS = _id_list("AD_ADMIN_IDS")
 
 # O'zimizning aloqa botimiz (Livegram o'rniga, reklamasiz). @BotFather'dagi
 # aloqa botining tokeni; bo'sh bo'lsa aloqa boti ishga tushmaydi.
@@ -81,10 +85,7 @@ SUPPORT_BOT_TOKENS = list(dict.fromkeys(
     ).replace(" ", "").split(",") if token
 ))
 SUPPORT_BOT_TOKEN = SUPPORT_BOT_TOKENS[0] if SUPPORT_BOT_TOKENS else ""
-SUPPORT_ADMIN_IDS = [
-    int(part) for part in os.getenv("SUPPORT_ADMIN_IDS", "").replace(" ", "").split(",")
-    if part.lstrip("-").isdigit()
-] or list(AD_ADMIN_IDS)
+SUPPORT_ADMIN_IDS = _id_list("SUPPORT_ADMIN_IDS") or list(AD_ADMIN_IDS)
 # CEO — barcha aloqa suhbatlarini kuzatadi (xabarlar va boshqa adminlarning
 # javoblari unga doim keladi, undan o'chirilmaydi). Berilmasa —
 # SUPPORT_ADMIN_IDS dagi birinchi ID. Boshqa adminlardan birinchi javob
