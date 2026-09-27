@@ -3,6 +3,7 @@ import gzip
 import hashlib
 import logging
 import os
+import time
 from pathlib import Path
 from typing import Optional
 
@@ -11,6 +12,7 @@ import asyncpg
 from aiogram import Bot
 from aiohttp import web
 
+from bot import perf
 from bot.config import KEEP_AWAKE
 from bot.webapp_api import setup_api_routes, start_channel_sync
 from bot.webpanel import dashboard_handler
@@ -74,6 +76,23 @@ async def _webapp_asset(request: web.Request) -> web.Response:
 
 
 @web.middleware
+async def _timing_middleware(request: web.Request, handler):
+    """Har bir so'rov davomiyligini yig'adi (admin /ping'da ko'rinadi);
+    1 soniyadan uzoq so'rovlar jurnalga ham yoziladi."""
+    started = time.perf_counter()
+    try:
+        return await handler(request)
+    finally:
+        ms = (time.perf_counter() - started) * 1000
+        route = request.match_info.route
+        resource = getattr(route, "resource", None)
+        path = f"{request.method} {resource.canonical if resource else request.path}"
+        perf.record(path, ms)
+        if ms > 1000:
+            logging.getLogger(__name__).warning("Sekin so'rov: %s — %.0f ms", path, ms)
+
+
+@web.middleware
 async def _error_middleware(request: web.Request, handler):
     """Noto'g'ri so'rovlar (buzuq JSON, juda katta son va h.k.) 500 emas,
     400 bilan qaytadi; kutilmagan xatolar jurnalga yoziladi."""
@@ -133,7 +152,7 @@ async def start_webserver(bot: Bot) -> None:
     uxlab qoladi. Shu server ustiga /admin (statistika paneli) va
     /webapp + /api/* (Telegram Mini App) ham qo'shilgan.
     """
-    app = web.Application(client_max_size=10 * 1024 * 1024, middlewares=[_error_middleware, _compress_middleware])
+    app = web.Application(client_max_size=10 * 1024 * 1024, middlewares=[_timing_middleware, _error_middleware, _compress_middleware])
     app["bot"] = bot
     me = await bot.get_me()
     app["bot_username"] = me.username

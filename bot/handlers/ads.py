@@ -257,3 +257,51 @@ async def on_preview_debug(message: Message, command: CommandObject) -> None:
         if key in result:
             lines.append(f"{key}: {escape(str(result[key]) or '—')[:300]}")
     await message.answer("\n".join(lines)[:4000], disable_web_page_preview=True)
+
+
+@router.message(Command("ping"), F.from_user.id.in_(AD_ADMIN_IDS))
+async def on_ping(message: Message) -> None:
+    """Admin uchun tezlik tashxisi: baza va Telegram kechikishi, protsessor
+    tezligi, xotira, kanal navbati va eng sekin API manzillari."""
+    import re
+    import time
+
+    from bot import perf
+    from bot.config import DATABASE_URL
+    from bot.database import count_channel_out_of_sync, db_ping
+    from bot.webapp_api import _PHOTO_CACHE, channel_failures_count
+
+    db_times = [await db_ping() for _ in range(3)]
+    started = time.perf_counter()
+    await message.bot.get_me()
+    tg_ms = (time.perf_counter() - started) * 1000
+    started = time.perf_counter()
+    sum(i * i for i in range(300_000))
+    cpu_ms = (time.perf_counter() - started) * 1000
+    rss_mb = 0.0
+    try:
+        with open("/proc/self/status") as f:
+            rss_mb = next(int(line.split()[1]) for line in f if line.startswith("VmRSS")) / 1024
+    except Exception:
+        pass
+    region = re.search(r"\.([a-z]{2}-[a-z]+-\d)\.", DATABASE_URL or "")
+    uptime_min = (time.time() - perf.STARTED_AT) / 60
+    cache_mb = sum(len(b) for b in _PHOTO_CACHE.values()) / 1024 / 1024
+
+    lines = [
+        "🩺 <b>Tezlik tashxisi</b>",
+        "",
+        f"🗄 Baza: <b>{min(db_times):.0f}</b> ms (o'rtacha {sum(db_times) / 3:.0f} ms)"
+        + (f" · mintaqa {region.group(1)}" if region else ""),
+        f"✈️ Telegram API: <b>{tg_ms:.0f}</b> ms",
+        f"🧠 Protsessor testi: <b>{cpu_ms:.0f}</b> ms (tez serverda 10–30 ms)",
+        f"💾 Xotira: <b>{rss_mb:.0f}</b> MB · rasm keshi {len(_PHOTO_CACHE)} ta / {cache_mb:.1f} MB",
+        f"📢 Kanal: {await count_channel_out_of_sync()} ta post yangilanishi kutmoqda, "
+        f"{channel_failures_count()} tasi xato bermoqda",
+        f"⏱ Ishlash vaqti: {uptime_min:.0f} daqiqa",
+        "",
+        "<b>Eng sekin so'rovlar</b> (o'rtacha / eng uzun, ms):",
+    ]
+    rows = perf.slowest(8)
+    lines += [f"• {escape(path)} — {avg:.0f} / {mx:.0f} ({n} ta)" for path, n, avg, mx in rows] or ["• hali so'rovlar yo'q"]
+    await message.answer("\n".join(lines), parse_mode="HTML")
