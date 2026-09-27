@@ -185,6 +185,18 @@ async def on_user_message(message: Message, bot: Bot) -> None:
 
     if not delivered:
         logger.error("Aloqa xabari hech bir adminga yetmadi (SUPPORT_ADMIN_IDS: %s)", SUPPORT_ADMIN_IDS)
+    if not delivered:
+        return
+    # Xabar qabul qilinganini 👍 reaksiya bilan tasdiqlaymiz (chatda ortiqcha
+    # matn yo'q). Reaksiya qo'yib bo'lmasa — matnli javob (30 daqiqada bir marta).
+    try:
+        await bot.set_message_reaction(
+            chat_id=message.chat.id, message_id=message.message_id,
+            reaction=[ReactionTypeEmoji(emoji="👍")],
+        )
+        return
+    except TelegramAPIError:
+        pass
     now = time.time()
     if now - _last_ack.get(user.id, 0) > ACK_INTERVAL_SECONDS:
         _last_ack[user.id] = now
