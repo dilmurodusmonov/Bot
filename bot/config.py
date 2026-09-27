@@ -7,6 +7,9 @@ load_dotenv()
 
 BOT_TOKEN = os.getenv("BOT_TOKEN")
 DATABASE_URL = os.getenv("DATABASE_URL")
+# Serverni boshqa mintaqaga ko'chirishda: eski baza manzili — bot ishga
+# tushganda bo'sh yangi bazaga hamma ma'lumot bir marta nusxalanadi (bot/db_copy.py).
+MIGRATE_FROM_DATABASE_URL = os.getenv("MIGRATE_FROM_DATABASE_URL", "").strip()
 ADMIN_USERNAME = os.getenv("ADMIN_USERNAME", "admin")
 ADMIN_PASSWORD = os.getenv("ADMIN_PASSWORD", "")
 
